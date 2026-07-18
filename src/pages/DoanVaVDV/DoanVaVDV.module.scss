@@ -1,0 +1,393 @@
+@use '../../styles/variables'as *;
+
+.page {
+    display: flex;
+    flex-direction: column;
+    gap: $space-4;
+}
+
+.headerRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.title {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.headerActions {
+    display: flex;
+    gap: $space-2;
+}
+
+.btnPrimary,
+.btnGhost {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-1;
+    font-size: 13px;
+    font-weight: 600;
+    padding: $space-2 $space-3;
+    border-radius: 6px;
+    cursor: pointer;
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+}
+
+.btnPrimary {
+    background: $color-do;
+    color: white;
+    border: none;
+
+    &:hover:not(:disabled) {
+        opacity: 0.9;
+    }
+}
+
+.btnGhost {
+    background: $color-surface;
+    color: $color-text;
+    border: 1px solid $color-border;
+
+    &:hover:not(:disabled) {
+        background: $color-bg;
+    }
+}
+
+.teamsCard {
+    background: $color-surface;
+    border: 1px solid $color-border;
+    border-radius: 10px;
+    padding: $space-4;
+}
+
+.teamsHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: $space-3;
+}
+
+.teamsTitle {
+    font-size: 14px;
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+}
+
+.teamsCount {
+    font-size: 12px;
+    font-weight: 600;
+    color: $color-text-muted;
+    background: $color-bg;
+    padding: 2px $space-2;
+    border-radius: 999px;
+}
+
+.teamsList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-2;
+}
+
+.teamChip {
+    display: flex;
+    align-items: stretch;
+    border: 1px solid $color-border;
+    border-radius: 8px;
+    background: $color-surface;
+    overflow: hidden;
+}
+
+.teamChipActive {
+    border-color: $color-do;
+    background: rgba($color-do, 0.06);
+}
+
+.teamChipMain {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    padding: $space-2 $space-3;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 13px;
+
+    &:hover {
+        background: $color-bg;
+    }
+}
+
+.teamChipEdit,
+.teamChipDelete {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 $space-2;
+    border: none;
+    border-left: 1px solid $color-border;
+    background: none;
+    color: $color-text-muted;
+    cursor: pointer;
+}
+
+.teamChipEdit:hover {
+    background: $color-bg;
+    color: $color-text;
+}
+
+.teamChipDelete:hover {
+    background: rgba($color-danger, 0.08);
+    color: $color-danger;
+}
+
+.teamChipName {
+    font-weight: 600;
+}
+
+.teamChipCount {
+    font-size: 11px;
+    color: $color-text-muted;
+    background: $color-bg;
+    padding: 1px $space-2;
+    border-radius: 999px;
+}
+
+.teamChipActive .teamChipCount {
+    color: $color-do;
+    background: rgba($color-do, 0.1);
+}
+
+.teamsEmpty {
+    font-size: 13px;
+    color: $color-text-muted;
+    margin: 0;
+}
+
+.filters {
+    display: flex;
+    gap: $space-2;
+
+    select {
+        font: inherit;
+        padding: $space-2 $space-3;
+        border: 1px solid $color-border;
+        border-radius: 6px;
+        background: $color-surface;
+    }
+}
+
+.searchBox {
+    display: flex;
+    align-items: center;
+    gap: $space-1;
+    flex: 1;
+    padding: $space-2 $space-3;
+    border: 1px solid $color-border;
+    border-radius: 6px;
+    background: $color-surface;
+    color: $color-text-muted;
+
+    input {
+        border: none;
+        outline: none;
+        font: inherit;
+        flex: 1;
+        color: $color-text;
+    }
+}
+
+.card {
+    background: $color-surface;
+    border: 1px solid $color-border;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+
+    th,
+    td {
+        text-align: left;
+        padding: $space-3 $space-4;
+        border-bottom: 1px solid $color-border;
+    }
+
+    th {
+        color: $color-text-muted;
+        font-weight: 600;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+
+    tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    tbody tr:hover {
+        background: $color-bg;
+    }
+
+    .noiDungChip {
+        display: block;
+
+    }
+}
+
+.rowActions {
+    display: flex;
+    gap: $space-2;
+
+    button {
+        background: none;
+        border: none;
+        color: $color-do;
+        font-weight: 600;
+        font-size: 13px;
+        cursor: pointer;
+        padding: 0;
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+}
+
+.empty {
+    text-align: center;
+    color: $color-text-muted;
+    padding: $space-6 !important;
+}
+
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: $space-3 $space-4;
+    font-size: 13px;
+    color: $color-text-muted;
+}
+
+.pageBtns {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+
+    button {
+        width: 28px;
+        height: 28px;
+        border: 1px solid $color-border;
+        background: $color-surface;
+        border-radius: 6px;
+        cursor: pointer;
+
+        &:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        &:hover:not(:disabled) {
+            background: $color-bg;
+        }
+    }
+}
+
+.modalForm {
+    display: flex;
+    flex-direction: column;
+    gap: $space-3;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: $space-1;
+    font-size: 13px;
+    font-weight: 500;
+
+    input,
+    select {
+        font: inherit;
+        padding: $space-2 $space-3;
+        border: 1px solid $color-border;
+        border-radius: 6px;
+    }
+}
+
+.teamContentCard {
+    background: $color-surface;
+    border: 1px solid $color-border;
+    border-radius: 10px;
+    padding: $space-4;
+}
+
+.teamContentTitle {
+    font-size: 14px;
+    font-weight: 700;
+    margin: 0 0 4px;
+}
+
+.teamContentNote {
+    font-size: 12px;
+    color: $color-text-muted;
+    margin: 0 0 $space-3;
+}
+
+.teamContentList {
+    display: flex;
+    flex-direction: column;
+    gap: $space-3;
+}
+
+.teamContentGroupTitle {
+    font-size: 13px;
+    font-weight: 600;
+    margin: 0 0 $space-2;
+    color: $color-xanh;
+}
+
+.teamContentUnit {
+    display: flex;
+    align-items: baseline;
+    gap: $space-2;
+    padding: $space-2 $space-3;
+    background: $color-bg;
+    border-radius: 6px;
+    margin-bottom: 4px;
+    font-size: 12px;
+    flex-wrap: wrap;
+}
+
+.teamContentUnitName {
+    font-weight: 600;
+}
+
+.teamContentUnitCount {
+    color: $color-text-muted;
+}
+
+.teamContentUnitNames {
+    color: $color-text-muted;
+    flex-basis: 100%;
+}
+
+.noiDungChipTeam {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba($color-xanh, 0.08);
+    color: $color-xanh;
+}

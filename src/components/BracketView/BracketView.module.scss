@@ -1,0 +1,95 @@
+@use '../../styles/variables'as *;
+
+.scrollArea {
+    overflow-x: auto;
+    padding: $space-2 0;
+}
+
+.canvas {
+    position: relative;
+}
+
+.roundLabel {
+    position: absolute;
+    top: 0;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: $color-text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.lines {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+
+    path {
+        stroke: $color-border;
+        stroke-width: 2;
+    }
+}
+
+.card {
+    position: absolute;
+    background: $color-surface;
+    border: 1px solid $color-border;
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.byeCard {
+    opacity: 0.55;
+}
+
+.slotRow {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    padding: 0 $space-3;
+    font-size: 13px;
+    font-weight: 500;
+    color: $color-text;
+    border-left: 3px solid transparent;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    &+& {
+        border-top: 1px solid $color-border;
+    }
+}
+
+.slotDo {
+    border-left-color: $color-do;
+}
+
+.slotXanh {
+    border-left-color: $color-xanh;
+}
+
+.champion {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    padding: $space-2 $space-4;
+    background: rgba($color-vang, 0.12);
+    border: 1px solid rgba($color-vang, 0.4);
+    border-radius: 8px;
+    color: #8a6416;
+    font-weight: 700;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.empty {
+    color: $color-text-muted;
+    font-size: 14px;
+    padding: $space-5 0;
+}

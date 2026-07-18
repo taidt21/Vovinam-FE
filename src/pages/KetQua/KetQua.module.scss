@@ -1,0 +1,236 @@
+@use '../../styles/variables'as *;
+
+.page {
+    display: flex;
+    flex-direction: column;
+    gap: $space-4;
+}
+
+.topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.title {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.exportBtns {
+    display: flex;
+    gap: $space-2;
+}
+
+.btnGhost {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-1;
+    font-size: 13px;
+    font-weight: 600;
+    padding: $space-2 $space-3;
+    border: 1px solid $color-border;
+    background: $color-surface;
+    border-radius: 6px;
+    cursor: pointer;
+
+    &:hover {
+        background: $color-bg;
+    }
+}
+
+.tabs {
+    display: flex;
+    gap: $space-1;
+    border-bottom: 1px solid $color-border;
+}
+
+.tab,
+.tabActive {
+    padding: $space-3 $space-4;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: $color-text-muted;
+}
+
+.tabActive {
+    color: $color-do;
+    border-bottom: 2px solid $color-do;
+    margin-bottom: -1px;
+}
+
+.resultLayout {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: $space-4;
+    align-items: start;
+}
+
+.eventPicker {
+    background: $color-surface;
+    border: 1px solid $color-border;
+    border-radius: 10px;
+    padding: $space-2;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.eventItem,
+.eventItemActive {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-2;
+    text-align: left;
+    padding: $space-2 $space-3;
+    border-radius: 6px;
+    border: none;
+    background: none;
+    font-size: 13px;
+    cursor: pointer;
+    color: $color-text;
+
+    &:hover {
+        background: $color-bg;
+    }
+}
+
+.eventItemActive {
+    background: rgba($color-do, 0.08);
+    color: $color-do;
+    font-weight: 600;
+}
+
+.doneTag {
+    font-size: 11px;
+    color: $color-success;
+    font-weight: 600;
+}
+
+.pendingTag {
+    font-size: 11px;
+    color: $color-text-muted;
+}
+
+.resultMain {
+    background: $color-surface;
+    border: 1px solid $color-border;
+    border-radius: 10px;
+    padding: $space-5;
+}
+
+.resultTitle {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0 0 $space-4;
+}
+
+.notDone {
+    font-size: 14px;
+    color: $color-text-muted;
+    background: $color-bg;
+    border-radius: 8px;
+    padding: $space-5;
+}
+
+.rankTable,
+.medalTable {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+
+    th,
+    td {
+        text-align: left;
+        padding: $space-3;
+        border-bottom: 1px solid $color-border;
+    }
+
+    th {
+        font-size: 12px;
+        text-transform: uppercase;
+        color: $color-text-muted;
+        font-weight: 600;
+    }
+
+    tbody tr:last-child td {
+        border-bottom: none;
+    }
+}
+
+.center {
+    text-align: center !important;
+}
+
+.rankNum {
+    font-weight: 700;
+    font-size: 15px;
+    width: 60px;
+}
+
+.athName {
+    font-weight: 600;
+}
+
+.athCode {
+    font-size: 11px;
+    color: $color-text-muted;
+}
+
+.medalTag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px $space-2;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.vang {
+    background: rgba($color-vang, 0.15);
+    color: #8a6416;
+}
+
+.bac {
+    background: rgba(#9ca3af, 0.2);
+    color: #4b5563;
+}
+
+.dong {
+    background: rgba(#b45309, 0.12);
+    color: #92400e;
+}
+
+.note {
+    font-size: 12px;
+    color: $color-text-muted;
+    margin-top: $space-3;
+}
+
+.card {
+    background: $color-surface;
+    border: 1px solid $color-border;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.gold {
+    color: $color-vang;
+    font-weight: 700;
+}
+
+.total {
+    font-weight: 700;
+}
+
+.empty {
+    text-align: center;
+    color: $color-text-muted;
+    padding: $space-5 !important;
+}

@@ -1,0 +1,69 @@
+@use '../../styles/variables'as *;
+
+.tagInput {
+    display: flex;
+    flex-direction: column;
+    gap: $space-2;
+}
+
+.tagRow {
+    display: flex;
+    gap: $space-2;
+
+    input {
+        flex: 1;
+        font: inherit;
+        padding: $space-2 $space-3;
+        border: 1px solid $color-border;
+        border-radius: 6px;
+    }
+
+    button {
+        font-size: 13px;
+        font-weight: 600;
+        padding: $space-2 $space-3;
+        border: 1px solid $color-border;
+        background: $color-surface;
+        border-radius: 6px;
+        cursor: pointer;
+        white-space: nowrap;
+
+        &:hover {
+            background: $color-bg;
+        }
+    }
+}
+
+.tagList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-2;
+}
+
+.tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 2px 2px $space-2;
+    background: $color-bg;
+    border: 1px solid $color-border;
+    border-radius: 999px;
+    font-size: 12px;
+
+    button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: none;
+        border: none;
+        color: $color-text-muted;
+        cursor: pointer;
+        padding: 2px;
+        border-radius: 50%;
+
+        &:hover {
+            background: $color-border;
+            color: $color-text;
+        }
+    }
+}

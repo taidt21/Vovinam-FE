@@ -1,0 +1,30 @@
+@use '../../styles/variables'as *;
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px $space-2;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.success {
+    background: rgba($color-success, 0.12);
+    color: $color-success;
+}
+
+.warning {
+    background: rgba($color-warning, 0.15);
+    color: #92400e;
+}
+
+.danger {
+    background: rgba($color-danger, 0.12);
+    color: $color-danger;
+}
+
+.neutral {
+    background: $color-bg;
+    color: $color-text-muted;
+}

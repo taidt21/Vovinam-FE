@@ -1,0 +1,56 @@
+@use '../../styles/variables'as *;
+
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+
+.dialog {
+    background: $color-surface;
+    border-radius: 10px;
+    width: 480px;
+    max-width: calc(100vw - #{$space-5} * 2);
+    max-height: calc(100vh - #{$space-6} * 2);
+    overflow-y: auto;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: $space-4 $space-5;
+    border-bottom: 1px solid $color-border;
+
+    h2 {
+        font-size: 16px;
+        font-weight: 600;
+        margin: 0;
+    }
+}
+
+.closeBtn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: $color-text-muted;
+    display: flex;
+    padding: $space-1;
+    border-radius: 4px;
+
+    &:hover {
+        background: $color-bg;
+    }
+}
+
+.body {
+    padding: $space-5;
+}
+
+.dialogLg {
+    width: 720px;
+}

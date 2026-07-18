@@ -1,0 +1,625 @@
+/** @format */
+
+import { useMemo, useState, type FormEvent } from "react";
+import {
+  Plus,
+  FileSpreadsheet,
+  Search,
+  Pencil,
+  Trash2,
+  Users,
+} from "lucide-react";
+import type { Athlete, GioiTinh, Team } from "../../types";
+import Modal from "../../components/Modal/Modal";
+import TagInput from "../../components/TagInput/TagInput";
+import ImportExcelModal from "../../components/ImportExcelModal/ImportExcelModal";
+import type { ImportRow } from "../../lib/excelImport";
+import { isTeamContent } from "../../lib/content";
+import styles from "./DoanVaVDV.module.scss";
+
+const CURRENT_YEAR = new Date().getFullYear();
+const NHOM_TUOI_OPTIONS = ["Nhóm tuổi 1", "Nhóm tuổi 2", "Nhóm tuổi 3"];
+
+const SEED_TEAMS: Team[] = [
+  { id: "t1", tournamentId: "demo", ten: "Bình Dương" },
+  { id: "t2", tournamentId: "demo", ten: "TP. Hồ Chí Minh" },
+  { id: "t3", tournamentId: "demo", ten: "Hà Nội" },
+];
+
+const SEED_ATHLETES: Athlete[] = [
+  {
+    id: "a1",
+    hoTen: "Nguyễn Minh Khang",
+    namSinh: 2008,
+    gioiTinh: "nam",
+    nhomTuoi: "Nhóm tuổi 2",
+    teamId: "t1",
+    noiDung: ["Đối kháng nam - 54kg"],
+  },
+  {
+    id: "a2",
+    hoTen: "Trần Đức Bảo",
+    namSinh: 2008,
+    gioiTinh: "nam",
+    nhomTuoi: "Nhóm tuổi 2",
+    teamId: "t1",
+    noiDung: ["Đối kháng nam - 60kg", "Song luyện nam"],
+  },
+  {
+    id: "a3",
+    hoTen: "Lê Gia Huy",
+    namSinh: 2009,
+    gioiTinh: "nam",
+    nhomTuoi: "Nhóm tuổi 1",
+    teamId: "t2",
+    noiDung: ["Đối kháng nam - 54kg"],
+  },
+  {
+    id: "a4",
+    hoTen: "Phạm Anh Thư",
+    namSinh: 2008,
+    gioiTinh: "nu",
+    nhomTuoi: "Nhóm tuổi 3",
+    teamId: "t3",
+    noiDung: ["Quyền cá nhân nữ"],
+  },
+  {
+    id: "a5",
+    hoTen: "Ngô Quang Vinh",
+    namSinh: 2008,
+    gioiTinh: "nam",
+    nhomTuoi: "Nhóm tuổi 2",
+    teamId: "t1",
+    noiDung: ["Quyền đồng đội nam"],
+  },
+  {
+    id: "a6",
+    hoTen: "Đặng Việt Hoàng",
+    namSinh: 2008,
+    gioiTinh: "nam",
+    nhomTuoi: "Nhóm tuổi 2",
+    teamId: "t1",
+    noiDung: ["Quyền đồng đội nam"],
+  },
+];
+
+type AthleteFormState = Omit<Athlete, "id" | "canNang">;
+
+const EMPTY_ATHLETE_FORM: AthleteFormState = {
+  hoTen: "",
+  namSinh: CURRENT_YEAR - 15,
+  gioiTinh: "nam",
+  nhomTuoi: NHOM_TUOI_OPTIONS[0],
+  teamId: "",
+  noiDung: [],
+};
+
+const PAGE_SIZE = 8;
+
+export default function DoanVaVDV() {
+  const [teams, setTeams] = useState<Team[]>(SEED_TEAMS);
+  const [athletes, setAthletes] = useState<Athlete[]>(SEED_ATHLETES);
+
+  const [search, setSearch] = useState("");
+  const [filterTeamId, setFilterTeamId] = useState<string>("all");
+  const [page, setPage] = useState(1);
+
+  const [showAddTeam, setShowAddTeam] = useState(false);
+  const [editingTeamId, setEditingTeamId] = useState<string | null>(null);
+  const [teamNameInput, setTeamNameInput] = useState("");
+  const [showImportModal, setShowImportModal] = useState(false);
+
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [showAddAthlete, setShowAddAthlete] = useState(false);
+  const [athleteForm, setAthleteForm] =
+    useState<AthleteFormState>(EMPTY_ATHLETE_FORM);
+
+  const teamName = (teamId: string) =>
+    teams.find((t) => t.id === teamId)?.ten ?? "—";
+
+  const teamStats = useMemo(() => {
+    return teams.map((t) => ({
+      ...t,
+      count: athletes.filter((a) => a.teamId === t.id).length,
+    }));
+  }, [teams, athletes]);
+
+  // Gom VĐV đang gắn tag đồng đội/võ nhạc theo (nội dung -> đơn vị) — chỉ để
+  // xem tổng quan, KHÔNG phải đội hình chính thức (1 đơn vị có thể có nhiều
+  // đội, việc ráp đội cụ thể làm ở màn Bốc thăm).
+  const teamContentGroups = useMemo(() => {
+    const map = new Map<string, Map<string, Athlete[]>>();
+    for (const a of athletes) {
+      for (const nd of a.noiDung) {
+        if (!isTeamContent(nd)) continue;
+        if (!map.has(nd)) map.set(nd, new Map());
+        const byTeam = map.get(nd)!;
+        if (!byTeam.has(a.teamId)) byTeam.set(a.teamId, []);
+        byTeam.get(a.teamId)!.push(a);
+      }
+    }
+    return Array.from(map.entries()).map(([noiDung, byTeam]) => ({
+      noiDung,
+      units: Array.from(byTeam.entries()).map(([teamId, list]) => ({
+        teamId,
+        athletes: list,
+      })),
+    }));
+  }, [athletes]);
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return athletes.filter((a) => {
+      const matchTeam = filterTeamId === "all" || a.teamId === filterTeamId;
+      if (!matchTeam) return false;
+      if (!q) return true;
+
+      const gioiTinhLabel = a.gioiTinh === "nam" ? "nam" : "nữ";
+      const haystack = [
+        a.hoTen,
+        String(a.namSinh),
+        gioiTinhLabel,
+        a.nhomTuoi,
+        teamName(a.teamId),
+        ...a.noiDung,
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      return haystack.includes(q);
+    });
+  }, [athletes, search, filterTeamId, teams]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  const toggleTeamFilter = (teamId: string) => {
+    setFilterTeamId((prev) => (prev === teamId ? "all" : teamId));
+    setPage(1);
+  };
+
+  const openAddAthlete = () => {
+    setEditingId(null);
+    setAthleteForm(EMPTY_ATHLETE_FORM);
+    setShowAddAthlete(true);
+  };
+
+  const openEditAthlete = (athlete: Athlete) => {
+    setEditingId(athlete.id);
+    setAthleteForm({
+      hoTen: athlete.hoTen,
+      namSinh: athlete.namSinh,
+      gioiTinh: athlete.gioiTinh,
+      nhomTuoi: athlete.nhomTuoi,
+      teamId: athlete.teamId,
+      noiDung: athlete.noiDung,
+    });
+    setShowAddAthlete(true);
+  };
+
+  const submitAthlete = (e: FormEvent) => {
+    e.preventDefault();
+    if (editingId) {
+      setAthletes((prev) =>
+        prev.map((a) => (a.id === editingId ? { ...a, ...athleteForm } : a)),
+      );
+    } else {
+      setAthletes((prev) => [
+        { id: crypto.randomUUID(), ...athleteForm },
+        ...prev,
+      ]);
+    }
+    setShowAddAthlete(false);
+  };
+
+  const deleteAthlete = (a: Athlete) => {
+    if (!window.confirm(`Xóa VĐV "${a.hoTen}"? Không thể hoàn tác.`)) return;
+    setAthletes((prev) => prev.filter((x) => x.id !== a.id));
+  };
+
+  const openAddTeam = () => {
+    setEditingTeamId(null);
+    setTeamNameInput("");
+    setShowAddTeam(true);
+  };
+
+  const openEditTeam = (team: Team) => {
+    setEditingTeamId(team.id);
+    setTeamNameInput(team.ten);
+    setShowAddTeam(true);
+  };
+
+  const submitTeam = (e: FormEvent) => {
+    e.preventDefault();
+    const ten = teamNameInput.trim();
+    if (!ten) return;
+    if (editingTeamId) {
+      setTeams((prev) =>
+        prev.map((t) => (t.id === editingTeamId ? { ...t, ten } : t)),
+      );
+    } else {
+      setTeams((prev) => [
+        ...prev,
+        { id: crypto.randomUUID(), tournamentId: "demo", ten },
+      ]);
+    }
+    setTeamNameInput("");
+    setShowAddTeam(false);
+  };
+
+  const deleteTeam = (t: Team & { count: number }) => {
+    if (t.count > 0) {
+      window.alert(
+        `Không thể xóa "${t.ten}" — còn ${t.count} VĐV thuộc đoàn này. Xóa hoặc chuyển đoàn cho các VĐV đó trước.`,
+      );
+      return;
+    }
+    if (!window.confirm(`Xóa đoàn "${t.ten}"? Không thể hoàn tác.`)) return;
+    setTeams((prev) => prev.filter((x) => x.id !== t.id));
+    if (filterTeamId === t.id) setFilterTeamId("all");
+  };
+
+  const handleImportConfirm = (validRows: ImportRow[]) => {
+    const existingNames = new Set(teams.map((t) => t.ten.trim().toLowerCase()));
+    const newTeams: Team[] = [];
+    for (const r of validRows) {
+      const key = r.donVi.trim().toLowerCase();
+      if (
+        key &&
+        !existingNames.has(key) &&
+        !newTeams.some((t) => t.ten.trim().toLowerCase() === key)
+      ) {
+        newTeams.push({
+          id: crypto.randomUUID(),
+          tournamentId: "demo",
+          ten: r.donVi.trim(),
+        });
+      }
+    }
+
+    const allTeams = [...teams, ...newTeams];
+    const teamIdByName = new Map(
+      allTeams.map((t) => [t.ten.trim().toLowerCase(), t.id]),
+    );
+
+    const newAthletes: Athlete[] = validRows.map((r) => ({
+      id: crypto.randomUUID(),
+      hoTen: r.hoTen,
+      namSinh: r.namSinh!,
+      gioiTinh: r.gioiTinh!,
+      nhomTuoi: r.nhomTuoi,
+      teamId: teamIdByName.get(r.donVi.trim().toLowerCase())!,
+      noiDung: r.noiDung,
+    }));
+
+    setTeams(allTeams);
+    setAthletes((prev) => [...newAthletes, ...prev]);
+    setShowImportModal(false);
+  };
+
+  return (
+    <div className={styles.page}>
+      <div className={styles.headerRow}>
+        <h1 className={styles.title}>Đoàn & vận động viên</h1>
+        <div className={styles.headerActions}>
+          <button
+            className={styles.btnGhost}
+            onClick={() => setShowImportModal(true)}>
+            <FileSpreadsheet size={16} /> Import Excel
+          </button>
+          <button className={styles.btnPrimary} onClick={openAddAthlete}>
+            <Plus size={16} /> Thêm VĐV
+          </button>
+        </div>
+      </div>
+
+      <section className={styles.teamsCard}>
+        <div className={styles.teamsHeader}>
+          <h2 className={styles.teamsTitle}>
+            Đoàn tham dự
+            <span className={styles.teamsCount}>{teams.length} đoàn</span>
+          </h2>
+          <button className={styles.btnGhost} onClick={openAddTeam}>
+            <Plus size={16} /> Thêm đoàn
+          </button>
+        </div>
+        <div className={styles.teamsList}>
+          {teamStats.map((t) => (
+            <div
+              key={t.id}
+              className={`${styles.teamChip} ${filterTeamId === t.id ? styles.teamChipActive : ""}`}>
+              <button
+                type="button"
+                className={styles.teamChipMain}
+                onClick={() => toggleTeamFilter(t.id)}
+                title="Bấm để lọc VĐV theo đoàn này">
+                <span className={styles.teamChipName}>{t.ten}</span>
+                <span className={styles.teamChipCount}>{t.count} VĐV</span>
+              </button>
+              <button
+                type="button"
+                className={styles.teamChipEdit}
+                onClick={() => openEditTeam(t)}
+                aria-label={`Sửa tên đoàn ${t.ten}`}
+                title="Sửa tên đoàn">
+                <Pencil size={12} />
+              </button>
+              <button
+                type="button"
+                className={styles.teamChipDelete}
+                onClick={() => deleteTeam(t)}
+                aria-label={`Xóa đoàn ${t.ten}`}
+                title="Xóa đoàn">
+                <Trash2 size={12} />
+              </button>
+            </div>
+          ))}
+          {teamStats.length === 0 && (
+            <p className={styles.teamsEmpty}>Chưa có đoàn nào</p>
+          )}
+        </div>
+      </section>
+
+      {teamContentGroups.length > 0 && (
+        <section className={styles.teamContentCard}>
+          <h2 className={styles.teamContentTitle}>
+            Nội dung đồng đội / võ nhạc — theo đơn vị
+          </h2>
+          <p className={styles.teamContentNote}>
+            Gom theo nhãn nội dung đang gắn cho từng VĐV — chưa phải đội hình
+            chính thức. 1 đơn vị có thể có nhiều đội cho cùng nội dung; việc ráp
+            đội cụ thể sẽ làm ở màn Bốc thăm.
+          </p>
+          <div className={styles.teamContentList}>
+            {teamContentGroups.map((g) => (
+              <div key={g.noiDung} className={styles.teamContentGroup}>
+                <h3 className={styles.teamContentGroupTitle}>{g.noiDung}</h3>
+                {g.units.map((u) => (
+                  <div key={u.teamId} className={styles.teamContentUnit}>
+                    <span className={styles.teamContentUnitName}>
+                      {teamName(u.teamId)}
+                    </span>
+                    <span className={styles.teamContentUnitCount}>
+                      {u.athletes.length} người
+                    </span>
+                    <span className={styles.teamContentUnitNames}>
+                      {u.athletes.map((a) => a.hoTen).join(", ")}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <div className={styles.filters}>
+        <div className={styles.searchBox}>
+          <Search size={16} />
+          <input
+            placeholder="Tìm theo tên, năm sinh, nhóm tuổi, đơn vị, nội dung..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+          />
+        </div>
+        <select
+          value={filterTeamId}
+          onChange={(e) => {
+            setFilterTeamId(e.target.value);
+            setPage(1);
+          }}>
+          <option value="all">Tất cả đoàn</option>
+          {teams.map((t) => (
+            <option key={t.id} value={t.id}>
+              {t.ten}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className={styles.card}>
+        <table className={styles.table}>
+          <thead>
+            <tr>
+              <th>Họ tên</th>
+              <th>Năm sinh</th>
+              <th>Giới tính</th>
+              <th>Nhóm tuổi</th>
+              <th>Đơn vị</th>
+              <th>Nội dung</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            {pageItems.map((a) => (
+              <tr key={a.id}>
+                <td>{a.hoTen}</td>
+                <td>{a.namSinh}</td>
+                <td>{a.gioiTinh === "nam" ? "Nam" : "Nữ"}</td>
+                <td>{a.nhomTuoi}</td>
+                <td>{teamName(a.teamId)}</td>
+                <td>
+                  {a.noiDung.length > 0 ? (
+                    <div className={styles.noiDungList}>
+                      {a.noiDung.map((nd) => (
+                        <span
+                          key={nd}
+                          className={`${styles.noiDungChip} ${isTeamContent(nd) ? styles.noiDungChipTeam : ""}`}>
+                          {isTeamContent(nd) && <Users size={11} />}
+                          {nd}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    "—"
+                  )}
+                </td>
+                <td className={styles.rowActions}>
+                  <button onClick={() => openEditAthlete(a)}>Sửa</button>
+                  <button
+                    onClick={() => deleteAthlete(a)}
+                    className={styles.dangerLink}>
+                    Xóa
+                  </button>
+                </td>
+              </tr>
+            ))}
+            {pageItems.length === 0 && (
+              <tr>
+                <td colSpan={7} className={styles.empty}>
+                  Không có VĐV nào khớp bộ lọc
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+
+        <div className={styles.pagination}>
+          <span>
+            Hiển thị {pageItems.length ? (page - 1) * PAGE_SIZE + 1 : 0}–
+            {(page - 1) * PAGE_SIZE + pageItems.length} của {filtered.length}
+          </span>
+          <div className={styles.pageBtns}>
+            <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
+              ‹
+            </button>
+            <span>
+              {page}/{totalPages}
+            </span>
+            <button
+              disabled={page >= totalPages}
+              onClick={() => setPage((p) => p + 1)}>
+              ›
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {showAddTeam && (
+        <Modal
+          title={editingTeamId ? "Sửa tên đoàn" : "Thêm đoàn"}
+          onClose={() => setShowAddTeam(false)}>
+          <form onSubmit={submitTeam} className={styles.modalForm}>
+            <label className={styles.field}>
+              <span>Tên đoàn</span>
+              <input
+                value={teamNameInput}
+                onChange={(e) => setTeamNameInput(e.target.value)}
+                autoFocus
+                required
+              />
+            </label>
+            <button type="submit" className={styles.btnPrimary}>
+              {editingTeamId ? "Lưu" : "Thêm"}
+            </button>
+          </form>
+        </Modal>
+      )}
+
+      {showAddAthlete && (
+        <Modal
+          title={editingId ? "Sửa VĐV" : "Thêm VĐV"}
+          onClose={() => setShowAddAthlete(false)}>
+          <form onSubmit={submitAthlete} className={styles.modalForm}>
+            <label className={styles.field}>
+              <span>Họ tên</span>
+              <input
+                value={athleteForm.hoTen}
+                onChange={(e) =>
+                  setAthleteForm({ ...athleteForm, hoTen: e.target.value })
+                }
+                required
+              />
+            </label>
+            <label className={styles.field}>
+              <span>Năm sinh</span>
+              <input
+                type="number"
+                min={1970}
+                max={CURRENT_YEAR}
+                value={athleteForm.namSinh}
+                onChange={(e) =>
+                  setAthleteForm({
+                    ...athleteForm,
+                    namSinh: Number(e.target.value),
+                  })
+                }
+                required
+              />
+            </label>
+            <label className={styles.field}>
+              <span>Giới tính</span>
+              <select
+                value={athleteForm.gioiTinh}
+                onChange={(e) =>
+                  setAthleteForm({
+                    ...athleteForm,
+                    gioiTinh: e.target.value as GioiTinh,
+                  })
+                }>
+                <option value="nam">Nam</option>
+                <option value="nu">Nữ</option>
+              </select>
+            </label>
+            <label className={styles.field}>
+              <span>Nhóm tuổi</span>
+              <select
+                value={athleteForm.nhomTuoi}
+                onChange={(e) =>
+                  setAthleteForm({ ...athleteForm, nhomTuoi: e.target.value })
+                }>
+                {NHOM_TUOI_OPTIONS.map((nt) => (
+                  <option key={nt} value={nt}>
+                    {nt}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className={styles.field}>
+              <span>Đoàn</span>
+              <select
+                value={athleteForm.teamId}
+                onChange={(e) =>
+                  setAthleteForm({ ...athleteForm, teamId: e.target.value })
+                }
+                required>
+                <option value="" disabled>
+                  Chọn đoàn
+                </option>
+                {teams.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.ten}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className={styles.field}>
+              <span>Nội dung</span>
+              <TagInput
+                value={athleteForm.noiDung}
+                onChange={(noiDung) =>
+                  setAthleteForm({ ...athleteForm, noiDung })
+                }
+                placeholder="VD: Đối kháng nam - 54kg"
+              />
+            </label>
+            <button type="submit" className={styles.btnPrimary}>
+              {editingId ? "Lưu" : "Thêm"}
+            </button>
+          </form>
+        </Modal>
+      )}
+
+      {showImportModal && (
+        <ImportExcelModal
+          existingTeamNames={teams.map((t) => t.ten)}
+          onClose={() => setShowImportModal(false)}
+          onConfirm={handleImportConfirm}
+        />
+      )}
+    </div>
+  );
+}

@@ -1,0 +1,431 @@
+@use '../../styles/variables'as *;
+
+.page {
+    display: flex;
+    flex-direction: column;
+    gap: $space-4;
+}
+
+.topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.title {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.courtTag {
+    font-size: 13px;
+    color: $color-do;
+    font-weight: 600;
+    background: rgba($color-do, 0.08);
+    padding: $space-1 $space-3;
+    border-radius: 999px;
+}
+
+.columns {
+    display: grid;
+    grid-template-columns: 1fr 0.8fr 1.3fr;
+    gap: $space-4;
+    align-items: start;
+}
+
+.col {
+    background: $color-surface;
+    border: 1px solid $color-border;
+    border-radius: 10px;
+    padding: $space-4;
+}
+
+.colTitle {
+    font-size: 14px;
+    font-weight: 700;
+    margin: 0 0 $space-3;
+
+    span {
+        font-weight: 400;
+        color: $color-text-muted;
+    }
+}
+
+.queueList {
+    display: flex;
+    flex-direction: column;
+    gap: $space-2;
+}
+
+.queueItem {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    padding: $space-2;
+    border: 1px solid $color-border;
+    border-radius: 8px;
+}
+
+.queueIdx {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: $color-bg;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    color: $color-text-muted;
+}
+
+.queueBody {
+    flex: 1;
+    min-width: 0;
+}
+
+.queueEvent {
+    font-size: 11px;
+    color: $color-text-muted;
+}
+
+.queueNames {
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.vs {
+    color: $color-text-muted;
+    margin: 0 2px;
+}
+
+.dotDo,
+.dotXanh {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.dotDo {
+    background: $color-do;
+}
+
+.dotXanh {
+    background: $color-xanh;
+}
+
+.openBtn {
+    flex-shrink: 0;
+    font-size: 12px;
+    font-weight: 600;
+    padding: $space-1 $space-2;
+    border: 1px solid $color-do;
+    color: $color-do;
+    background: none;
+    border-radius: 6px;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+        background: rgba($color-do, 0.06);
+    }
+
+    &:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        border-color: $color-border;
+        color: $color-text-muted;
+    }
+}
+
+.courtCards {
+    display: flex;
+    flex-direction: column;
+    gap: $space-2;
+}
+
+.courtCard {
+    text-align: left;
+    padding: $space-3;
+    border: 1px solid $color-border;
+    border-radius: 8px;
+    background: $color-surface;
+    cursor: pointer;
+
+    &:hover {
+        background: $color-bg;
+    }
+}
+
+.courtCardMine {
+    border-color: $color-do;
+    box-shadow: 0 0 0 1px $color-do;
+}
+
+.courtCardHead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+.courtCardBody {
+    font-size: 12px;
+    color: $color-text;
+}
+
+.courtCardBodyMuted {
+    font-size: 12px;
+    color: $color-text-muted;
+}
+
+.noMatch {
+    font-size: 13px;
+    color: $color-text-muted;
+    background: $color-bg;
+    border-radius: 8px;
+    padding: $space-5;
+    text-align: center;
+}
+
+.matchPanel {
+    display: flex;
+    flex-direction: column;
+    gap: $space-4;
+}
+
+.matchMeta {
+    font-size: 13px;
+    color: $color-text-muted;
+    text-align: center;
+}
+
+.scoreBoard {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: $space-3;
+    align-items: start;
+}
+
+.corner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $space-1;
+    padding: $space-3;
+    border: 1px solid $color-border;
+    border-radius: 10px;
+}
+
+.cornerLabelDo,
+.cornerLabelXanh {
+    font-size: 12px;
+    font-weight: 700;
+    padding: 2px $space-3;
+    border-radius: 999px;
+    color: white;
+}
+
+.cornerLabelDo {
+    background: $color-do;
+}
+
+.cornerLabelXanh {
+    background: $color-xanh;
+}
+
+.athName {
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.athUnit {
+    font-size: 11px;
+    color: $color-text-muted;
+}
+
+.scoreNumDo,
+.scoreNumXanh {
+    font-size: 44px;
+    font-weight: 700;
+    font-family: $font-mono;
+    line-height: 1;
+    margin: $space-1 0;
+}
+
+.scoreNumDo {
+    color: $color-do;
+}
+
+.scoreNumXanh {
+    color: $color-xanh;
+}
+
+.stepBtns {
+    display: flex;
+    gap: $space-2;
+
+    button {
+        width: 34px;
+        height: 34px;
+        border: 1px solid $color-border;
+        background: $color-surface;
+        border-radius: 8px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        &:hover {
+            background: $color-bg;
+        }
+    }
+}
+
+.warnRow {
+    display: flex;
+    align-items: center;
+    gap: $space-1;
+    margin-top: $space-2;
+    font-size: 11px;
+    color: $color-text-muted;
+
+    button {
+        width: 20px;
+        height: 20px;
+        border: 1px solid $color-border;
+        background: $color-surface;
+        border-radius: 4px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+    }
+}
+
+.dots {
+    display: flex;
+    gap: 3px;
+}
+
+.dotOnDo,
+.dotOnXanh,
+.dotOff {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.dotOnDo {
+    background: $color-warning;
+}
+
+.dotOnXanh {
+    background: $color-warning;
+}
+
+.dotOff {
+    background: $color-border;
+}
+
+.timerCol {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding-top: $space-4;
+}
+
+.hiep {
+    font-size: 12px;
+    color: $color-text-muted;
+}
+
+.timer {
+    font-size: 32px;
+    font-weight: 700;
+    font-family: $font-mono;
+}
+
+.timerNote {
+    font-size: 10px;
+    color: $color-text-muted;
+    max-width: 90px;
+    text-align: center;
+}
+
+.controls {
+    display: flex;
+    flex-direction: column;
+    gap: $space-3;
+    padding-top: $space-3;
+    border-top: 1px solid $color-border;
+}
+
+.reasonRow {
+    display: flex;
+    align-items: center;
+    gap: $space-3;
+    font-size: 13px;
+    font-weight: 500;
+
+    select {
+        font: inherit;
+        padding: $space-2 $space-3;
+        border: 1px solid $color-border;
+        border-radius: 6px;
+        flex: 1;
+    }
+}
+
+.controlBtns {
+    display: flex;
+    gap: $space-3;
+}
+
+.btnDanger,
+.btnPrimary {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-1;
+    padding: $space-3 $space-5;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    flex: 1;
+    justify-content: center;
+}
+
+.btnDanger {
+    background: $color-do;
+    color: white;
+
+    &:hover {
+        opacity: 0.9;
+    }
+}
+
+.btnPrimary {
+    background: $color-success;
+    color: white;
+
+    &:hover {
+        opacity: 0.9;
+    }
+}
+
+.empty {
+    font-size: 13px;
+    color: $color-text-muted;
+    text-align: center;
+    padding: $space-4;
+}

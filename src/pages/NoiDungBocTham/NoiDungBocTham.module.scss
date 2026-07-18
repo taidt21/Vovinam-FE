@@ -1,0 +1,157 @@
+@use '../../styles/variables'as *;
+
+.page {
+    display: flex;
+    gap: $space-5;
+    align-items: flex-start;
+}
+
+.sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    background: $color-surface;
+    border: 1px solid $color-border;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.tabs {
+    display: flex;
+    border-bottom: 1px solid $color-border;
+}
+
+.tab,
+.tabActive {
+    flex: 1;
+    padding: $space-3;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: $color-text-muted;
+}
+
+.tabActive {
+    color: $color-do;
+    border-bottom: 2px solid $color-do;
+    margin-bottom: -1px;
+}
+
+.eventList {
+    display: flex;
+    flex-direction: column;
+    padding: $space-2;
+    gap: 2px;
+}
+
+.eventItem,
+.eventItemActive {
+    text-align: left;
+    padding: $space-2 $space-3;
+    border-radius: 6px;
+    border: none;
+    background: none;
+    font-size: 13px;
+    cursor: pointer;
+    color: $color-text;
+
+    &:hover {
+        background: $color-bg;
+    }
+}
+
+.eventItemActive {
+    background: rgba($color-do, 0.08);
+    color: $color-do;
+    font-weight: 600;
+}
+
+.emptyList {
+    padding: $space-3;
+    font-size: 13px;
+    color: $color-text-muted;
+}
+
+.main {
+    flex: 1;
+    background: $color-surface;
+    border: 1px solid $color-border;
+    border-radius: 10px;
+    padding: $space-5;
+    min-width: 0;
+}
+
+.title {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0 0 $space-4;
+}
+
+.metaRow {
+    display: flex;
+    gap: $space-5;
+    padding-bottom: $space-4;
+    margin-bottom: $space-4;
+    border-bottom: 1px solid $color-border;
+    flex-wrap: wrap;
+}
+
+.metaItem {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    span {
+        font-size: 11px;
+        color: $color-text-muted;
+        text-transform: uppercase;
+    }
+
+    strong {
+        font-size: 14px;
+    }
+}
+
+.actions {
+    display: flex;
+    align-items: center;
+    gap: $space-3;
+    margin-bottom: $space-4;
+}
+
+.btnPrimary {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-1;
+    background: $color-do;
+    color: white;
+    border: none;
+    padding: $space-2 $space-4;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+        opacity: 0.9;
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+}
+
+.hint {
+    font-size: 12px;
+    color: $color-text-muted;
+}
+
+.quyenNote {
+    font-size: 13px;
+    color: $color-text-muted;
+    background: $color-bg;
+    border-radius: 8px;
+    padding: $space-4;
+}
