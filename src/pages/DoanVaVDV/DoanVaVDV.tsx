@@ -1,20 +1,12 @@
 /** @format */
 
 import { useMemo, useState, type FormEvent } from "react";
-import {
-  Plus,
-  FileSpreadsheet,
-  Search,
-  Pencil,
-  Trash2,
-  Users,
-} from "lucide-react";
+import { Plus, FileSpreadsheet, Search, Pencil, Trash2 } from "lucide-react";
 import type { Athlete, GioiTinh, Team } from "../../types";
 import Modal from "../../components/Modal/Modal";
 import TagInput from "../../components/TagInput/TagInput";
 import ImportExcelModal from "../../components/ImportExcelModal/ImportExcelModal";
 import type { ImportRow } from "../../lib/excelImport";
-import { isTeamContent } from "../../lib/content";
 import styles from "./DoanVaVDV.module.scss";
 
 const CURRENT_YEAR = new Date().getFullYear();
@@ -123,29 +115,6 @@ export default function DoanVaVDV() {
       count: athletes.filter((a) => a.teamId === t.id).length,
     }));
   }, [teams, athletes]);
-
-  // Gom VĐV đang gắn tag đồng đội/võ nhạc theo (nội dung -> đơn vị) — chỉ để
-  // xem tổng quan, KHÔNG phải đội hình chính thức (1 đơn vị có thể có nhiều
-  // đội, việc ráp đội cụ thể làm ở màn Bốc thăm).
-  const teamContentGroups = useMemo(() => {
-    const map = new Map<string, Map<string, Athlete[]>>();
-    for (const a of athletes) {
-      for (const nd of a.noiDung) {
-        if (!isTeamContent(nd)) continue;
-        if (!map.has(nd)) map.set(nd, new Map());
-        const byTeam = map.get(nd)!;
-        if (!byTeam.has(a.teamId)) byTeam.set(a.teamId, []);
-        byTeam.get(a.teamId)!.push(a);
-      }
-    }
-    return Array.from(map.entries()).map(([noiDung, byTeam]) => ({
-      noiDung,
-      units: Array.from(byTeam.entries()).map(([teamId, list]) => ({
-        teamId,
-        athletes: list,
-      })),
-    }));
-  }, [athletes]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -360,39 +329,6 @@ export default function DoanVaVDV() {
         </div>
       </section>
 
-      {teamContentGroups.length > 0 && (
-        <section className={styles.teamContentCard}>
-          <h2 className={styles.teamContentTitle}>
-            Nội dung đồng đội / võ nhạc — theo đơn vị
-          </h2>
-          <p className={styles.teamContentNote}>
-            Gom theo nhãn nội dung đang gắn cho từng VĐV — chưa phải đội hình
-            chính thức. 1 đơn vị có thể có nhiều đội cho cùng nội dung; việc ráp
-            đội cụ thể sẽ làm ở màn Bốc thăm.
-          </p>
-          <div className={styles.teamContentList}>
-            {teamContentGroups.map((g) => (
-              <div key={g.noiDung} className={styles.teamContentGroup}>
-                <h3 className={styles.teamContentGroupTitle}>{g.noiDung}</h3>
-                {g.units.map((u) => (
-                  <div key={u.teamId} className={styles.teamContentUnit}>
-                    <span className={styles.teamContentUnitName}>
-                      {teamName(u.teamId)}
-                    </span>
-                    <span className={styles.teamContentUnitCount}>
-                      {u.athletes.length} người
-                    </span>
-                    <span className={styles.teamContentUnitNames}>
-                      {u.athletes.map((a) => a.hoTen).join(", ")}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
       <div className={styles.filters}>
         <div className={styles.searchBox}>
           <Search size={16} />
@@ -445,10 +381,7 @@ export default function DoanVaVDV() {
                   {a.noiDung.length > 0 ? (
                     <div className={styles.noiDungList}>
                       {a.noiDung.map((nd) => (
-                        <span
-                          key={nd}
-                          className={`${styles.noiDungChip} ${isTeamContent(nd) ? styles.noiDungChipTeam : ""}`}>
-                          {isTeamContent(nd) && <Users size={11} />}
+                        <span key={nd} className={styles.noiDungChip}>
                           {nd}
                         </span>
                       ))}
