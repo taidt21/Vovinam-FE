@@ -1,0 +1,1344 @@
+[
+  {
+    "id": "vdv0001",
+    "hoTen": "Nguyễn Minh Khang",
+    "namSinh": 2008,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 2",
+    "teamId": "t1",
+    "eventIds": [
+      "e1"
+    ]
+  },
+  {
+    "id": "vdv0002",
+    "hoTen": "Lê Gia Huy",
+    "namSinh": 2009,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 1",
+    "teamId": "t2",
+    "eventIds": [
+      "e1"
+    ]
+  },
+  {
+    "id": "vdv0003",
+    "hoTen": "Trần Nhật Nam",
+    "namSinh": 2008,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 2",
+    "teamId": "t3",
+    "eventIds": [
+      "e1"
+    ]
+  },
+  {
+    "id": "vdv0004",
+    "hoTen": "Bùi Anh Dương",
+    "namSinh": 2008,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 2",
+    "teamId": "t1",
+    "eventIds": [
+      "e1"
+    ]
+  },
+  {
+    "id": "vdv0005",
+    "hoTen": "Đỗ Hoàng Anh",
+    "namSinh": 2009,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 1",
+    "teamId": "t2",
+    "eventIds": [
+      "e1"
+    ]
+  },
+  {
+    "id": "vdv0006",
+    "hoTen": "Phạm Quang Huy",
+    "namSinh": 2008,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 2",
+    "teamId": "t1",
+    "eventIds": [
+      "e2"
+    ]
+  },
+  {
+    "id": "vdv0007",
+    "hoTen": "Ngô Đức Thắng",
+    "namSinh": 2009,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 2",
+    "teamId": "t2",
+    "eventIds": [
+      "e2"
+    ]
+  },
+  {
+    "id": "vdv0008",
+    "hoTen": "Vũ Minh Tuấn",
+    "namSinh": 2008,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 2",
+    "teamId": "t3",
+    "eventIds": [
+      "e2"
+    ]
+  },
+  {
+    "id": "vdv0009",
+    "hoTen": "Hoàng Văn Long",
+    "namSinh": 2008,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 2",
+    "teamId": "t4",
+    "eventIds": [
+      "e2"
+    ]
+  },
+  {
+    "id": "vdv0010",
+    "hoTen": "Lý Anh Kiệt",
+    "namSinh": 2009,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 1",
+    "teamId": "t1",
+    "eventIds": [
+      "e2"
+    ]
+  },
+  {
+    "id": "vdv0011",
+    "hoTen": "Đinh Công Sơn",
+    "namSinh": 2008,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 2",
+    "teamId": "t2",
+    "eventIds": [
+      "e2"
+    ]
+  },
+  {
+    "id": "vdv0012",
+    "hoTen": "Trịnh Bảo Long",
+    "namSinh": 2009,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 1",
+    "teamId": "t5",
+    "eventIds": [
+      "e2"
+    ]
+  },
+  {
+    "id": "vdv0013",
+    "hoTen": "Nguyễn Hữu Phát",
+    "namSinh": 2008,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t1",
+    "eventIds": [
+      "e3"
+    ]
+  },
+  {
+    "id": "vdv0014",
+    "hoTen": "Trần Đăng Khoa",
+    "namSinh": 2009,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t2",
+    "eventIds": [
+      "e3"
+    ]
+  },
+  {
+    "id": "vdv0015",
+    "hoTen": "Lê Xuân Bách",
+    "namSinh": 2008,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t3",
+    "eventIds": [
+      "e3"
+    ]
+  },
+  {
+    "id": "vdv0016",
+    "hoTen": "Phan Nhật Minh",
+    "namSinh": 2008,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t4",
+    "eventIds": [
+      "e3"
+    ]
+  },
+  {
+    "id": "vdv0017",
+    "hoTen": "Võ Thành Đạt",
+    "namSinh": 2009,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t5",
+    "eventIds": [
+      "e3"
+    ]
+  },
+  {
+    "id": "vdv0018",
+    "hoTen": "Đặng Quốc Việt",
+    "namSinh": 2008,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t1",
+    "eventIds": [
+      "e3"
+    ]
+  },
+  {
+    "id": "vdv0019",
+    "hoTen": "Bùi Tuấn Kiệt",
+    "namSinh": 2009,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t2",
+    "eventIds": [
+      "e3"
+    ]
+  },
+  {
+    "id": "vdv0020",
+    "hoTen": "Hồ Gia Bảo",
+    "namSinh": 2008,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t3",
+    "eventIds": [
+      "e3"
+    ]
+  },
+  {
+    "id": "vdv0021",
+    "hoTen": "Nguyễn Thị Hồng Nhung",
+    "namSinh": 2008,
+    "gioiTinh": "nu",
+    "nhomTuoi": "Nhóm tuổi 2",
+    "teamId": "t1",
+    "eventIds": [
+      "e4"
+    ]
+  },
+  {
+    "id": "vdv0022",
+    "hoTen": "Trần Thị Kim Ngân",
+    "namSinh": 2009,
+    "gioiTinh": "nu",
+    "nhomTuoi": "Nhóm tuổi 2",
+    "teamId": "t2",
+    "eventIds": [
+      "e4"
+    ]
+  },
+  {
+    "id": "vdv0023",
+    "hoTen": "Lê Thị Bích Trâm",
+    "namSinh": 2008,
+    "gioiTinh": "nu",
+    "nhomTuoi": "Nhóm tuổi 2",
+    "teamId": "t3",
+    "eventIds": [
+      "e4"
+    ]
+  },
+  {
+    "id": "vdv0024",
+    "hoTen": "Phạm Thị Thu Hà",
+    "namSinh": 2009,
+    "gioiTinh": "nu",
+    "nhomTuoi": "Nhóm tuổi 2",
+    "teamId": "t4",
+    "eventIds": [
+      "e4"
+    ]
+  },
+  {
+    "id": "vdv0025",
+    "hoTen": "Hoàng Thị Mai Anh",
+    "namSinh": 2008,
+    "gioiTinh": "nu",
+    "nhomTuoi": "Nhóm tuổi 2",
+    "teamId": "t1",
+    "eventIds": [
+      "e4"
+    ]
+  },
+  {
+    "id": "vdv0026",
+    "hoTen": "Đỗ Thị Ngọc Ánh",
+    "namSinh": 2009,
+    "gioiTinh": "nu",
+    "nhomTuoi": "Nhóm tuổi 2",
+    "teamId": "t5",
+    "eventIds": [
+      "e4"
+    ]
+  },
+  {
+    "id": "vdv0027",
+    "hoTen": "Vương Thị Kiều Trang",
+    "namSinh": 2008,
+    "gioiTinh": "nu",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t2",
+    "eventIds": [
+      "e5"
+    ]
+  },
+  {
+    "id": "vdv0028",
+    "hoTen": "Nguyễn Đình Phong",
+    "namSinh": 2010,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 1",
+    "teamId": "t1",
+    "eventIds": [
+      "e6"
+    ]
+  },
+  {
+    "id": "vdv0029",
+    "hoTen": "Lê Công Danh",
+    "namSinh": 2010,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 1",
+    "teamId": "t2",
+    "eventIds": [
+      "e6"
+    ]
+  },
+  {
+    "id": "vdv0030",
+    "hoTen": "Phạm Tuấn Anh",
+    "namSinh": 2011,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 1",
+    "teamId": "t3",
+    "eventIds": [
+      "e6"
+    ]
+  },
+  {
+    "id": "vdv0031",
+    "hoTen": "Vũ Đức Huy",
+    "namSinh": 2010,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 1",
+    "teamId": "t4",
+    "eventIds": [
+      "e6"
+    ]
+  },
+  {
+    "id": "vdv0032",
+    "hoTen": "Nguyễn Ngọc Bích",
+    "namSinh": 2010,
+    "gioiTinh": "nu",
+    "nhomTuoi": "Nhóm tuổi 1",
+    "teamId": "t1",
+    "eventIds": [
+      "e7"
+    ]
+  },
+  {
+    "id": "vdv0033",
+    "hoTen": "Trần Khánh Linh",
+    "namSinh": 2011,
+    "gioiTinh": "nu",
+    "nhomTuoi": "Nhóm tuổi 1",
+    "teamId": "t5",
+    "eventIds": [
+      "e7"
+    ]
+  },
+  {
+    "id": "vdv0034",
+    "hoTen": "Lê Thảo Vy",
+    "namSinh": 2010,
+    "gioiTinh": "nu",
+    "nhomTuoi": "Nhóm tuổi 1",
+    "teamId": "t2",
+    "eventIds": [
+      "e7"
+    ]
+  },
+  {
+    "id": "vdv0035",
+    "hoTen": "Đỗ Minh Quân",
+    "namSinh": 2008,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 2",
+    "teamId": "t1",
+    "eventIds": [
+      "e8"
+    ]
+  },
+  {
+    "id": "vdv0036",
+    "hoTen": "Bùi Xuân Trường",
+    "namSinh": 2008,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 2",
+    "teamId": "t1",
+    "eventIds": [
+      "e8"
+    ]
+  },
+  {
+    "id": "vdv0121",
+    "hoTen": "Đỗ Minh Ngọc",
+    "namSinh": 2008,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 2",
+    "teamId": "t1",
+    "eventIds": [
+      "e8"
+    ]
+  },
+  {
+    "id": "vdv0122",
+    "hoTen": "Bùi Xuân Linh",
+    "namSinh": 2008,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 2",
+    "teamId": "t1",
+    "eventIds": [
+      "e8"
+    ]
+  },
+  {
+    "id": "vdv0037",
+    "hoTen": "Đinh Tuấn Tài",
+    "namSinh": 2008,
+    "gioiTinh": "nu",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t1",
+    "eventIds": [
+      "e9"
+    ]
+  },
+  {
+    "id": "vdv0038",
+    "hoTen": "Nguyễn Gia Bảo",
+    "namSinh": 2008,
+    "gioiTinh": "nu",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t2",
+    "eventIds": [
+      "e9"
+    ]
+  },
+  {
+    "id": "vdv0039",
+    "hoTen": "Nguyễn Khắc Vượng",
+    "namSinh": 2009,
+    "gioiTinh": "nu",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t3",
+    "eventIds": [
+      "e9"
+    ]
+  },
+  {
+    "id": "vdv0040",
+    "hoTen": "Nguyễn Bảo Long",
+    "namSinh": 2011,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 1",
+    "teamId": "t2",
+    "eventIds": [
+      "e12"
+    ]
+  },
+  {
+    "id": "vdv0041",
+    "hoTen": "Trần Gia Hưng",
+    "namSinh": 2011,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 1",
+    "teamId": "t4",
+    "eventIds": [
+      "e12"
+    ]
+  },
+  {
+    "id": "vdv0042",
+    "hoTen": "Lê Minh Đức",
+    "namSinh": 2010,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 1",
+    "teamId": "t1",
+    "eventIds": [
+      "e12"
+    ]
+  },
+  {
+    "id": "vdv0043",
+    "hoTen": "Phạm Nhật Anh",
+    "namSinh": 2011,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 1",
+    "teamId": "t3",
+    "eventIds": [
+      "e13"
+    ]
+  },
+  {
+    "id": "vdv0044",
+    "hoTen": "Vũ Đăng Khôi",
+    "namSinh": 2010,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 1",
+    "teamId": "t1",
+    "eventIds": [
+      "e13"
+    ]
+  },
+  {
+    "id": "vdv0045",
+    "hoTen": "Hoàng Tuấn Kiệt",
+    "namSinh": 2011,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 1",
+    "teamId": "t5",
+    "eventIds": [
+      "e13"
+    ]
+  },
+  {
+    "id": "vdv0046",
+    "hoTen": "Đặng Quang Vinh",
+    "namSinh": 2010,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 1",
+    "teamId": "t2",
+    "eventIds": [
+      "e13"
+    ]
+  },
+  {
+    "id": "vdv0047",
+    "hoTen": "Bùi Xuân Hòa",
+    "namSinh": 2010,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 1",
+    "teamId": "t1",
+    "eventIds": [
+      "e14"
+    ]
+  },
+  {
+    "id": "vdv0048",
+    "hoTen": "Đỗ Minh Nhật",
+    "namSinh": 2011,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 1",
+    "teamId": "t3",
+    "eventIds": [
+      "e14"
+    ]
+  },
+  {
+    "id": "vdv0049",
+    "hoTen": "Ngô Hữu Thịnh",
+    "namSinh": 2010,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 1",
+    "teamId": "t6",
+    "eventIds": [
+      "e14"
+    ]
+  },
+  {
+    "id": "vdv0050",
+    "hoTen": "Dương Công Danh",
+    "namSinh": 2010,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 1",
+    "teamId": "t2",
+    "eventIds": [
+      "e14"
+    ]
+  },
+  {
+    "id": "vdv0051",
+    "hoTen": "Lý Anh Tuấn",
+    "namSinh": 2011,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 1",
+    "teamId": "t4",
+    "eventIds": [
+      "e14"
+    ]
+  },
+  {
+    "id": "vdv0052",
+    "hoTen": "Trịnh Công Hiếu",
+    "namSinh": 2009,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 2",
+    "teamId": "t1",
+    "eventIds": [
+      "e15"
+    ]
+  },
+  {
+    "id": "vdv0053",
+    "hoTen": "Đoàn Thế Vinh",
+    "namSinh": 2008,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 2",
+    "teamId": "t3",
+    "eventIds": [
+      "e15"
+    ]
+  },
+  {
+    "id": "vdv0054",
+    "hoTen": "Vương Đức Mạnh",
+    "namSinh": 2009,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 2",
+    "teamId": "t5",
+    "eventIds": [
+      "e15"
+    ]
+  },
+  {
+    "id": "vdv0055",
+    "hoTen": "Lương Xuân Bình",
+    "namSinh": 2009,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 2",
+    "teamId": "t2",
+    "eventIds": [
+      "e15"
+    ]
+  },
+  {
+    "id": "vdv0056",
+    "hoTen": "Nguyễn Trọng Nghĩa",
+    "namSinh": 2008,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 2",
+    "teamId": "t1",
+    "eventIds": [
+      "e15"
+    ]
+  },
+  {
+    "id": "vdv0057",
+    "hoTen": "Trần Việt Hoàng",
+    "namSinh": 2009,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 2",
+    "teamId": "t4",
+    "eventIds": [
+      "e15"
+    ]
+  },
+  {
+    "id": "vdv0058",
+    "hoTen": "Lê Công Thành",
+    "namSinh": 2009,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 2",
+    "teamId": "t2",
+    "eventIds": [
+      "e16"
+    ]
+  },
+  {
+    "id": "vdv0059",
+    "hoTen": "Phạm Anh Kiệt",
+    "namSinh": 2008,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 2",
+    "teamId": "t1",
+    "eventIds": [
+      "e16"
+    ]
+  },
+  {
+    "id": "vdv0060",
+    "hoTen": "Hoàng Minh Quân",
+    "namSinh": 2009,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 2",
+    "teamId": "t3",
+    "eventIds": [
+      "e16"
+    ]
+  },
+  {
+    "id": "vdv0061",
+    "hoTen": "Vũ Bảo Long",
+    "namSinh": 2009,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 2",
+    "teamId": "t6",
+    "eventIds": [
+      "e16"
+    ]
+  },
+  {
+    "id": "vdv0062",
+    "hoTen": "Đặng Hữu Nam",
+    "namSinh": 2008,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 2",
+    "teamId": "t2",
+    "eventIds": [
+      "e16"
+    ]
+  },
+  {
+    "id": "vdv0063",
+    "hoTen": "Bùi Quang Huy",
+    "namSinh": 2009,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 2",
+    "teamId": "t5",
+    "eventIds": [
+      "e16"
+    ]
+  },
+  {
+    "id": "vdv0064",
+    "hoTen": "Đỗ Tấn Phát",
+    "namSinh": 2008,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 2",
+    "teamId": "t1",
+    "eventIds": [
+      "e16"
+    ]
+  },
+  {
+    "id": "vdv0065",
+    "hoTen": "Ngô Đình Khoa",
+    "namSinh": 2008,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 2",
+    "teamId": "t3",
+    "eventIds": [
+      "e17"
+    ]
+  },
+  {
+    "id": "vdv0066",
+    "hoTen": "Dương Anh Vũ",
+    "namSinh": 2007,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 2",
+    "teamId": "t1",
+    "eventIds": [
+      "e17"
+    ]
+  },
+  {
+    "id": "vdv0067",
+    "hoTen": "Lý Trọng Tấn",
+    "namSinh": 2008,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 2",
+    "teamId": "t4",
+    "eventIds": [
+      "e17"
+    ]
+  },
+  {
+    "id": "vdv0068",
+    "hoTen": "Đinh Công Lộc",
+    "namSinh": 2008,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 2",
+    "teamId": "t2",
+    "eventIds": [
+      "e17"
+    ]
+  },
+  {
+    "id": "vdv0069",
+    "hoTen": "Trịnh Minh Tâm",
+    "namSinh": 2007,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 2",
+    "teamId": "t6",
+    "eventIds": [
+      "e17"
+    ]
+  },
+  {
+    "id": "vdv0070",
+    "hoTen": "Đoàn Bảo Toàn",
+    "namSinh": 2008,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 2",
+    "teamId": "t1",
+    "eventIds": [
+      "e17"
+    ]
+  },
+  {
+    "id": "vdv0071",
+    "hoTen": "Vương Đức Anh",
+    "namSinh": 2008,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 2",
+    "teamId": "t5",
+    "eventIds": [
+      "e17"
+    ]
+  },
+  {
+    "id": "vdv0072",
+    "hoTen": "Nguyễn Xuân Sang",
+    "namSinh": 2007,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 2",
+    "teamId": "t3",
+    "eventIds": [
+      "e17"
+    ]
+  },
+  {
+    "id": "vdv0073",
+    "hoTen": "Trần Đình Long",
+    "namSinh": 2007,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t2",
+    "eventIds": [
+      "e18"
+    ]
+  },
+  {
+    "id": "vdv0074",
+    "hoTen": "Lê Hữu Tài",
+    "namSinh": 2006,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t1",
+    "eventIds": [
+      "e18"
+    ]
+  },
+  {
+    "id": "vdv0075",
+    "hoTen": "Phạm Quốc Bảo",
+    "namSinh": 2007,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t4",
+    "eventIds": [
+      "e18"
+    ]
+  },
+  {
+    "id": "vdv0076",
+    "hoTen": "Vũ Thành Nam",
+    "namSinh": 2007,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t3",
+    "eventIds": [
+      "e18"
+    ]
+  },
+  {
+    "id": "vdv0077",
+    "hoTen": "Hoàng Đăng Khôi",
+    "namSinh": 2006,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t5",
+    "eventIds": [
+      "e18"
+    ]
+  },
+  {
+    "id": "vdv0078",
+    "hoTen": "Đặng Minh Vũ",
+    "namSinh": 2007,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t1",
+    "eventIds": [
+      "e18"
+    ]
+  },
+  {
+    "id": "vdv0079",
+    "hoTen": "Bùi Trọng Nhân",
+    "namSinh": 2007,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t6",
+    "eventIds": [
+      "e18"
+    ]
+  },
+  {
+    "id": "vdv0080",
+    "hoTen": "Đỗ Anh Quân",
+    "namSinh": 2006,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t2",
+    "eventIds": [
+      "e18"
+    ]
+  },
+  {
+    "id": "vdv0081",
+    "hoTen": "Ngô Bảo Duy",
+    "namSinh": 2007,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t3",
+    "eventIds": [
+      "e18"
+    ]
+  },
+  {
+    "id": "vdv0082",
+    "hoTen": "Dương Công Hùng",
+    "namSinh": 2007,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t1",
+    "eventIds": [
+      "e19"
+    ]
+  },
+  {
+    "id": "vdv0083",
+    "hoTen": "Lý Anh Đức",
+    "namSinh": 2006,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t4",
+    "eventIds": [
+      "e19"
+    ]
+  },
+  {
+    "id": "vdv0084",
+    "hoTen": "Đinh Thế Anh",
+    "namSinh": 2007,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t2",
+    "eventIds": [
+      "e19"
+    ]
+  },
+  {
+    "id": "vdv0085",
+    "hoTen": "Trịnh Hữu Phúc",
+    "namSinh": 2007,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t5",
+    "eventIds": [
+      "e19"
+    ]
+  },
+  {
+    "id": "vdv0086",
+    "hoTen": "Đoàn Quang Tùng",
+    "namSinh": 2006,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t1",
+    "eventIds": [
+      "e19"
+    ]
+  },
+  {
+    "id": "vdv0087",
+    "hoTen": "Vương Minh Trí",
+    "namSinh": 2007,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t3",
+    "eventIds": [
+      "e19"
+    ]
+  },
+  {
+    "id": "vdv0088",
+    "hoTen": "Lương Bảo Sơn",
+    "namSinh": 2007,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t6",
+    "eventIds": [
+      "e19"
+    ]
+  },
+  {
+    "id": "vdv0089",
+    "hoTen": "Nguyễn Đình Tâm",
+    "namSinh": 2006,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t2",
+    "eventIds": [
+      "e19"
+    ]
+  },
+  {
+    "id": "vdv0090",
+    "hoTen": "Trần Xuân Hải",
+    "namSinh": 2007,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t4",
+    "eventIds": [
+      "e19"
+    ]
+  },
+  {
+    "id": "vdv0091",
+    "hoTen": "Lê Anh Vinh",
+    "namSinh": 2007,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t1",
+    "eventIds": [
+      "e19"
+    ]
+  },
+  {
+    "id": "vdv0092",
+    "hoTen": "Phạm Đức Toàn",
+    "namSinh": 2006,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t2",
+    "eventIds": [
+      "e20"
+    ]
+  },
+  {
+    "id": "vdv0093",
+    "hoTen": "Vũ Quang Trung",
+    "namSinh": 2005,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t3",
+    "eventIds": [
+      "e20"
+    ]
+  },
+  {
+    "id": "vdv0094",
+    "hoTen": "Hoàng Bảo Nam",
+    "namSinh": 2006,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t1",
+    "eventIds": [
+      "e20"
+    ]
+  },
+  {
+    "id": "vdv0095",
+    "hoTen": "Đặng Tấn Lộc",
+    "namSinh": 2006,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t5",
+    "eventIds": [
+      "e20"
+    ]
+  },
+  {
+    "id": "vdv0096",
+    "hoTen": "Bùi Minh Khôi",
+    "namSinh": 2005,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t4",
+    "eventIds": [
+      "e20"
+    ]
+  },
+  {
+    "id": "vdv0097",
+    "hoTen": "Đỗ Công Danh",
+    "namSinh": 2006,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t2",
+    "eventIds": [
+      "e20"
+    ]
+  },
+  {
+    "id": "vdv0098",
+    "hoTen": "Ngô Anh Thịnh",
+    "namSinh": 2006,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t6",
+    "eventIds": [
+      "e20"
+    ]
+  },
+  {
+    "id": "vdv0099",
+    "hoTen": "Dương Trọng Nghĩa",
+    "namSinh": 2005,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t1",
+    "eventIds": [
+      "e20"
+    ]
+  },
+  {
+    "id": "vdv0100",
+    "hoTen": "Lý Xuân Đạt",
+    "namSinh": 2006,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t3",
+    "eventIds": [
+      "e20"
+    ]
+  },
+  {
+    "id": "vdv0101",
+    "hoTen": "Đinh Hữu Vinh",
+    "namSinh": 2006,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t2",
+    "eventIds": [
+      "e20"
+    ]
+  },
+  {
+    "id": "vdv0102",
+    "hoTen": "Trịnh Quang Huy",
+    "namSinh": 2005,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t5",
+    "eventIds": [
+      "e20"
+    ]
+  },
+  {
+    "id": "vdv0103",
+    "hoTen": "Đoàn Bảo Long",
+    "namSinh": 2006,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t1",
+    "eventIds": [
+      "e21"
+    ]
+  },
+  {
+    "id": "vdv0104",
+    "hoTen": "Vương Thành Trung",
+    "namSinh": 2005,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t4",
+    "eventIds": [
+      "e21"
+    ]
+  },
+  {
+    "id": "vdv0105",
+    "hoTen": "Lương Anh Kiệt",
+    "namSinh": 2006,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t2",
+    "eventIds": [
+      "e21"
+    ]
+  },
+  {
+    "id": "vdv0106",
+    "hoTen": "Nguyễn Đăng Khoa",
+    "namSinh": 2006,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t3",
+    "eventIds": [
+      "e21"
+    ]
+  },
+  {
+    "id": "vdv0107",
+    "hoTen": "Trần Minh Đức",
+    "namSinh": 2005,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t1",
+    "eventIds": [
+      "e21"
+    ]
+  },
+  {
+    "id": "vdv0108",
+    "hoTen": "Lê Quốc Việt",
+    "namSinh": 2006,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t5",
+    "eventIds": [
+      "e21"
+    ]
+  },
+  {
+    "id": "vdv0109",
+    "hoTen": "Phạm Hữu Thắng",
+    "namSinh": 2006,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t2",
+    "eventIds": [
+      "e21"
+    ]
+  },
+  {
+    "id": "vdv0110",
+    "hoTen": "Vũ Công Sơn",
+    "namSinh": 2005,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t6",
+    "eventIds": [
+      "e21"
+    ]
+  },
+  {
+    "id": "vdv0111",
+    "hoTen": "Hoàng Xuân Bách",
+    "namSinh": 2006,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t1",
+    "eventIds": [
+      "e21"
+    ]
+  },
+  {
+    "id": "vdv0112",
+    "hoTen": "Đặng Trọng Tấn",
+    "namSinh": 2006,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t3",
+    "eventIds": [
+      "e21"
+    ]
+  },
+  {
+    "id": "vdv0113",
+    "hoTen": "Bùi Anh Dũng",
+    "namSinh": 2005,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t4",
+    "eventIds": [
+      "e21"
+    ]
+  },
+  {
+    "id": "vdv0114",
+    "hoTen": "Đỗ Bảo Trung",
+    "namSinh": 2006,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 3",
+    "teamId": "t2",
+    "eventIds": [
+      "e21"
+    ]
+  },
+  {
+    "id": "vdv0115",
+    "hoTen": "Ngô Minh Quang",
+    "namSinh": 2008,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 2",
+    "teamId": "t1",
+    "eventIds": [
+      "e22"
+    ]
+  },
+  {
+    "id": "vdv0116",
+    "hoTen": "Dương Anh Tuấn",
+    "namSinh": 2008,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 2",
+    "teamId": "t1",
+    "eventIds": [
+      "e22"
+    ]
+  },
+  {
+    "id": "vdv0117",
+    "hoTen": "Lý Công Hiếu",
+    "namSinh": 2008,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 2",
+    "teamId": "t1",
+    "eventIds": [
+      "e22"
+    ]
+  },
+  {
+    "id": "vdv0118",
+    "hoTen": "Đinh Quốc Bảo",
+    "namSinh": 2008,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 2",
+    "teamId": "t1",
+    "eventIds": [
+      "e22"
+    ]
+  },
+  {
+    "id": "vdv0119",
+    "hoTen": "Trịnh Xuân Nam",
+    "namSinh": 2008,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 2",
+    "teamId": "t1",
+    "eventIds": [
+      "e22"
+    ]
+  },
+  {
+    "id": "vdv0120",
+    "hoTen": "Đoàn Hữu Thịnh",
+    "namSinh": 2008,
+    "gioiTinh": "nam",
+    "nhomTuoi": "Nhóm tuổi 2",
+    "teamId": "t1",
+    "eventIds": [
+      "e22"
+    ]
+  }
+]

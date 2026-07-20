@@ -88,30 +88,6 @@
     margin: 0 0 $space-4;
 }
 
-.metaRow {
-    display: flex;
-    gap: $space-5;
-    padding-bottom: $space-4;
-    margin-bottom: $space-4;
-    border-bottom: 1px solid $color-border;
-    flex-wrap: wrap;
-}
-
-.metaItem {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-
-    span {
-        font-size: 11px;
-        color: $color-text-muted;
-        text-transform: uppercase;
-    }
-
-    strong {
-        font-size: 14px;
-    }
-}
 
 .actions {
     display: flex;

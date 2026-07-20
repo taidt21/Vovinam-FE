@@ -1,0 +1,40 @@
+[
+  {
+    "id": "sq3",
+    "eventId": "e8",
+    "ten": "Đội 1",
+    "athleteIds": [
+      "vdv0035",
+      "vdv0036"
+    ]
+  },
+  {
+    "id": "sq4",
+    "eventId": "e8",
+    "ten": "Đội 2",
+    "athleteIds": [
+      "vdv0121",
+      "vdv0122"
+    ]
+  },
+  {
+    "id": "sq1",
+    "eventId": "e22",
+    "ten": "Đội 1",
+    "athleteIds": [
+      "vdv0115",
+      "vdv0116",
+      "vdv0117"
+    ]
+  },
+  {
+    "id": "sq2",
+    "eventId": "e22",
+    "ten": "Đội 2",
+    "athleteIds": [
+      "vdv0118",
+      "vdv0119",
+      "vdv0120"
+    ]
+  }
+]

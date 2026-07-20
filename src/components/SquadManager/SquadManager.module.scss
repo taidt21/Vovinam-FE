@@ -1,0 +1,153 @@
+@use '../../styles/variables'as *;
+
+.wrap {
+    display: flex;
+    flex-direction: column;
+    gap: $space-4;
+    margin-bottom: $space-4;
+}
+
+.unassignedSection,
+.squadList {
+    background: $color-surface;
+    border: 1px solid $color-border;
+    border-radius: 10px;
+    padding: $space-4;
+}
+
+.sectionHead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: $space-3;
+
+    h3 {
+        font-size: 14px;
+        font-weight: 700;
+        margin: 0;
+
+        span {
+            font-weight: 400;
+            color: $color-text-muted;
+            font-size: 12px;
+        }
+    }
+}
+
+.btnGhost {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    padding: $space-1 $space-3;
+    border: 1px solid $color-border;
+    background: $color-surface;
+    border-radius: 6px;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+        background: $color-bg;
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+}
+
+.checkList {
+    display: flex;
+    flex-direction: column;
+    gap: $space-2;
+}
+
+.checkItem {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.squadList h3 {
+    font-size: 14px;
+    font-weight: 700;
+    margin: 0 0 $space-3;
+}
+
+.squadCard {
+    padding: $space-3;
+    background: $color-bg;
+    border-radius: 8px;
+    margin-bottom: $space-2;
+}
+
+.squadHead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    strong {
+        font-size: 13px;
+    }
+
+    button {
+        background: none;
+        border: none;
+        color: $color-text-muted;
+        cursor: pointer;
+        display: flex;
+
+        &:hover {
+            color: $color-danger;
+        }
+    }
+}
+
+.squadMembers {
+    font-size: 12px;
+    color: $color-text-muted;
+    margin: 4px 0 0;
+}
+
+.hint {
+    font-size: 12px;
+    color: $color-text-muted;
+}
+
+.modalForm {
+    display: flex;
+    flex-direction: column;
+    gap: $space-3;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: $space-1;
+    font-size: 13px;
+    font-weight: 500;
+
+    input {
+        font: inherit;
+        padding: $space-2 $space-3;
+        border: 1px solid $color-border;
+        border-radius: 6px;
+    }
+}
+
+.btnPrimary {
+    background: $color-do;
+    color: white;
+    border: none;
+    padding: $space-2 $space-4;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover {
+        opacity: 0.9;
+    }
+}
