@@ -11,6 +11,7 @@ import { Shuffle } from "lucide-react";
 import type { Athlete, CompetitionEvent, Match, Squad } from "../../types";
 import { generateBracket } from "../../lib/bracket";
 import BracketView from "../../components/BracketView/BracketView";
+import LichThiDau from "../../components/LichThiDau/LichThiDau";
 import styles from "./NoiDungBocTham.module.scss";
 
 type AthleteRecord = Omit<Athlete, "noiDung" | "canNang"> & {
@@ -48,9 +49,34 @@ function squadMemberNames(s: Squad, athletes: Athlete[]): string {
     .map((id) => athletes.find((a) => a.id === id)?.hoTen)
     .join(", ");
 }
+// function squadMemberNames(s: Squad, athletes: Athlete[]): string {
+//   return s.athleteIds
+//     .map((id) => {
+//       const a = athletes.find((x) => x.id === id);
+//       return a ? `${a.hoTen} (${a.namSinh})` : undefined;
+//     })
+//     .join(", ");
+// }
+function teamName(
+  teamId: string,
+  teams: { id: string; ten: string }[],
+): string {
+  return teams.find((t) => t.id === teamId)?.ten ?? "—";
+}
 
-const LOAI_LABEL = { quyen: "Quyền", doi_khang: "Đối kháng" } as const;
-
+function squadTeamName(
+  s: Squad,
+  athletes: Athlete[],
+  teams: { id: string; ten: string }[],
+): string {
+  const first = athletes.find((a) => s.athleteIds.includes(a.id));
+  return first ? teamName(first.teamId, teams) : "—";
+}
+const LOAI_LABEL = {
+  quyen: "Quyền",
+  doi_khang: "Đối kháng",
+  lich_thi_dau: "Lịch thi đấu",
+} as const;
 function BocThamButton({
   onClick,
   count,
@@ -87,6 +113,7 @@ export default function NoiDungBocTham() {
   const [events, setEvents] = useState<CompetitionEvent[]>([]);
   const [athletes, setAthletes] = useState<AthleteRecord[]>([]);
   const [squads, setSquads] = useState<Squad[]>([]);
+  const [teams, setTeams] = useState<{ id: string; ten: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -95,11 +122,13 @@ export default function NoiDungBocTham() {
       fetch("/data/events.json").then((r) => r.json()),
       fetch("/data/athletes.json").then((r) => r.json()),
       fetch("/data/squads.json").then((r) => r.json()),
+      fetch("/data/teams.json").then((r) => r.json()),
     ])
-      .then(([eventsData, athletesData, squadsData]) => {
+      .then(([eventsData, athletesData, squadsData, teamsData]) => {
         setEvents(eventsData);
         setAthletes(athletesData);
         setSquads(squadsData);
+        setTeams(teamsData);
       })
       .catch(() =>
         setLoadError(
@@ -109,7 +138,9 @@ export default function NoiDungBocTham() {
       .finally(() => setLoading(false));
   }, []);
 
-  const [tab, setTab] = useState<"quyen" | "doi_khang">("doi_khang");
+  const [tab, setTab] = useState<"quyen" | "doi_khang" | "lich_thi_dau">(
+    "doi_khang",
+  );
   const [selectedId, setSelectedId] = useState("e1");
   const [bracketsByEvent, setBracketsByEvent] = useState<
     Record<string, Match[]>
@@ -122,7 +153,10 @@ export default function NoiDungBocTham() {
   >({});
 
   const eventsInTab = useMemo(
-    () => events.filter((ev) => ev.loai === tab),
+    () =>
+      events
+        .filter((ev) => ev.loai === tab)
+        .sort((a, b) => a.nhomTuoi - b.nhomTuoi),
     [events, tab],
   );
   const selected = events.find((ev) => ev.id === selectedId) ?? eventsInTab[0];
@@ -168,7 +202,7 @@ export default function NoiDungBocTham() {
     <div className={styles.page}>
       <aside className={styles.sidebar}>
         <div className={styles.tabs}>
-          {(["quyen", "doi_khang"] as const).map((t) => (
+          {(["quyen", "doi_khang", "lich_thi_dau"] as const).map((t) => (
             <button
               key={t}
               className={t === tab ? styles.tabActive : styles.tab}
@@ -177,25 +211,41 @@ export default function NoiDungBocTham() {
             </button>
           ))}
         </div>
-        <div className={styles.eventList}>
-          {eventsInTab.map((ev) => (
-            <button
-              key={ev.id}
-              className={
-                ev.id === selectedId ? styles.eventItemActive : styles.eventItem
-              }
-              onClick={() => setSelectedId(ev.id)}>
-              {ev.ten}
-            </button>
-          ))}
-          {eventsInTab.length === 0 && (
-            <p className={styles.emptyList}>Chưa có nội dung nào</p>
-          )}
-        </div>
+        {tab !== "lich_thi_dau" && (
+          <div className={styles.eventList}>
+            {eventsInTab.map((ev) => (
+              <button
+                key={ev.id}
+                className={
+                  ev.id === selectedId
+                    ? styles.eventItemActive
+                    : styles.eventItem
+                }
+                onClick={() => setSelectedId(ev.id)}>
+                <span className={styles.eventName}>{ev.ten}</span>
+                <span className={styles.eventMeta}>
+                  Nhóm tuổi {ev.nhomTuoi}
+                </span>
+              </button>
+            ))}
+            {eventsInTab.length === 0 && (
+              <p className={styles.emptyList}>Chưa có nội dung nào</p>
+            )}
+          </div>
+        )}
       </aside>
 
       <section className={styles.main}>
-        {!selected ? (
+        {tab === "lich_thi_dau" ? (
+          <LichThiDau
+            events={events}
+            athletes={athletes}
+            teams={teams}
+            bracketsByEvent={bracketsByEvent}
+            orderByEvent={orderByEvent}
+            squadOrderByEvent={squadOrderByEvent}
+          />
+        ) : !selected ? (
           <p>Chọn 1 nội dung ở danh sách bên trái.</p>
         ) : (
           <>
@@ -215,8 +265,11 @@ export default function NoiDungBocTham() {
                   <ol className={styles.athleteList}>
                     {squadsOfSelected.map((s) => (
                       <li key={s.id}>
-                        <strong>{s.ten}</strong> —{" "}
-                        {squadMemberNames(s, athletesOfSelected)}
+                        <strong>{s.ten}</strong>{" "}
+                        <span className={styles.teamTag}>
+                          ({squadTeamName(s, athletesOfSelected, teams)})
+                        </span>{" "}
+                        — {squadMemberNames(s, athletesOfSelected)}
                       </li>
                     ))}
                   </ol>
@@ -228,7 +281,12 @@ export default function NoiDungBocTham() {
               ) : athletesOfSelected.length > 0 ? (
                 <ol className={styles.athleteList}>
                   {athletesOfSelected.map((a) => (
-                    <li key={a.id}>{a.hoTen}</li>
+                    <li key={a.id}>
+                      {a.hoTen}{" "}
+                      <span className={styles.teamTag}>
+                        ({a.namSinh} · {teamName(a.teamId, teams)})
+                      </span>
+                    </li>
                   ))}
                 </ol>
               ) : (
@@ -247,6 +305,7 @@ export default function NoiDungBocTham() {
                 <BracketView
                   matches={bracket ?? []}
                   athletes={athletesOfSelected}
+                  teams={teams}
                 />
               </>
             ) : isTeamEvent ? (
@@ -263,8 +322,11 @@ export default function NoiDungBocTham() {
                     <ol className={styles.athleteList}>
                       {squadOrder.map((s) => (
                         <li key={s.id}>
-                          <strong>{s.ten}</strong> —{" "}
-                          {squadMemberNames(s, athletesOfSelected)}
+                          <strong>{s.ten}</strong>{" "}
+                          <span className={styles.teamTag}>
+                            ({squadTeamName(s, athletesOfSelected, teams)})
+                          </span>{" "}
+                          — {squadMemberNames(s, athletesOfSelected)}
                         </li>
                       ))}
                     </ol>
@@ -284,16 +346,16 @@ export default function NoiDungBocTham() {
                     <h2 className={styles.registeredTitle}>Thứ tự thi diễn</h2>
                     <ol className={styles.athleteList}>
                       {order.map((a) => (
-                        <li key={a.id}>{a.hoTen}</li>
+                        <li key={a.id}>
+                          {a.hoTen}{" "}
+                          <span className={styles.teamTag}>
+                            ({teamName(a.teamId, teams)})
+                          </span>
+                        </li>
                       ))}
                     </ol>
                   </div>
                 )}
-                <p className={styles.quyenNote}>
-                  Nội dung quyền không có nhánh loại trực tiếp — bốc thăm chỉ
-                  xác định thứ tự thi diễn. Cách xử lý hòa điểm còn đang để ngỏ,
-                  màn này để dành làm sau khi chốt xong.
-                </p>
               </>
             )}
           </>

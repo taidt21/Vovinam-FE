@@ -96,3 +96,16 @@ export function groupByRound(matches: Match[]): Match[][] {
   }
   return Array.from(map.values()); // Sơ bộ luôn được push đầu tiên trong allMatches -> tự đứng cột đầu
 }
+// Đếm số bước từ 1 trận tới chung kết, bằng cách lần theo nextMatchId —
+// không suy đoán qua tên vòng, vì "Sơ bộ" không cố định cách chung kết
+// bao nhiêu bước (tùy n). Chung kết (không có nextMatchId) = 0.
+export function distanceFromFinal(match: Match, matchesInEvent: Match[]): number {
+  let distance = 0;
+  let current: Match | undefined = match;
+  while (current?.nextMatchId) {
+    current = matchesInEvent.find((m) => m.id === current!.nextMatchId);
+    if (!current) break;
+    distance++;
+  }
+  return distance;
+}

@@ -1,0 +1,97 @@
+@use '../../styles/variables'as *;
+
+.wrap {
+    display: flex;
+    flex-direction: column;
+    gap: $space-5;
+    max-width: 900px;
+}
+
+.title {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.pendingNote {
+    font-size: 13px;
+    color: #8a6416;
+    background: rgba($color-warning, 0.12);
+    padding: $space-3 $space-4;
+    border-radius: 8px;
+    margin: 0;
+}
+
+.ntSection {
+    display: flex;
+    flex-direction: column;
+    gap: $space-3;
+}
+
+.ntTitle {
+    font-size: 16px;
+    font-weight: 700;
+    color: $color-do;
+    padding-bottom: $space-2;
+    border-bottom: 2px solid $color-do;
+    margin: 0;
+}
+
+.subSection {
+    background: $color-surface;
+    border: 1px solid $color-border;
+    border-radius: 10px;
+    padding: $space-4;
+}
+
+.subTitle {
+    font-size: 12px;
+    font-weight: 700;
+    margin: 0 0 $space-3;
+    color: $color-text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.matchList {
+    display: flex;
+    flex-direction: column;
+    gap: $space-2;
+    padding-left: 0;
+    list-style: none;
+    margin: 0;
+
+    li {
+        display: flex;
+        align-items: baseline;
+        gap: $space-3;
+        flex-wrap: wrap;
+        padding: $space-2 0;
+        border-bottom: 1px solid $color-border;
+        font-size: 13px;
+
+        &:last-child {
+            border-bottom: none;
+        }
+    }
+}
+
+.matchVong {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: white;
+    background: $color-xanh;
+    padding: 2px $space-2;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.matchEvent {
+    color: $color-text-muted;
+    flex-shrink: 0;
+}
+
+.matchup {
+    flex: 1;
+}

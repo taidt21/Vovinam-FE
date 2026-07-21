@@ -14,6 +14,27 @@
     display: flex;
     flex-direction: column;
     padding: $space-4 0;
+    transition: width 0.2s ease;
+    overflow: hidden;
+}
+
+.sidebarCollapsed {
+    width: 64px;
+
+    .brand {
+        justify-content: center;
+        padding: 0 $space-2 $space-4;
+    }
+
+    .navItem {
+        justify-content: center;
+        padding: $space-2;
+    }
+
+    .collapseBtn {
+        justify-content: center;
+        padding: $space-3;
+    }
 }
 
 .brand {
@@ -29,10 +50,11 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    // width: 32px;
-    // height: 32px;
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
     border-radius: 6px;
-    // background: $color-do;
+    background: $color-do;
     color: white;
     font-weight: 700;
     font-size: 13px;
@@ -42,6 +64,7 @@
     font-weight: 700;
     font-size: 15px;
     color: $color-text;
+    white-space: nowrap;
 }
 
 .nav {
@@ -61,6 +84,7 @@
     font-size: 14px;
     font-weight: 500;
     text-decoration: none;
+    white-space: nowrap;
     transition: background-color 0.15s, color 0.15s;
 
     &:hover {
@@ -76,6 +100,28 @@
     &:hover {
         background: rgba($color-do, 0.08);
         color: $color-do;
+    }
+}
+
+.collapseBtn {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    margin-top: auto;
+    padding: $space-3 $space-4;
+    border: none;
+    border-top: 1px solid $color-border;
+    background: none;
+    color: $color-text-muted;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+    width: 100%;
+
+    &:hover {
+        background: $color-bg;
+        color: $color-text;
     }
 }
 

@@ -6,7 +6,7 @@ import type { Athlete, Match } from "../../types";
 import { groupByRound } from "../../lib/bracket";
 import styles from "./BracketView.module.scss";
 
-const CARD_W = 208;
+const CARD_W = 240; // nới từ 208 để chứa thêm tên đơn vị, CARD_H giữ nguyên
 const CARD_H = 60;
 const ROUND_GAP = 64;
 const ROW_HEIGHT = 84;
@@ -16,9 +16,14 @@ const LABEL_H = 32;
 interface BracketViewProps {
   matches: Match[];
   athletes: Athlete[];
+  teams: { id: string; ten: string }[];
 }
 
-export default function BracketView({ matches, athletes }: BracketViewProps) {
+export default function BracketView({
+  matches,
+  athletes,
+  teams,
+}: BracketViewProps) {
   const rounds = useMemo(() => groupByRound(matches), [matches]);
 
   const layout = useMemo(() => {
@@ -84,6 +89,13 @@ export default function BracketView({ matches, athletes }: BracketViewProps) {
   const athleteName = (id: string | null) =>
     id ? (athletes.find((a) => a.id === id)?.hoTen ?? "—") : null;
 
+  const athleteTeam = (id: string | null) => {
+    if (!id) return null;
+    const a = athletes.find((x) => x.id === id);
+    if (!a) return null;
+    return teams.find((t) => t.id === a.teamId)?.ten ?? null;
+  };
+
   if (rounds.length === 0)
     return (
       <p className={styles.empty}>
@@ -127,10 +139,36 @@ export default function BracketView({ matches, athletes }: BracketViewProps) {
               height: CARD_H,
             }}>
             <div className={`${styles.slotRow} ${styles.slotDo}`}>
-              {athleteName(match.athleteRedId) ?? "Chờ xác định"}
+              {match.athleteRedId ? (
+                <>
+                  <span className={styles.slotName}>
+                    {athleteName(match.athleteRedId)}
+                  </span>
+                  {athleteTeam(match.athleteRedId) && (
+                    <span className={styles.slotTeam}>
+                      {athleteTeam(match.athleteRedId)}
+                    </span>
+                  )}
+                </>
+              ) : (
+                "Chờ xác định"
+              )}
             </div>
             <div className={`${styles.slotRow} ${styles.slotXanh}`}>
-              {athleteName(match.athleteBlueId) ?? "Chờ xác định"}
+              {match.athleteBlueId ? (
+                <>
+                  <span className={styles.slotName}>
+                    {athleteName(match.athleteBlueId)}
+                  </span>
+                  {athleteTeam(match.athleteBlueId) && (
+                    <span className={styles.slotTeam}>
+                      {athleteTeam(match.athleteBlueId)}
+                    </span>
+                  )}
+                </>
+              ) : (
+                "Chờ xác định"
+              )}
             </div>
           </div>
         ))}

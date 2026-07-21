@@ -5,9 +5,8 @@
     "ten": "Đối kháng nam - 54kg",
     "loai": "doi_khang",
     "gioiTinh": "nam",
-    "nhomTuoi": "Nhóm tuổi 2",
-    "hangCanHoacBaiQuyen": "54kg",
-    "soTrongTai": 5
+    "nhomTuoi": 2,
+    "hangCan": 54
   },
   {
     "id": "e2",
@@ -15,9 +14,8 @@
     "ten": "Đối kháng nam - 60kg",
     "loai": "doi_khang",
     "gioiTinh": "nam",
-    "nhomTuoi": "Nhóm tuổi 2",
-    "hangCanHoacBaiQuyen": "60kg",
-    "soTrongTai": 5
+    "nhomTuoi": 2,
+    "hangCan": 60
   },
   {
     "id": "e3",
@@ -25,9 +23,8 @@
     "ten": "Đối kháng nam - 67kg",
     "loai": "doi_khang",
     "gioiTinh": "nam",
-    "nhomTuoi": "Nhóm tuổi 3",
-    "hangCanHoacBaiQuyen": "67kg",
-    "soTrongTai": 5
+    "nhomTuoi": 3,
+    "hangCan": 67
   },
   {
     "id": "e4",
@@ -35,49 +32,32 @@
     "ten": "Đối kháng nữ - 48kg",
     "loai": "doi_khang",
     "gioiTinh": "nu",
-    "nhomTuoi": "Nhóm tuổi 2",
-    "hangCanHoacBaiQuyen": "48kg",
-    "soTrongTai": 5
-  },
-  {
-    "id": "e5",
-    "tournamentId": "demo",
-    "ten": "Đối kháng nữ - 52kg",
-    "loai": "doi_khang",
-    "gioiTinh": "nu",
-    "nhomTuoi": "Nhóm tuổi 3",
-    "hangCanHoacBaiQuyen": "52kg",
-    "soTrongTai": 5
+    "nhomTuoi": 2,
+    "hangCan": 48
   },
   {
     "id": "e6",
     "tournamentId": "demo",
-    "ten": "Quyền cá nhân nam",
+    "ten": "Long hổ quyền",
     "loai": "quyen",
     "gioiTinh": "nam",
-    "nhomTuoi": "Nhóm tuổi 1",
-    "hangCanHoacBaiQuyen": "Long hổ quyền",
-    "soTrongTai": 5
+    "nhomTuoi": 1
   },
   {
     "id": "e7",
     "tournamentId": "demo",
-    "ten": "Quyền cá nhân nữ",
+    "ten": "Nhập môn quyền",
     "loai": "quyen",
     "gioiTinh": "nu",
-    "nhomTuoi": "Nhóm tuổi 1",
-    "hangCanHoacBaiQuyen": "Nhập môn quyền",
-    "soTrongTai": 5
+    "nhomTuoi": 1
   },
   {
     "id": "e8",
     "tournamentId": "demo",
-    "ten": "Song luyện nam",
+    "ten": "Song luyện",
     "loai": "quyen",
     "gioiTinh": "nam",
-    "nhomTuoi": "Nhóm tuổi 2",
-    "hangCanHoacBaiQuyen": "Song luyện căn bản",
-    "soTrongTai": 5,
+    "nhomTuoi": 2,
     "hinhThucThi": "doi"
   },
   {
@@ -86,9 +66,8 @@
     "ten": "Đối kháng nữ - 60kg",
     "loai": "doi_khang",
     "gioiTinh": "nu",
-    "nhomTuoi": "Nhóm tuổi 3",
-    "hangCanHoacBaiQuyen": "60kg",
-    "soTrongTai": 5
+    "nhomTuoi": 3,
+    "hangCan": 60
   },
   {
     "id": "e12",
@@ -96,9 +75,8 @@
     "ten": "Đối kháng nam - 25kg",
     "loai": "doi_khang",
     "gioiTinh": "nam",
-    "nhomTuoi": "Nhóm tuổi 1",
-    "hangCanHoacBaiQuyen": "25kg",
-    "soTrongTai": 5
+    "nhomTuoi": 1,
+    "hangCan": 25
   },
   {
     "id": "e13",
@@ -106,9 +84,8 @@
     "ten": "Đối kháng nam - 30kg",
     "loai": "doi_khang",
     "gioiTinh": "nam",
-    "nhomTuoi": "Nhóm tuổi 1",
-    "hangCanHoacBaiQuyen": "30kg",
-    "soTrongTai": 5
+    "nhomTuoi": 1,
+    "hangCan": 30
   },
   {
     "id": "e14",
@@ -116,9 +93,8 @@
     "ten": "Đối kháng nam - 35kg",
     "loai": "doi_khang",
     "gioiTinh": "nam",
-    "nhomTuoi": "Nhóm tuổi 1",
-    "hangCanHoacBaiQuyen": "35kg",
-    "soTrongTai": 5
+    "nhomTuoi": 1,
+    "hangCan": 35
   },
   {
     "id": "e15",
@@ -126,9 +102,8 @@
     "ten": "Đối kháng nam - 40kg",
     "loai": "doi_khang",
     "gioiTinh": "nam",
-    "nhomTuoi": "Nhóm tuổi 2",
-    "hangCanHoacBaiQuyen": "40kg",
-    "soTrongTai": 5
+    "nhomTuoi": 2,
+    "hangCan": 40
   },
   {
     "id": "e16",
@@ -136,9 +111,8 @@
     "ten": "Đối kháng nam - 45kg",
     "loai": "doi_khang",
     "gioiTinh": "nam",
-    "nhomTuoi": "Nhóm tuổi 2",
-    "hangCanHoacBaiQuyen": "45kg",
-    "soTrongTai": 5
+    "nhomTuoi": 2,
+    "hangCan": 45
   },
   {
     "id": "e17",
@@ -146,9 +120,8 @@
     "ten": "Đối kháng nam - 50kg",
     "loai": "doi_khang",
     "gioiTinh": "nam",
-    "nhomTuoi": "Nhóm tuổi 2",
-    "hangCanHoacBaiQuyen": "50kg",
-    "soTrongTai": 5
+    "nhomTuoi": 2,
+    "hangCan": 50
   },
   {
     "id": "e18",
@@ -156,9 +129,8 @@
     "ten": "Đối kháng nam - 55kg",
     "loai": "doi_khang",
     "gioiTinh": "nam",
-    "nhomTuoi": "Nhóm tuổi 3",
-    "hangCanHoacBaiQuyen": "55kg",
-    "soTrongTai": 5
+    "nhomTuoi": 3,
+    "hangCan": 55
   },
   {
     "id": "e19",
@@ -166,9 +138,8 @@
     "ten": "Đối kháng nam - 60kg (nhóm 3)",
     "loai": "doi_khang",
     "gioiTinh": "nam",
-    "nhomTuoi": "Nhóm tuổi 3",
-    "hangCanHoacBaiQuyen": "60kg",
-    "soTrongTai": 5
+    "nhomTuoi": 3,
+    "hangCan": 60
   },
   {
     "id": "e20",
@@ -176,9 +147,8 @@
     "ten": "Đối kháng nam - 65kg",
     "loai": "doi_khang",
     "gioiTinh": "nam",
-    "nhomTuoi": "Nhóm tuổi 3",
-    "hangCanHoacBaiQuyen": "65kg",
-    "soTrongTai": 5
+    "nhomTuoi": 3,
+    "hangCan": 65
   },
   {
     "id": "e21",
@@ -186,19 +156,16 @@
     "ten": "Đối kháng nam - 70kg",
     "loai": "doi_khang",
     "gioiTinh": "nam",
-    "nhomTuoi": "Nhóm tuổi 3",
-    "hangCanHoacBaiQuyen": "70kg",
-    "soTrongTai": 5
+    "nhomTuoi": 3,
+    "hangCan": 70
   },
   {
     "id": "e22",
     "tournamentId": "demo",
-    "ten": "Quyền đồng đội nam",
+    "ten": "Long hổ quyền (đồng đội)",
     "loai": "quyen",
-    "gioiTinh": "nam",
-    "nhomTuoi": "Nhóm tuổi 2",
-    "hangCanHoacBaiQuyen": "Long hổ quyền (đồng đội)",
-    "soTrongTai": 5,
+    "gioiTinh": "nu",
+    "nhomTuoi": 2,
     "hinhThucThi": "doi"
   }
 ]
