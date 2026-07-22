@@ -1,8 +1,58 @@
 [
-  { "id": "t1", "ten": "Bình Dương" },
-  { "id": "t2", "ten": "TP. Hồ Chí Minh" },
-  { "id": "t3", "ten": "Hà Nội" },
-  { "id": "t4", "ten": "Đà Nẵng" },
-  { "id": "t5", "ten": "Cần Thơ" },
-  { "id": "t6", "ten": "Hải Phòng" }
+  {
+    "id": "t1",
+    "ten": "Bình Dương"
+  },
+  {
+    "id": "t2",
+    "ten": "TP. Hồ Chí Minh"
+  },
+  {
+    "id": "t3",
+    "ten": "Hà Nội"
+  },
+  {
+    "id": "t4",
+    "ten": "Đà Nẵng"
+  },
+  {
+    "id": "t5",
+    "ten": "Cần Thơ"
+  },
+  {
+    "id": "t6",
+    "ten": "Hải Phòng"
+  },
+  {
+    "id": "t7",
+    "ten": "Đồng Nai"
+  },
+  {
+    "id": "t8",
+    "ten": "Bà Rịa - Vũng Tàu"
+  },
+  {
+    "id": "t9",
+    "ten": "Tây Ninh"
+  },
+  {
+    "id": "t10",
+    "ten": "Bình Phước"
+  },
+  {
+    "id": "t11",
+    "ten": "Khánh Hòa"
+  },
+  {
+    "id": "t12",
+    "ten": "Quảng Nam"
+  },
+  {
+    "id": "t13",
+    "ten": "Nghệ An"
+  },
+  {
+    "id": "t14",
+    "ten": "Thanh Hóa"
+  }
 ]

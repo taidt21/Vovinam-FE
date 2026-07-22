@@ -1,81 +1,19 @@
 /** @format */
 
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Plus, FileSpreadsheet, Search, Pencil, Trash2 } from "lucide-react";
-import type { Athlete, GioiTinh, Team } from "../../types";
+import type { AthleteRecord, CompetitionEvent, GioiTinh } from "../../types";
 import Modal from "../../components/Modal/Modal";
-import TagInput from "../../components/TagInput/TagInput";
 import ImportExcelModal from "../../components/ImportExcelModal/ImportExcelModal";
 import type { ImportRow } from "../../lib/excelImport";
 import styles from "./DoanVaVDV.module.scss";
 
 const CURRENT_YEAR = new Date().getFullYear();
-const NHOM_TUOI_OPTIONS = ["Nhóm tuổi 1", "Nhóm tuổi 2", "Nhóm tuổi 3"];
+const NHOM_TUOI_OPTIONS = [1, 2, 3];
+const formatNhomTuoi = (n: number) => `${n}`;
 
-const SEED_TEAMS: Team[] = [
-  { id: "t1", tournamentId: "demo", ten: "Bình Dương" },
-  { id: "t2", tournamentId: "demo", ten: "TP. Hồ Chí Minh" },
-  { id: "t3", tournamentId: "demo", ten: "Hà Nội" },
-];
-
-const SEED_ATHLETES: Athlete[] = [
-  {
-    id: "a1",
-    hoTen: "Nguyễn Minh Khang",
-    namSinh: 2008,
-    gioiTinh: "nam",
-    nhomTuoi: "Nhóm tuổi 2",
-    teamId: "t1",
-    noiDung: ["Đối kháng nam - 54kg"],
-  },
-  {
-    id: "a2",
-    hoTen: "Trần Đức Bảo",
-    namSinh: 2008,
-    gioiTinh: "nam",
-    nhomTuoi: "Nhóm tuổi 2",
-    teamId: "t1",
-    noiDung: ["Đối kháng nam - 60kg", "Song luyện nam"],
-  },
-  {
-    id: "a3",
-    hoTen: "Lê Gia Huy",
-    namSinh: 2009,
-    gioiTinh: "nam",
-    nhomTuoi: "Nhóm tuổi 1",
-    teamId: "t2",
-    noiDung: ["Đối kháng nam - 54kg"],
-  },
-  {
-    id: "a4",
-    hoTen: "Phạm Anh Thư",
-    namSinh: 2008,
-    gioiTinh: "nu",
-    nhomTuoi: "Nhóm tuổi 3",
-    teamId: "t3",
-    noiDung: ["Quyền cá nhân nữ"],
-  },
-  {
-    id: "a5",
-    hoTen: "Ngô Quang Vinh",
-    namSinh: 2008,
-    gioiTinh: "nam",
-    nhomTuoi: "Nhóm tuổi 2",
-    teamId: "t1",
-    noiDung: ["Quyền đồng đội nam"],
-  },
-  {
-    id: "a6",
-    hoTen: "Đặng Việt Hoàng",
-    namSinh: 2008,
-    gioiTinh: "nam",
-    nhomTuoi: "Nhóm tuổi 2",
-    teamId: "t1",
-    noiDung: ["Quyền đồng đội nam"],
-  },
-];
-
-type AthleteFormState = Omit<Athlete, "id" | "canNang">;
+type TeamBasic = { id: string; ten: string };
+type AthleteFormState = Omit<AthleteRecord, "id">;
 
 const EMPTY_ATHLETE_FORM: AthleteFormState = {
   hoTen: "",
@@ -83,14 +21,36 @@ const EMPTY_ATHLETE_FORM: AthleteFormState = {
   gioiTinh: "nam",
   nhomTuoi: NHOM_TUOI_OPTIONS[0],
   teamId: "",
-  noiDung: [],
+  eventIds: [],
 };
 
 const PAGE_SIZE = 8;
 
 export default function DoanVaVDV() {
-  const [teams, setTeams] = useState<Team[]>(SEED_TEAMS);
-  const [athletes, setAthletes] = useState<Athlete[]>(SEED_ATHLETES);
+  const [events, setEvents] = useState<CompetitionEvent[]>([]);
+  const [teams, setTeams] = useState<TeamBasic[]>([]);
+  const [athletes, setAthletes] = useState<AthleteRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    Promise.all([
+      fetch("/data/events.json").then((r) => r.json()),
+      fetch("/data/teams.json").then((r) => r.json()),
+      fetch("/data/athletes.json").then((r) => r.json()),
+    ])
+      .then(([eventsData, teamsData, athletesData]) => {
+        setEvents(eventsData);
+        setTeams(teamsData);
+        setAthletes(athletesData);
+      })
+      .catch(() =>
+        setLoadError(
+          "Không tải được dữ liệu — kiểm tra lại 3 file trong public/data/",
+        ),
+      )
+      .finally(() => setLoading(false));
+  }, []);
 
   const [search, setSearch] = useState("");
   const [filterTeamId, setFilterTeamId] = useState<string>("all");
@@ -108,6 +68,8 @@ export default function DoanVaVDV() {
 
   const teamName = (teamId: string) =>
     teams.find((t) => t.id === teamId)?.ten ?? "—";
+  const eventName = (eventId: string) =>
+    events.find((e) => e.id === eventId)?.ten ?? "—";
 
   const teamStats = useMemo(() => {
     return teams.map((t) => ({
@@ -124,20 +86,21 @@ export default function DoanVaVDV() {
       if (!q) return true;
 
       const gioiTinhLabel = a.gioiTinh === "nam" ? "nam" : "nữ";
+      const eventNames = a.eventIds.map(eventName).join(" ");
       const haystack = [
         a.hoTen,
         String(a.namSinh),
         gioiTinhLabel,
-        a.nhomTuoi,
+        formatNhomTuoi(a.nhomTuoi),
         teamName(a.teamId),
-        ...a.noiDung,
+        eventNames,
       ]
         .join(" ")
         .toLowerCase();
 
       return haystack.includes(q);
     });
-  }, [athletes, search, filterTeamId, teams]);
+  }, [athletes, search, filterTeamId, teams, events]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -153,7 +116,7 @@ export default function DoanVaVDV() {
     setShowAddAthlete(true);
   };
 
-  const openEditAthlete = (athlete: Athlete) => {
+  const openEditAthlete = (athlete: AthleteRecord) => {
     setEditingId(athlete.id);
     setAthleteForm({
       hoTen: athlete.hoTen,
@@ -161,9 +124,18 @@ export default function DoanVaVDV() {
       gioiTinh: athlete.gioiTinh,
       nhomTuoi: athlete.nhomTuoi,
       teamId: athlete.teamId,
-      noiDung: athlete.noiDung,
+      eventIds: athlete.eventIds,
     });
     setShowAddAthlete(true);
+  };
+
+  const toggleEventIdInForm = (eventId: string) => {
+    setAthleteForm((prev) => ({
+      ...prev,
+      eventIds: prev.eventIds.includes(eventId)
+        ? prev.eventIds.filter((id) => id !== eventId)
+        : [...prev.eventIds, eventId],
+    }));
   };
 
   const submitAthlete = (e: FormEvent) => {
@@ -181,7 +153,7 @@ export default function DoanVaVDV() {
     setShowAddAthlete(false);
   };
 
-  const deleteAthlete = (a: Athlete) => {
+  const deleteAthlete = (a: AthleteRecord) => {
     if (!window.confirm(`Xóa VĐV "${a.hoTen}"? Không thể hoàn tác.`)) return;
     setAthletes((prev) => prev.filter((x) => x.id !== a.id));
   };
@@ -192,7 +164,7 @@ export default function DoanVaVDV() {
     setShowAddTeam(true);
   };
 
-  const openEditTeam = (team: Team) => {
+  const openEditTeam = (team: TeamBasic) => {
     setEditingTeamId(team.id);
     setTeamNameInput(team.ten);
     setShowAddTeam(true);
@@ -207,16 +179,13 @@ export default function DoanVaVDV() {
         prev.map((t) => (t.id === editingTeamId ? { ...t, ten } : t)),
       );
     } else {
-      setTeams((prev) => [
-        ...prev,
-        { id: crypto.randomUUID(), tournamentId: "demo", ten },
-      ]);
+      setTeams((prev) => [...prev, { id: crypto.randomUUID(), ten }]);
     }
     setTeamNameInput("");
     setShowAddTeam(false);
   };
 
-  const deleteTeam = (t: Team & { count: number }) => {
+  const deleteTeam = (t: TeamBasic & { count: number }) => {
     if (t.count > 0) {
       window.alert(
         `Không thể xóa "${t.ten}" — còn ${t.count} VĐV thuộc đoàn này. Xóa hoặc chuyển đoàn cho các VĐV đó trước.`,
@@ -230,7 +199,7 @@ export default function DoanVaVDV() {
 
   const handleImportConfirm = (validRows: ImportRow[]) => {
     const existingNames = new Set(teams.map((t) => t.ten.trim().toLowerCase()));
-    const newTeams: Team[] = [];
+    const newTeams: TeamBasic[] = [];
     for (const r of validRows) {
       const key = r.donVi.trim().toLowerCase();
       if (
@@ -238,11 +207,7 @@ export default function DoanVaVDV() {
         !existingNames.has(key) &&
         !newTeams.some((t) => t.ten.trim().toLowerCase() === key)
       ) {
-        newTeams.push({
-          id: crypto.randomUUID(),
-          tournamentId: "demo",
-          ten: r.donVi.trim(),
-        });
+        newTeams.push({ id: crypto.randomUUID(), ten: r.donVi.trim() });
       }
     }
 
@@ -251,20 +216,36 @@ export default function DoanVaVDV() {
       allTeams.map((t) => [t.ten.trim().toLowerCase(), t.id]),
     );
 
-    const newAthletes: Athlete[] = validRows.map((r) => ({
+    const newAthletes: AthleteRecord[] = validRows.map((r) => ({
       id: crypto.randomUUID(),
       hoTen: r.hoTen,
       namSinh: r.namSinh!,
       gioiTinh: r.gioiTinh!,
-      nhomTuoi: r.nhomTuoi,
+      nhomTuoi:
+        parseInt(r.nhomTuoi.replace(/[^0-9]/g, ""), 10) || NHOM_TUOI_OPTIONS[0],
       teamId: teamIdByName.get(r.donVi.trim().toLowerCase())!,
-      noiDung: r.noiDung,
+      eventIds: [], // Excel không map được nội dung chính xác — gán tay qua Sửa sau khi import
     }));
 
     setTeams(allTeams);
     setAthletes((prev) => [...newAthletes, ...prev]);
     setShowImportModal(false);
   };
+
+  if (loading) {
+    return (
+      <div className={styles.page}>
+        <p className={styles.hint}>Đang tải dữ liệu...</p>
+      </div>
+    );
+  }
+  if (loadError) {
+    return (
+      <div className={styles.page}>
+        <p className={styles.hint}>{loadError}</p>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.page}>
@@ -375,14 +356,14 @@ export default function DoanVaVDV() {
                 <td>{a.hoTen}</td>
                 <td>{a.namSinh}</td>
                 <td>{a.gioiTinh === "nam" ? "Nam" : "Nữ"}</td>
-                <td>{a.nhomTuoi}</td>
+                <td>{formatNhomTuoi(a.nhomTuoi)}</td>
                 <td>{teamName(a.teamId)}</td>
                 <td>
-                  {a.noiDung.length > 0 ? (
+                  {a.eventIds.length > 0 ? (
                     <div className={styles.noiDungList}>
-                      {a.noiDung.map((nd) => (
-                        <span key={nd} className={styles.noiDungChip}>
-                          {nd}
+                      {a.eventIds.map((eid) => (
+                        <span key={eid} className={styles.noiDungChip}>
+                          {eventName(eid)}
                         </span>
                       ))}
                     </div>
@@ -455,7 +436,8 @@ export default function DoanVaVDV() {
       {showAddAthlete && (
         <Modal
           title={editingId ? "Sửa VĐV" : "Thêm VĐV"}
-          onClose={() => setShowAddAthlete(false)}>
+          onClose={() => setShowAddAthlete(false)}
+          size="lg">
           <form onSubmit={submitAthlete} className={styles.modalForm}>
             <label className={styles.field}>
               <span>Họ tên</span>
@@ -502,11 +484,14 @@ export default function DoanVaVDV() {
               <select
                 value={athleteForm.nhomTuoi}
                 onChange={(e) =>
-                  setAthleteForm({ ...athleteForm, nhomTuoi: e.target.value })
+                  setAthleteForm({
+                    ...athleteForm,
+                    nhomTuoi: Number(e.target.value),
+                  })
                 }>
                 {NHOM_TUOI_OPTIONS.map((nt) => (
                   <option key={nt} value={nt}>
-                    {nt}
+                    {formatNhomTuoi(nt)}
                   </option>
                 ))}
               </select>
@@ -530,14 +515,22 @@ export default function DoanVaVDV() {
               </select>
             </label>
             <label className={styles.field}>
-              <span>Nội dung</span>
-              <TagInput
-                value={athleteForm.noiDung}
-                onChange={(noiDung) =>
-                  setAthleteForm({ ...athleteForm, noiDung })
-                }
-                placeholder="VD: Đối kháng nam - 54kg"
-              />
+              <span>Nội dung đăng ký</span>
+              <div className={styles.eventPicker}>
+                {events.map((ev) => (
+                  <label key={ev.id} className={styles.eventCheckItem}>
+                    <input
+                      type="checkbox"
+                      checked={athleteForm.eventIds.includes(ev.id)}
+                      onChange={() => toggleEventIdInForm(ev.id)}
+                    />
+                    <span>{ev.ten}</span>
+                    <span className={styles.eventCheckMeta}>
+                      Nhóm tuổi {ev.nhomTuoi}
+                    </span>
+                  </label>
+                ))}
+              </div>
             </label>
             <button type="submit" className={styles.btnPrimary}>
               {editingId ? "Lưu" : "Thêm"}

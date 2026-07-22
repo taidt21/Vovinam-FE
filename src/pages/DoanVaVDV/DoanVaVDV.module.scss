@@ -248,8 +248,8 @@
 }
 
 .rowActions {
-    display: flex;
-    gap: $space-2;
+    // display: flex;
+    // gap: $space-2;
 
     button {
         background: none;
@@ -259,9 +259,14 @@
         font-size: 13px;
         cursor: pointer;
         padding: 0;
+        text-decoration: underline;
 
         &:hover {
             text-decoration: underline;
+        }
+
+        &:first-child {
+            margin-right: $space-2;
         }
     }
 }
@@ -325,4 +330,36 @@
         border: 1px solid $color-border;
         border-radius: 6px;
     }
+}
+
+.eventPicker {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-height: 240px;
+    overflow-y: auto;
+    border: 1px solid $color-border;
+    border-radius: 8px;
+    padding: $space-2;
+}
+
+.eventCheckItem {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    font-size: 13px;
+    padding: $space-1 $space-2;
+    cursor: pointer;
+    border-radius: 4px;
+
+    &:hover {
+        background: $color-bg;
+    }
+}
+
+.eventCheckMeta {
+    margin-left: auto;
+    font-size: 11px;
+    color: $color-text-muted;
+    flex-shrink: 0;
 }

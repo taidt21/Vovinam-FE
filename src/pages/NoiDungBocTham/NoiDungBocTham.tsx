@@ -8,15 +8,17 @@ import {
   type SetStateAction,
 } from "react";
 import { Shuffle } from "lucide-react";
-import type { Athlete, CompetitionEvent, Match, Squad } from "../../types";
+import type {
+  Athlete,
+  AthleteRecord,
+  CompetitionEvent,
+  Match,
+  Squad,
+} from "../../types";
 import { generateBracket } from "../../lib/bracket";
 import BracketView from "../../components/BracketView/BracketView";
 import LichThiDau from "../../components/LichThiDau/LichThiDau";
 import styles from "./NoiDungBocTham.module.scss";
-
-type AthleteRecord = Omit<Athlete, "noiDung" | "canNang"> & {
-  eventIds: string[];
-};
 
 function getAthletesForEvent(
   athletes: AthleteRecord[],

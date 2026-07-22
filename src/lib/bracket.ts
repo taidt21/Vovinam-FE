@@ -1,10 +1,13 @@
 import type { Athlete, Match } from '../types';
 
-function tenVong(matchesInRound: number): string {
-  if (matchesInRound === 1) return 'Chung kết';
-  if (matchesInRound === 2) return 'Bán kết';
-  if (matchesInRound === 4) return 'Tứ kết';
-  return `Vòng ${matchesInRound * 2}`;
+// Đặt tên vòng theo khoảng cách THẬT tới chung kết — không theo số trận
+// trong vòng nữa. 0 bước = Chung kết, 1 = Bán kết, 2 = Tứ kết, xa hơn
+// thì theo số người thi đấu ở vòng đó (2^(khoảng cách + 1)).
+function tenVong(distance: number): string {
+  if (distance === 0) return 'Chung kết';
+  if (distance === 1) return 'Bán kết';
+  if (distance === 2) return 'Tứ kết';
+  return `Vòng ${2 ** (distance + 1)}`;
 }
 
 function shuffleArray<T>(arr: T[]): T[] {
@@ -15,11 +18,31 @@ type Entrant =
   | { kind: 'athlete'; athleteId: string }
   | { kind: 'pending'; matchId: string };
 
+// Đếm số bước từ 1 trận tới chung kết, bằng cách lần theo nextMatchId —
+// không suy đoán qua tên vòng hay số trận trong vòng. Chung kết
+// (không có nextMatchId) = 0.
+export function distanceFromFinal(match: Match, matchesInEvent: Match[]): number {
+  let distance = 0;
+  let current: Match | undefined = match;
+  while (current?.nextMatchId) {
+    current = matchesInEvent.find((m) => m.id === current!.nextMatchId);
+    if (!current) break;
+    distance++;
+  }
+  return distance;
+}
+
 /**
  * Sinh bracket đúng theo sơ đồ Sigma: đưa số VĐV về lũy thừa 2 LỚN NHẤT
  * <= n bằng ĐÚNG 1 vòng sơ bộ duy nhất, không giãn bracket lên như trước.
  * Sau vòng sơ bộ, bracket sạch tuyệt đối — không còn ai miễn đấu thêm
  * vòng nào nữa, không ai phải đợi nhiều vòng liên tiếp.
+ *
+ * Tên vòng KHÔNG còn gán "Sơ bộ" cứng cho vòng đầu nữa — toàn bộ cây
+ * trận được dựng xong trước (giữ nguyên cấu trúc/nextMatchId như cũ),
+ * rồi mới quét lại 1 lượt, đặt tên từng trận theo đúng khoảng cách thật
+ * tới chung kết — để trận ngay trước bán kết luôn là tứ kết, bất kể n
+ * lẻ hay có vòng sơ bộ hay không.
  */
 export function generateBracket(athletes: Athlete[], eventId: string): Match[] {
   const n = athletes.length;
@@ -46,7 +69,7 @@ export function generateBracket(athletes: Athlete[], eventId: string): Match[] {
         nextMatchId: null,
         athleteRedId: soBoAthletes[i].id,
         athleteBlueId: soBoAthletes[i + 1].id,
-        vong: 'Sơ bộ',
+        vong: '', // gán thật ở bước cuối cùng, sau khi biết đủ cả cây trận
         trangThai: 'cho_thi',
       });
       return acc;
@@ -74,7 +97,7 @@ export function generateBracket(athletes: Athlete[], eventId: string): Match[] {
         nextMatchId: null,
         athleteRedId: left.kind === 'athlete' ? left.athleteId : null,
         athleteBlueId: right.kind === 'athlete' ? right.athleteId : null,
-        vong: tenVong(matchesInRound),
+        vong: '', // gán thật ở bước cuối cùng, sau khi biết đủ cả cây trận
         trangThai: 'cho_thi',
       };
       if (left.kind === 'pending') allMatches.find((x) => x.id === left.matchId)!.nextMatchId = m.id;
@@ -83,6 +106,12 @@ export function generateBracket(athletes: Athlete[], eventId: string): Match[] {
       roundMatches.push(m);
     }
     entrants = roundMatches.map((m) => ({ kind: 'pending', matchId: m.id }));
+  }
+
+  // Đặt tên vòng thật — chỉ làm được SAU khi đã dựng xong toàn bộ
+  // nextMatchId, vì cần lần chuỗi tới chung kết mới biết khoảng cách.
+  for (const m of allMatches) {
+    m.vong = tenVong(distanceFromFinal(m, allMatches));
   }
 
   return allMatches;
@@ -94,18 +123,5 @@ export function groupByRound(matches: Match[]): Match[][] {
     if (!map.has(m.vong)) map.set(m.vong, []);
     map.get(m.vong)!.push(m);
   }
-  return Array.from(map.values()); // Sơ bộ luôn được push đầu tiên trong allMatches -> tự đứng cột đầu
-}
-// Đếm số bước từ 1 trận tới chung kết, bằng cách lần theo nextMatchId —
-// không suy đoán qua tên vòng, vì "Sơ bộ" không cố định cách chung kết
-// bao nhiêu bước (tùy n). Chung kết (không có nextMatchId) = 0.
-export function distanceFromFinal(match: Match, matchesInEvent: Match[]): number {
-  let distance = 0;
-  let current: Match | undefined = match;
-  while (current?.nextMatchId) {
-    current = matchesInEvent.find((m) => m.id === current!.nextMatchId);
-    if (!current) break;
-    distance++;
-  }
-  return distance;
+  return Array.from(map.values()); // trận xa chung kết nhất luôn được tạo/push đầu tiên -> tự đứng cột đầu
 }

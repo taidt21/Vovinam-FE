@@ -3,7 +3,7 @@
 .wrap {
     display: flex;
     flex-direction: column;
-    gap: $space-5;
+    gap: $space-6;
     max-width: 900px;
 }
 
@@ -22,14 +22,14 @@
     margin: 0;
 }
 
-.ntSection {
+.loaiSection {
     display: flex;
     flex-direction: column;
-    gap: $space-3;
+    gap: $space-4;
 }
 
-.ntTitle {
-    font-size: 16px;
+.loaiTitle {
+    font-size: 18px;
     font-weight: 700;
     color: $color-do;
     padding-bottom: $space-2;
@@ -37,36 +37,39 @@
     margin: 0;
 }
 
-.subSection {
-    background: $color-surface;
-    border: 1px solid $color-border;
-    border-radius: 10px;
-    padding: $space-4;
+.ntBlock {
+    display: flex;
+    flex-direction: column;
+    gap: $space-2;
 }
 
-.subTitle {
-    font-size: 12px;
+.ntTitle {
+    font-size: 13px;
     font-weight: 700;
-    margin: 0 0 $space-3;
     color: $color-text-muted;
     text-transform: uppercase;
     letter-spacing: 0.03em;
+    margin: 0;
 }
 
 .matchList {
     display: flex;
     flex-direction: column;
-    gap: $space-2;
+    gap: 0;
     padding-left: 0;
     list-style: none;
     margin: 0;
+    background: $color-surface;
+    border: 1px solid $color-border;
+    border-radius: 10px;
+    overflow: hidden;
 
     li {
         display: flex;
         align-items: baseline;
         gap: $space-3;
         flex-wrap: wrap;
-        padding: $space-2 0;
+        padding: $space-3 $space-4;
         border-bottom: 1px solid $color-border;
         font-size: 13px;
 
@@ -74,6 +77,15 @@
             border-bottom: none;
         }
     }
+}
+
+.matchNo {
+    font-family: $font-mono;
+    font-size: 12px;
+    font-weight: 700;
+    color: $color-text-muted;
+    flex-shrink: 0;
+    min-width: 32px;
 }
 
 .matchVong {

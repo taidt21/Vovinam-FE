@@ -1,40 +1,326 @@
 [
   {
-    "id": "sq3",
+    "id": "sq0001",
     "eventId": "e8",
-    "ten": "Đội 1",
-    "athleteIds": [
-      "vdv0035",
-      "vdv0036"
-    ]
+    "ten": "Quảng Nam",
+    "athleteIds": ["vdv0132", "vdv0439"]
   },
   {
-    "id": "sq4",
+    "id": "sq0002",
     "eventId": "e8",
-    "ten": "Đội 2",
-    "athleteIds": [
-      "vdv0121",
-      "vdv0122"
-    ]
+    "ten": "Thanh Hóa",
+    "athleteIds": ["vdv0233", "vdv0305"]
   },
   {
-    "id": "sq1",
-    "eventId": "e22",
-    "ten": "Đội 1",
-    "athleteIds": [
-      "vdv0115",
-      "vdv0116",
-      "vdv0117"
-    ]
+    "id": "sq0003",
+    "eventId": "e8",
+    "ten": "Tây Ninh",
+    "athleteIds": ["vdv0301", "vdv0124"]
   },
   {
-    "id": "sq2",
+    "id": "sq0004",
+    "eventId": "e8",
+    "ten": "Đà Nẵng",
+    "athleteIds": ["vdv0057", "vdv0009"]
+  },
+  {
+    "id": "sq0005",
+    "eventId": "e8",
+    "ten": "Bình Phước",
+    "athleteIds": ["vdv0306", "vdv0230"]
+  },
+  {
+    "id": "sq0006",
+    "eventId": "e8",
+    "ten": "Hải Phòng",
+    "athleteIds": ["vdv0061", "vdv0069"]
+  },
+  {
+    "id": "sq0007",
+    "eventId": "e8",
+    "ten": "Cần Thơ",
+    "athleteIds": ["vdv0063", "vdv0071"]
+  },
+  {
+    "id": "sq0008",
+    "eventId": "e8",
+    "ten": "Đồng Nai",
+    "athleteIds": ["vdv0231", "vdv0303"]
+  },
+  {
+    "id": "sq0009",
+    "eventId": "e8",
+    "ten": "Bình Dương",
+    "athleteIds": ["vdv0442", "vdv0056"]
+  },
+  {
+    "id": "sq0010",
+    "eventId": "e8",
+    "ten": "Nghệ An",
+    "athleteIds": ["vdv0446", "vdv0232"]
+  },
+  {
+    "id": "sq0011",
     "eventId": "e22",
-    "ten": "Đội 2",
-    "athleteIds": [
-      "vdv0118",
-      "vdv0119",
-      "vdv0120"
-    ]
+    "ten": "Cần Thơ",
+    "athleteIds": ["vdv0012", "vdv0054", "vdv0440"]
+  },
+  {
+    "id": "sq0012",
+    "eventId": "e22",
+    "ten": "Khánh Hòa",
+    "athleteIds": ["vdv0228", "vdv0129", "vdv0302"]
+  },
+  {
+    "id": "sq0013",
+    "eventId": "e22",
+    "ten": "Tây Ninh",
+    "athleteIds": ["vdv0444", "vdv0236", "vdv0433"]
+  },
+  {
+    "id": "sq0014",
+    "eventId": "e22",
+    "ten": "Đà Nẵng",
+    "athleteIds": ["vdv0310", "vdv0482", "vdv0483"]
+  },
+  {
+    "id": "sq0015",
+    "eventId": "e22",
+    "ten": "Hải Phòng",
+    "athleteIds": ["vdv0438", "vdv0309", "vdv0484"]
+  },
+  {
+    "id": "sq0016",
+    "eventId": "e22",
+    "ten": "Hà Nội",
+    "athleteIds": ["vdv0072", "vdv0003", "vdv0311"]
+  },
+  {
+    "id": "sq0017",
+    "eventId": "e22",
+    "ten": "Quảng Nam",
+    "athleteIds": ["vdv0237", "vdv0127", "vdv0308"]
+  },
+  {
+    "id": "sq0018",
+    "eventId": "e22",
+    "ten": "Nghệ An",
+    "athleteIds": ["vdv0123", "vdv0240", "vdv0436"]
+  },
+  {
+    "id": "sq0019",
+    "eventId": "e44",
+    "ten": "Quảng Nam",
+    "athleteIds": ["vdv0342", "vdv0140"]
+  },
+  {
+    "id": "sq0020",
+    "eventId": "e44",
+    "ten": "Hà Nội",
+    "athleteIds": ["vdv0023", "vdv0457"]
+  },
+  {
+    "id": "sq0021",
+    "eventId": "e44",
+    "ten": "Khánh Hòa",
+    "athleteIds": ["vdv0190", "vdv0447"]
+  },
+  {
+    "id": "sq0022",
+    "eventId": "e44",
+    "ten": "TP. Hồ Chí Minh",
+    "athleteIds": ["vdv0022", "vdv0456"]
+  },
+  {
+    "id": "sq0023",
+    "eventId": "e44",
+    "ten": "Nghệ An",
+    "athleteIds": ["vdv0452", "vdv0192"]
+  },
+  {
+    "id": "sq0024",
+    "eventId": "e44",
+    "ten": "Hải Phòng",
+    "athleteIds": ["vdv0319", "vdv0343"]
+  },
+  {
+    "id": "sq0025",
+    "eventId": "e44",
+    "ten": "Cần Thơ",
+    "athleteIds": ["vdv0333", "vdv0344"]
+  },
+  {
+    "id": "sq0026",
+    "eventId": "e44",
+    "ten": "Đồng Nai",
+    "athleteIds": ["vdv0341", "vdv0138"]
+  },
+  {
+    "id": "sq0027",
+    "eventId": "e45",
+    "ten": "Đà Nẵng",
+    "athleteIds": ["vdv0209", "vdv0454", "vdv0322"]
+  },
+  {
+    "id": "sq0028",
+    "eventId": "e45",
+    "ten": "Đồng Nai",
+    "athleteIds": ["vdv0199", "vdv0448", "vdv0316"]
+  },
+  {
+    "id": "sq0029",
+    "eventId": "e45",
+    "ten": "Thanh Hóa",
+    "athleteIds": ["vdv0313", "vdv0326", "vdv0193"]
+  },
+  {
+    "id": "sq0030",
+    "eventId": "e45",
+    "ten": "Bà Rịa - Vũng Tàu",
+    "athleteIds": ["vdv0201", "vdv0459", "vdv0315"]
+  },
+  {
+    "id": "sq0031",
+    "eventId": "e45",
+    "ten": "Cần Thơ",
+    "athleteIds": ["vdv0455", "vdv0026", "vdv0321"]
+  },
+  {
+    "id": "sq0032",
+    "eventId": "e45",
+    "ten": "Khánh Hòa",
+    "athleteIds": ["vdv0203", "vdv0317", "vdv0339"]
+  },
+  {
+    "id": "sq0033",
+    "eventId": "e45",
+    "ten": "Hà Nội",
+    "athleteIds": ["vdv0323", "vdv0485", "vdv0486"]
+  },
+  {
+    "id": "sq0034",
+    "eventId": "e45",
+    "ten": "Nghệ An",
+    "athleteIds": ["vdv0139", "vdv0204", "vdv0330"]
+  },
+  {
+    "id": "sq0035",
+    "eventId": "e45",
+    "ten": "TP. Hồ Chí Minh",
+    "athleteIds": ["vdv0487", "vdv0488", "vdv0489"]
+  },
+  {
+    "id": "sq0036",
+    "eventId": "e45",
+    "ten": "Quảng Nam",
+    "athleteIds": ["vdv0202", "vdv0191", "vdv0331"]
+  },
+  {
+    "id": "sq0037",
+    "eventId": "e46",
+    "ten": "Bình Dương",
+    "athleteIds": ["vdv0018", "vdv0111", "vdv0086"]
+  },
+  {
+    "id": "sq0038",
+    "eventId": "e46",
+    "ten": "Hà Nội",
+    "athleteIds": ["vdv0020", "vdv0081", "vdv0112"]
+  },
+  {
+    "id": "sq0039",
+    "eventId": "e46",
+    "ten": "Cần Thơ",
+    "athleteIds": ["vdv0355", "vdv0366", "vdv0017"]
+  },
+  {
+    "id": "sq0040",
+    "eventId": "e46",
+    "ten": "Nghệ An",
+    "athleteIds": ["vdv0134", "vdv0358", "vdv0490"]
+  },
+  {
+    "id": "sq0041",
+    "eventId": "e46",
+    "ten": "Hải Phòng",
+    "athleteIds": ["vdv0364", "vdv0088", "vdv0353"]
+  },
+  {
+    "id": "sq0042",
+    "eventId": "e46",
+    "ten": "Khánh Hòa",
+    "athleteIds": ["vdv0133", "vdv0471", "vdv0461"]
+  },
+  {
+    "id": "sq0043",
+    "eventId": "e46",
+    "ten": "Đà Nẵng",
+    "athleteIds": ["vdv0083", "vdv0075", "vdv0104"]
+  },
+  {
+    "id": "sq0044",
+    "eventId": "e46",
+    "ten": "Đồng Nai",
+    "athleteIds": ["vdv0350", "vdv0468", "vdv0491"]
+  },
+  {
+    "id": "sq0045",
+    "eventId": "e47",
+    "ten": "Nghệ An",
+    "athleteIds": ["vdv0397", "vdv0373", "vdv0425"]
+  },
+  {
+    "id": "sq0046",
+    "eventId": "e47",
+    "ten": "Thanh Hóa",
+    "athleteIds": ["vdv0370", "vdv0409", "vdv0184"]
+  },
+  {
+    "id": "sq0047",
+    "eventId": "e47",
+    "ten": "Đà Nẵng",
+    "athleteIds": ["vdv0415", "vdv0403", "vdv0378"]
+  },
+  {
+    "id": "sq0048",
+    "eventId": "e47",
+    "ten": "Hà Nội",
+    "athleteIds": ["vdv0379", "vdv0392", "vdv0430"]
+  },
+  {
+    "id": "sq0049",
+    "eventId": "e47",
+    "ten": "Bình Phước",
+    "athleteIds": ["vdv0386", "vdv0399", "vdv0187"]
+  },
+  {
+    "id": "sq0050",
+    "eventId": "e47",
+    "ten": "Bình Dương",
+    "athleteIds": ["vdv0418", "vdv0432", "vdv0037"]
+  },
+  {
+    "id": "sq0051",
+    "eventId": "e47",
+    "ten": "Quảng Nam",
+    "athleteIds": ["vdv0427", "vdv0147", "vdv0412"]
+  },
+  {
+    "id": "sq0052",
+    "eventId": "e47",
+    "ten": "TP. Hồ Chí Minh",
+    "athleteIds": ["vdv0431", "vdv0404", "vdv0038"]
+  },
+  {
+    "id": "sq0053",
+    "eventId": "e47",
+    "ten": "Tây Ninh",
+    "athleteIds": ["vdv0419", "vdv0405", "vdv0380"]
+  },
+  {
+    "id": "sq0054",
+    "eventId": "e47",
+    "ten": "Đồng Nai",
+    "athleteIds": ["vdv0183", "vdv0408", "vdv0385"]
   }
 ]

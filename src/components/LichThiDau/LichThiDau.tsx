@@ -54,25 +54,44 @@ export default function LichThiDau({
       .map((e) => e.ten),
   ];
 
-  // Trộn tất cả trận đối kháng đã xác định đủ 2 bên, từ MỌI nội dung —
-  // không tách riêng theo từng hạng cân — rồi sắp theo đúng quy tắc:
-  // nhóm tuổi tăng dần, trong đó khoảng cách chung kết giảm dần (xa nhất trước).
-  const allMatches = doiKhangEvents.flatMap((e) => {
-    const matches = bracketsByEvent[e.id];
-    if (!matches) return [];
-    return matches
-      .filter((m) => m.athleteRedId && m.athleteBlueId)
-      .map((m) => ({
-        event: e,
-        match: m,
-        distance: distanceFromFinal(m, matches),
-      }));
-  });
-  allMatches.sort((a, b) =>
-    a.event.nhomTuoi !== b.event.nhomTuoi
-      ? a.event.nhomTuoi - b.event.nhomTuoi
-      : b.distance - a.distance,
+  const doiKhangSorted = doiKhangEvents
+    .flatMap((e) => {
+      const matches = bracketsByEvent[e.id];
+      if (!matches) return [];
+      return matches
+        .filter((m) => m.athleteRedId && m.athleteBlueId)
+        .map((m) => ({
+          event: e,
+          match: m,
+          distance: distanceFromFinal(m, matches),
+        }));
+    })
+    .sort((a, b) =>
+      a.event.nhomTuoi !== b.event.nhomTuoi
+        ? a.event.nhomTuoi - b.event.nhomTuoi
+        : b.distance - a.distance,
+    );
+  const doiKhangNumbered = doiKhangSorted.map((x, i) => ({ ...x, so: i + 1 }));
+
+  const quyenReady = quyenEvents.filter((e) =>
+    e.hinhThucThi === "doi" ? !!squadOrderByEvent[e.id] : !!orderByEvent[e.id],
   );
+  const quyenSorted = [...quyenReady]
+    .sort((a, b) => a.nhomTuoi - b.nhomTuoi)
+    .flatMap((e) =>
+      e.hinhThucThi === "doi"
+        ? squadOrderByEvent[e.id]!.map((s) => ({
+            event: e,
+            key: s.id,
+            label: `${s.ten} (${squadTeam(s)})`,
+          }))
+        : orderByEvent[e.id]!.map((a) => ({
+            event: e,
+            key: a.id,
+            label: `${a.hoTen} (${a.namSinh} · ${teamName(a.teamId)})`,
+          })),
+    );
+  const quyenNumbered = quyenSorted.map((x, i) => ({ ...x, so: i + 1 }));
 
   const nhomTuoiList = Array.from(new Set(events.map((e) => e.nhomTuoi))).sort(
     (a, b) => a - b,
@@ -89,28 +108,21 @@ export default function LichThiDau({
         </p>
       )}
 
-      {nhomTuoiList.map((nt) => {
-        const matchesOfNt = allMatches.filter((x) => x.event.nhomTuoi === nt);
-        const quyenOfNt = quyenEvents.filter((e) => e.nhomTuoi === nt);
-        const quyenReadyOfNt = quyenOfNt.filter((e) =>
-          e.hinhThucThi === "doi"
-            ? !!squadOrderByEvent[e.id]
-            : !!orderByEvent[e.id],
-        );
-
-        if (matchesOfNt.length === 0 && quyenReadyOfNt.length === 0)
-          return null;
-
-        return (
-          <section key={nt} className={styles.ntSection}>
-            <h2 className={styles.ntTitle}>Nhóm tuổi {nt}</h2>
-
-            {matchesOfNt.length > 0 && (
-              <div className={styles.subSection}>
-                <h3 className={styles.subTitle}>Đối kháng</h3>
+      {doiKhangNumbered.length > 0 && (
+        <section className={styles.loaiSection}>
+          <h2 className={styles.loaiTitle}>Đối kháng</h2>
+          {nhomTuoiList.map((nt) => {
+            const items = doiKhangNumbered.filter(
+              (x) => x.event.nhomTuoi === nt,
+            );
+            if (items.length === 0) return null;
+            return (
+              <div key={nt} className={styles.ntBlock}>
+                <h3 className={styles.ntTitle}>Nhóm tuổi {nt}</h3>
                 <ol className={styles.matchList}>
-                  {matchesOfNt.map(({ event, match }) => (
+                  {items.map(({ event, match, so }) => (
                     <li key={match.id}>
+                      <span className={styles.matchNo}>{so}</span>
                       <span className={styles.matchVong}>{match.vong}</span>
                       <span className={styles.matchEvent}>{event.ten}</span>
                       <span className={styles.matchup}>
@@ -121,29 +133,34 @@ export default function LichThiDau({
                   ))}
                 </ol>
               </div>
-            )}
+            );
+          })}
+        </section>
+      )}
 
-            {quyenReadyOfNt.map((e) => (
-              <div key={e.id} className={styles.subSection}>
-                <h3 className={styles.subTitle}>Quyền — {e.ten}</h3>
+      {quyenNumbered.length > 0 && (
+        <section className={styles.loaiSection}>
+          <h2 className={styles.loaiTitle}>Quyền</h2>
+          {nhomTuoiList.map((nt) => {
+            const items = quyenNumbered.filter((x) => x.event.nhomTuoi === nt);
+            if (items.length === 0) return null;
+            return (
+              <div key={nt} className={styles.ntBlock}>
+                <h3 className={styles.ntTitle}>Nhóm tuổi {nt}</h3>
                 <ol className={styles.matchList}>
-                  {e.hinhThucThi === "doi"
-                    ? squadOrderByEvent[e.id]!.map((s) => (
-                        <li key={s.id}>
-                          <strong>{s.ten}</strong> ({squadTeam(s)})
-                        </li>
-                      ))
-                    : orderByEvent[e.id]!.map((a) => (
-                        <li key={a.id}>
-                          {a.hoTen} ({a.namSinh} · {teamName(a.teamId)})
-                        </li>
-                      ))}
+                  {items.map(({ event, key, label, so }) => (
+                    <li key={key}>
+                      <span className={styles.matchNo}>{so}</span>
+                      <span className={styles.matchEvent}>{event.ten}</span>
+                      <span className={styles.matchup}>{label}</span>
+                    </li>
+                  ))}
                 </ol>
               </div>
-            ))}
-          </section>
-        );
-      })}
+            );
+          })}
+        </section>
+      )}
     </div>
   );
 }
