@@ -1,4 +1,4 @@
-import type { Athlete, Match } from '../types';
+import type { Athlete, CompetitionEvent, Match } from '../types';
 
 // Đặt tên vòng theo khoảng cách THẬT tới chung kết — không theo số trận
 // trong vòng nữa. 0 bước = Chung kết, 1 = Bán kết, 2 = Tứ kết, xa hơn
@@ -67,6 +67,7 @@ export function generateBracket(athletes: Athlete[], eventId: string): Match[] {
         eventId,
         courtId: null,
         nextMatchId: null,
+        nextMatchSlot: null,
         athleteRedId: soBoAthletes[i].id,
         athleteBlueId: soBoAthletes[i + 1].id,
         vong: '', // gán thật ở bước cuối cùng, sau khi biết đủ cả cây trận
@@ -95,13 +96,22 @@ export function generateBracket(athletes: Athlete[], eventId: string): Match[] {
         eventId,
         courtId: null,
         nextMatchId: null,
+        nextMatchSlot: null,
         athleteRedId: left.kind === 'athlete' ? left.athleteId : null,
         athleteBlueId: right.kind === 'athlete' ? right.athleteId : null,
         vong: '', // gán thật ở bước cuối cùng, sau khi biết đủ cả cây trận
         trangThai: 'cho_thi',
       };
-      if (left.kind === 'pending') allMatches.find((x) => x.id === left.matchId)!.nextMatchId = m.id;
-      if (right.kind === 'pending') allMatches.find((x) => x.id === right.matchId)!.nextMatchId = m.id;
+      if (left.kind === 'pending') {
+        const feeder = allMatches.find((x) => x.id === left.matchId)!;
+        feeder.nextMatchId = m.id;
+        feeder.nextMatchSlot = 'do';
+      }
+      if (right.kind === 'pending') {
+        const feeder = allMatches.find((x) => x.id === right.matchId)!;
+        feeder.nextMatchId = m.id;
+        feeder.nextMatchSlot = 'xanh';
+      }
       allMatches.push(m);
       roundMatches.push(m);
     }
@@ -124,4 +134,60 @@ export function groupByRound(matches: Match[]): Match[][] {
     map.get(m.vong)!.push(m);
   }
   return Array.from(map.values()); // trận xa chung kết nhất luôn được tạo/push đầu tiên -> tự đứng cột đầu
+}
+
+/**
+ * Đánh số THỨ TỰ TOÀN GIẢI cho mọi trận đối kháng (mọi nội dung, mọi vòng) —
+ * dùng chung 1 nguồn cho cả tab "Lịch thi đấu" lẫn sơ đồ nhánh đấu từng nội
+ * dung, để số trận không bao giờ lệch nhau giữa 2 nơi.
+ *
+ * Sắp theo nhóm tuổi trước, rồi theo khoảng cách tới chung kết GIẢM DẦN
+ * (vòng xa chung kết nhất trước) — nhờ vậy trận "nguồn" (nuôi người thắng
+ * vào trận sau) LUÔN được đánh số trước trận nó nuôi vào, dù có xen kẽ
+ * nhiều nội dung khác nhau ở giữa.
+ */
+export interface NumberedMatch {
+  event: CompetitionEvent;
+  match: Match;
+  so: number;
+}
+
+export function numberDoiKhangMatches(
+  events: CompetitionEvent[],
+  bracketsByEvent: Record<string, Match[]>,
+): NumberedMatch[] {
+  const items = events
+    .filter((e) => e.loai === 'doi_khang')
+    .flatMap((e) => {
+      const matches = bracketsByEvent[e.id];
+      if (!matches) return [];
+      return matches.map((m) => ({
+        event: e,
+        match: m,
+        distance: distanceFromFinal(m, matches),
+      }));
+    })
+    .sort((a, b) =>
+      a.event.nhomTuoi !== b.event.nhomTuoi ? a.event.nhomTuoi - b.event.nhomTuoi : b.distance - a.distance,
+    );
+  return items.map((x, i) => ({ event: x.event, match: x.match, so: i + 1 }));
+}
+
+/**
+ * Nhãn hiển thị cho 1 ô VĐV trong trận: tên VĐV nếu đã biết, hoặc
+ * "Thắng trận N" nếu ô này còn chờ người thắng từ trận trước (N lấy từ
+ * soByMatchId — xem numberDoiKhangMatches). "Chưa xác định" chỉ xuất hiện
+ * khi thiếu dữ liệu (trường hợp không nên xảy ra trong luồng bình thường).
+ */
+export function winnerLabel(
+  matchesInEvent: Match[],
+  soByMatchId: Map<string, number>,
+  targetMatchId: string,
+  slot: 'do' | 'xanh',
+): string {
+  const feeder = matchesInEvent.find(
+    (m) => m.nextMatchId === targetMatchId && m.nextMatchSlot === slot,
+  );
+  const so = feeder ? soByMatchId.get(feeder.id) : undefined;
+  return so ? `Thắng trận ${so}` : 'Chưa xác định';
 }

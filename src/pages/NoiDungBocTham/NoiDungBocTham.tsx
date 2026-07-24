@@ -15,7 +15,12 @@ import type {
   Match,
   Squad,
 } from "../../types";
-import { generateBracket } from "../../lib/bracket";
+import {
+  loadBracketData,
+  saveBracketData,
+  subscribeBracketData,
+} from "../../lib/bracketStore";
+import { generateBracket, numberDoiKhangMatches } from "../../lib/bracket";
 import BracketView from "../../components/BracketView/BracketView";
 import LichThiDau from "../../components/LichThiDau/LichThiDau";
 import styles from "./NoiDungBocTham.module.scss";
@@ -153,7 +158,17 @@ export default function NoiDungBocTham() {
   const [squadOrderByEvent, setSquadOrderByEvent] = useState<
     Record<string, Squad[]>
   >({});
+  useEffect(() => {
+    saveBracketData({ bracketsByEvent, orderByEvent, squadOrderByEvent });
+  }, [bracketsByEvent, orderByEvent, squadOrderByEvent]);
 
+  useEffect(() => {
+    return subscribeBracketData((data) => {
+      setBracketsByEvent(data.bracketsByEvent);
+      setOrderByEvent(data.orderByEvent);
+      setSquadOrderByEvent(data.squadOrderByEvent);
+    });
+  }, []);
   const eventsInTab = useMemo(
     () =>
       events
@@ -172,6 +187,14 @@ export default function NoiDungBocTham() {
     : [];
   const squadOrder = selected ? squadOrderByEvent[selected.id] : undefined;
   const isTeamEvent = selected?.hinhThucThi === "doi";
+
+  // Số thứ tự toàn giải cho từng trận đối kháng — tính 1 lần ở đây, dùng
+  // chung cho cả sơ đồ nhánh (BracketView) lẫn tab Lịch thi đấu, để số
+  // trận hiển thị luôn khớp nhau ở mọi nơi.
+  const soByMatchId = useMemo(() => {
+    const numbered = numberDoiKhangMatches(events, bracketsByEvent);
+    return new Map(numbered.map((x) => [x.match.id, x.so]));
+  }, [events, bracketsByEvent]);
 
   const handleBocTham = () => {
     if (!selected) return;
@@ -202,127 +225,74 @@ export default function NoiDungBocTham() {
 
   return (
     <div className={styles.page}>
-      <aside className={styles.sidebar}>
-        <div className={styles.tabs}>
-          {(["quyen", "doi_khang", "lich_thi_dau"] as const).map((t) => (
-            <button
-              key={t}
-              className={t === tab ? styles.tabActive : styles.tab}
-              onClick={() => setTab(t)}>
-              {LOAI_LABEL[t]}
-            </button>
-          ))}
-        </div>
+      <div className={styles.tabsBar}>
+        {(["quyen", "doi_khang", "lich_thi_dau"] as const).map((t) => (
+          <button
+            key={t}
+            className={t === tab ? styles.tabActive : styles.tab}
+            onClick={() => setTab(t)}>
+            {LOAI_LABEL[t]}
+          </button>
+        ))}
+      </div>
+
+      <div className={styles.body}>
         {tab !== "lich_thi_dau" && (
-          <div className={styles.eventList}>
-            {eventsInTab.map((ev) => (
-              <button
-                key={ev.id}
-                className={
-                  ev.id === selectedId
-                    ? styles.eventItemActive
-                    : styles.eventItem
-                }
-                onClick={() => setSelectedId(ev.id)}>
-                <span className={styles.eventName}>{ev.ten}</span>
-                <span className={styles.eventMeta}>
-                  Nhóm tuổi {ev.nhomTuoi}
-                </span>
-              </button>
-            ))}
-            {eventsInTab.length === 0 && (
-              <p className={styles.emptyList}>Chưa có nội dung nào</p>
-            )}
-          </div>
-        )}
-      </aside>
-
-      <section className={styles.main}>
-        {tab === "lich_thi_dau" ? (
-          <LichThiDau
-            events={events}
-            athletes={athletes}
-            teams={teams}
-            bracketsByEvent={bracketsByEvent}
-            orderByEvent={orderByEvent}
-            squadOrderByEvent={squadOrderByEvent}
-          />
-        ) : !selected ? (
-          <p>Chọn 1 nội dung ở danh sách bên trái.</p>
-        ) : (
-          <>
-            <h1 className={styles.title}>{selected.ten}</h1>
-
-            <section className={styles.registeredSection}>
-              <h2 className={styles.registeredTitle}>
-                {isTeamEvent ? "Danh sách đội đăng ký" : "Danh sách đăng ký"}{" "}
-                <span>
-                  {isTeamEvent
-                    ? `(${squadsOfSelected.length} đội)`
-                    : `(${athletesOfSelected.length} người)`}
-                </span>
-              </h2>
-              {isTeamEvent ? (
-                squadsOfSelected.length > 0 ? (
-                  <ol className={styles.athleteList}>
-                    {squadsOfSelected.map((s) => (
-                      <li key={s.id}>
-                        <strong>{s.ten}</strong>{" "}
-                        <span className={styles.teamTag}>
-                          ({squadTeamName(s, athletesOfSelected, teams)})
-                        </span>{" "}
-                        — {squadMemberNames(s, athletesOfSelected)}
-                      </li>
-                    ))}
-                  </ol>
-                ) : (
-                  <p className={styles.hint}>
-                    Chưa có đội đăng ký nội dung này
-                  </p>
-                )
-              ) : athletesOfSelected.length > 0 ? (
-                <ol className={styles.athleteList}>
-                  {athletesOfSelected.map((a) => (
-                    <li key={a.id}>
-                      {a.hoTen}{" "}
-                      <span className={styles.teamTag}>
-                        ({a.namSinh} · {teamName(a.teamId, teams)})
-                      </span>
-                    </li>
-                  ))}
-                </ol>
-              ) : (
-                <p className={styles.hint}>Chưa có VĐV đăng ký nội dung này</p>
+          <aside className={styles.sidebar}>
+            <div className={styles.eventList}>
+              {eventsInTab.map((ev) => (
+                <button
+                  key={ev.id}
+                  className={
+                    ev.id === selectedId
+                      ? styles.eventItemActive
+                      : styles.eventItem
+                  }
+                  onClick={() => setSelectedId(ev.id)}>
+                  <span className={styles.eventName}>{ev.ten}</span>
+                  <span className={styles.eventMeta}>
+                    Nhóm tuổi {ev.nhomTuoi}
+                  </span>
+                </button>
+              ))}
+              {eventsInTab.length === 0 && (
+                <p className={styles.emptyList}>Chưa có nội dung nào</p>
               )}
-            </section>
+            </div>
+          </aside>
+        )}
 
-            {selected.loai === "doi_khang" ? (
-              <>
-                <BocThamButton
-                  onClick={handleBocTham}
-                  count={athletesOfSelected.length}
-                  hasResult={!!bracket}
-                  itemLabel="VĐV đăng ký"
-                />
-                <BracketView
-                  matches={bracket ?? []}
-                  athletes={athletesOfSelected}
-                  teams={teams}
-                />
-              </>
-            ) : isTeamEvent ? (
-              <>
-                <BocThamButton
-                  onClick={handleBocThamSquads}
-                  count={squadsOfSelected.length}
-                  hasResult={!!squadOrder}
-                  itemLabel="đội"
-                />
-                {squadOrder && (
-                  <div className={styles.registeredSection}>
-                    <h2 className={styles.registeredTitle}>Thứ tự thi diễn</h2>
+        <section className={styles.main}>
+          {tab === "lich_thi_dau" ? (
+            <LichThiDau
+              events={events}
+              athletes={athletes}
+              teams={teams}
+              bracketsByEvent={bracketsByEvent}
+              orderByEvent={orderByEvent}
+              squadOrderByEvent={squadOrderByEvent}
+            />
+          ) : !selected ? (
+            <p>Chọn 1 nội dung ở danh sách bên trái.</p>
+          ) : (
+            <>
+              <h1 className={styles.title}>
+                {selected.ten} | <small>Nhóm tuổi {selected.nhomTuoi}</small>
+              </h1>
+
+              <section className={styles.registeredSection}>
+                <h2 className={styles.registeredTitle}>
+                  {isTeamEvent ? "Danh sách đội đăng ký" : "Danh sách đăng ký"}{" "}
+                  <span>
+                    {isTeamEvent
+                      ? `(${squadsOfSelected.length} đội)`
+                      : `(${athletesOfSelected.length} người)`}
+                  </span>
+                </h2>
+                {isTeamEvent ? (
+                  squadsOfSelected.length > 0 ? (
                     <ol className={styles.athleteList}>
-                      {squadOrder.map((s) => (
+                      {squadsOfSelected.map((s) => (
                         <li key={s.id}>
                           <strong>{s.ten}</strong>{" "}
                           <span className={styles.teamTag}>
@@ -332,37 +302,102 @@ export default function NoiDungBocTham() {
                         </li>
                       ))}
                     </ol>
-                  </div>
+                  ) : (
+                    <p className={styles.hint}>
+                      Chưa có đội đăng ký nội dung này
+                    </p>
+                  )
+                ) : athletesOfSelected.length > 0 ? (
+                  <ol className={styles.athleteList}>
+                    {athletesOfSelected.map((a) => (
+                      <li key={a.id}>
+                        {a.hoTen}{" "}
+                        <span className={styles.teamTag}>
+                          ({a.namSinh} · {teamName(a.teamId, teams)})
+                        </span>
+                      </li>
+                    ))}
+                  </ol>
+                ) : (
+                  <p className={styles.hint}>
+                    Chưa có VĐV đăng ký nội dung này
+                  </p>
                 )}
-              </>
-            ) : (
-              <>
-                <BocThamButton
-                  onClick={handleBocThamQuyen}
-                  count={athletesOfSelected.length}
-                  hasResult={!!order}
-                  itemLabel="VĐV đăng ký"
-                />
-                {order && (
-                  <div className={styles.registeredSection}>
-                    <h2 className={styles.registeredTitle}>Thứ tự thi diễn</h2>
-                    <ol className={styles.athleteList}>
-                      {order.map((a) => (
-                        <li key={a.id}>
-                          {a.hoTen}{" "}
-                          <span className={styles.teamTag}>
-                            ({teamName(a.teamId, teams)})
-                          </span>
-                        </li>
-                      ))}
-                    </ol>
-                  </div>
-                )}
-              </>
-            )}
-          </>
-        )}
-      </section>
+              </section>
+
+              {selected.loai === "doi_khang" ? (
+                <>
+                  <BocThamButton
+                    onClick={handleBocTham}
+                    count={athletesOfSelected.length}
+                    hasResult={!!bracket}
+                    itemLabel="VĐV đăng ký"
+                  />
+                  <BracketView
+                    matches={bracket ?? []}
+                    athletes={athletesOfSelected}
+                    teams={teams}
+                    soByMatchId={soByMatchId}
+                  />
+                </>
+              ) : isTeamEvent ? (
+                <>
+                  <BocThamButton
+                    onClick={handleBocThamSquads}
+                    count={squadsOfSelected.length}
+                    hasResult={!!squadOrder}
+                    itemLabel="đội"
+                  />
+                  {squadOrder && (
+                    <div className={styles.registeredSection}>
+                      <h2 className={styles.registeredTitle}>
+                        Thứ tự thi diễn
+                      </h2>
+                      <ol className={styles.athleteList}>
+                        {squadOrder.map((s) => (
+                          <li key={s.id}>
+                            <strong>{s.ten}</strong>{" "}
+                            <span className={styles.teamTag}>
+                              ({squadTeamName(s, athletesOfSelected, teams)})
+                            </span>{" "}
+                            — {squadMemberNames(s, athletesOfSelected)}
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  <BocThamButton
+                    onClick={handleBocThamQuyen}
+                    count={athletesOfSelected.length}
+                    hasResult={!!order}
+                    itemLabel="VĐV đăng ký"
+                  />
+                  {order && (
+                    <div className={styles.registeredSection}>
+                      <h2 className={styles.registeredTitle}>
+                        Thứ tự thi diễn
+                      </h2>
+                      <ol className={styles.athleteList}>
+                        {order.map((a) => (
+                          <li key={a.id}>
+                            {a.hoTen}{" "}
+                            <span className={styles.teamTag}>
+                              ({teamName(a.teamId, teams)})
+                            </span>
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+                  )}
+                </>
+              )}
+            </>
+          )}
+        </section>
+      </div>
     </div>
   );
 }

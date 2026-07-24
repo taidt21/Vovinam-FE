@@ -1,0 +1,22 @@
+.avatar,
+.avatarFallback {
+    border-radius: 50%;
+    flex-shrink: 0;
+    border: 2px solid rgba(255, 255, 255, 0.45);
+}
+
+.avatar {
+    object-fit: cover;
+    display: block;
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.avatarFallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: white;
+    background: rgba(255, 255, 255, 0.16);
+    letter-spacing: 0.02em;
+}

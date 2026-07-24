@@ -9,6 +9,11 @@ export interface Athlete {
   teamId: string;
   noiDung: string[];
   canNang?: number;
+  // URL ảnh đại diện VĐV. Optional vì hiện chưa có nơi nhập/upload ảnh —
+  // chỉ mới có chỗ HIỂN THỊ (Bàn thư ký, Màn hình công khai) sẵn sàng dùng
+  // ngay khi có dữ liệu thật. Athlete nào chưa có ảnh thì UI tự hiện avatar
+  // chữ cái đầu tên (xem components/AthleteAvatar).
+  anhDaiDien?: string;
 }
 
 // Dạng dữ liệu thô đúng như trong athletes.json — dùng chung cho cả

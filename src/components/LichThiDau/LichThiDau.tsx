@@ -1,7 +1,7 @@
 /** @format */
 
 import type { Athlete, CompetitionEvent, Match, Squad } from "../../types";
-import { distanceFromFinal } from "../../lib/bracket";
+import { numberDoiKhangMatches, winnerLabel } from "../../lib/bracket";
 import styles from "./LichThiDau.module.scss";
 
 interface AthleteBasic {
@@ -54,24 +54,8 @@ export default function LichThiDau({
       .map((e) => e.ten),
   ];
 
-  const doiKhangSorted = doiKhangEvents
-    .flatMap((e) => {
-      const matches = bracketsByEvent[e.id];
-      if (!matches) return [];
-      return matches
-        .filter((m) => m.athleteRedId && m.athleteBlueId)
-        .map((m) => ({
-          event: e,
-          match: m,
-          distance: distanceFromFinal(m, matches),
-        }));
-    })
-    .sort((a, b) =>
-      a.event.nhomTuoi !== b.event.nhomTuoi
-        ? a.event.nhomTuoi - b.event.nhomTuoi
-        : b.distance - a.distance,
-    );
-  const doiKhangNumbered = doiKhangSorted.map((x, i) => ({ ...x, so: i + 1 }));
+  const doiKhangNumbered = numberDoiKhangMatches(events, bracketsByEvent);
+  const soByMatchId = new Map(doiKhangNumbered.map((x) => [x.match.id, x.so]));
 
   const quyenReady = quyenEvents.filter((e) =>
     e.hinhThucThi === "doi" ? !!squadOrderByEvent[e.id] : !!orderByEvent[e.id],
@@ -108,6 +92,30 @@ export default function LichThiDau({
         </p>
       )}
 
+      {quyenNumbered.length > 0 && (
+        <section className={styles.loaiSection}>
+          <h2 className={styles.loaiTitle}>Quyền</h2>
+          {nhomTuoiList.map((nt) => {
+            const items = quyenNumbered.filter((x) => x.event.nhomTuoi === nt);
+            if (items.length === 0) return null;
+            return (
+              <div key={nt} className={styles.ntBlock}>
+                <h3 className={styles.ntTitle}>Nhóm tuổi {nt}</h3>
+                <ol className={styles.matchList}>
+                  {items.map(({ event, key, label, so }) => (
+                    <li key={key}>
+                      <span className={styles.matchNo}>{so}</span>
+                      <span className={styles.matchEvent}>{event.ten}</span>
+                      <span className={styles.matchup}>{label}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            );
+          })}
+        </section>
+      )}
+
       {doiKhangNumbered.length > 0 && (
         <section className={styles.loaiSection}>
           <h2 className={styles.loaiTitle}>Đối kháng</h2>
@@ -126,33 +134,26 @@ export default function LichThiDau({
                       <span className={styles.matchVong}>{match.vong}</span>
                       <span className={styles.matchEvent}>{event.ten}</span>
                       <span className={styles.matchup}>
-                        {athleteLabel(match.athleteRedId)} vs{" "}
-                        {athleteLabel(match.athleteBlueId)}
+                        <span className={styles.matchDo}>
+                          {athleteLabel(match.athleteRedId) ??
+                            winnerLabel(
+                              bracketsByEvent[event.id] ?? [],
+                              soByMatchId,
+                              match.id,
+                              "do",
+                            )}
+                        </span>
+                        <span className={styles.vs}>vs</span>
+                        <span className={styles.matchXanh}>
+                          {athleteLabel(match.athleteBlueId) ??
+                            winnerLabel(
+                              bracketsByEvent[event.id] ?? [],
+                              soByMatchId,
+                              match.id,
+                              "xanh",
+                            )}
+                        </span>
                       </span>
-                    </li>
-                  ))}
-                </ol>
-              </div>
-            );
-          })}
-        </section>
-      )}
-
-      {quyenNumbered.length > 0 && (
-        <section className={styles.loaiSection}>
-          <h2 className={styles.loaiTitle}>Quyền</h2>
-          {nhomTuoiList.map((nt) => {
-            const items = quyenNumbered.filter((x) => x.event.nhomTuoi === nt);
-            if (items.length === 0) return null;
-            return (
-              <div key={nt} className={styles.ntBlock}>
-                <h3 className={styles.ntTitle}>Nhóm tuổi {nt}</h3>
-                <ol className={styles.matchList}>
-                  {items.map(({ event, key, label, so }) => (
-                    <li key={key}>
-                      <span className={styles.matchNo}>{so}</span>
-                      <span className={styles.matchEvent}>{event.ten}</span>
-                      <span className={styles.matchup}>{label}</span>
                     </li>
                   ))}
                 </ol>

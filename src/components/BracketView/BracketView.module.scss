@@ -37,7 +37,6 @@
     background: $color-surface;
     border: 1px solid $color-border;
     border-radius: 8px;
-    overflow: hidden;
     display: flex;
     flex-direction: column;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
@@ -112,4 +111,18 @@
     color: $color-text-muted;
     font-size: 14px;
     padding: $space-5 0;
+}
+
+.matchBadge {
+    position: absolute;
+    top: -17px;
+    right: 10px;
+    background: $color-surface;
+    border: 1px solid $color-border;
+    border-radius: 999px;
+    padding: 1px $space-2;
+    font-family: $font-mono;
+    font-size: 10px;
+    font-weight: 700;
+    color: $color-text-muted;
 }

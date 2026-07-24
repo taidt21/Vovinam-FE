@@ -285,7 +285,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 1",
     "teamId": "t1",
-    "eventIds": ["e7", "e25"]
+    "eventIds": ["e7", "e27"]
   },
   {
     "id": "vdv0033",
@@ -294,7 +294,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 1",
     "teamId": "t5",
-    "eventIds": ["e7", "e25"]
+    "eventIds": ["e7", "e26"]
   },
   {
     "id": "vdv0034",
@@ -303,7 +303,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 1",
     "teamId": "t2",
-    "eventIds": ["e7", "e25"]
+    "eventIds": ["e7", "e27"]
   },
   {
     "id": "vdv0035",
@@ -357,7 +357,7 @@
     "gioiTinh": "nam",
     "nhomTuoi": "Nhóm tuổi 1",
     "teamId": "t2",
-    "eventIds": ["e12"]
+    "eventIds": ["e14"]
   },
   {
     "id": "vdv0041",
@@ -366,7 +366,7 @@
     "gioiTinh": "nam",
     "nhomTuoi": "Nhóm tuổi 1",
     "teamId": "t4",
-    "eventIds": ["e12"]
+    "eventIds": ["e14"]
   },
   {
     "id": "vdv0042",
@@ -375,7 +375,7 @@
     "gioiTinh": "nam",
     "nhomTuoi": "Nhóm tuổi 1",
     "teamId": "t1",
-    "eventIds": ["e12"]
+    "eventIds": ["e14"]
   },
   {
     "id": "vdv0043",
@@ -465,7 +465,7 @@
     "gioiTinh": "nam",
     "nhomTuoi": "Nhóm tuổi 2",
     "teamId": "t1",
-    "eventIds": ["e15"]
+    "eventIds": ["e2"]
   },
   {
     "id": "vdv0053",
@@ -483,7 +483,7 @@
     "gioiTinh": "nam",
     "nhomTuoi": "Nhóm tuổi 2",
     "teamId": "t5",
-    "eventIds": ["e15", "e22"]
+    "eventIds": ["e1", "e22"]
   },
   {
     "id": "vdv0055",
@@ -492,7 +492,7 @@
     "gioiTinh": "nam",
     "nhomTuoi": "Nhóm tuổi 2",
     "teamId": "t2",
-    "eventIds": ["e15", "e40"]
+    "eventIds": ["e17", "e40"]
   },
   {
     "id": "vdv0056",
@@ -510,7 +510,7 @@
     "gioiTinh": "nam",
     "nhomTuoi": "Nhóm tuổi 2",
     "teamId": "t4",
-    "eventIds": ["e15", "e8"]
+    "eventIds": ["e1", "e8"]
   },
   {
     "id": "vdv0058",
@@ -555,7 +555,7 @@
     "gioiTinh": "nam",
     "nhomTuoi": "Nhóm tuổi 2",
     "teamId": "t2",
-    "eventIds": ["e16"]
+    "eventIds": ["e17"]
   },
   {
     "id": "vdv0063",
@@ -654,7 +654,7 @@
     "gioiTinh": "nam",
     "nhomTuoi": "Nhóm tuổi 3",
     "teamId": "t2",
-    "eventIds": ["e18", "e42"]
+    "eventIds": ["e19", "e42"]
   },
   {
     "id": "vdv0074",
@@ -663,7 +663,7 @@
     "gioiTinh": "nam",
     "nhomTuoi": "Nhóm tuổi 3",
     "teamId": "t1",
-    "eventIds": ["e18"]
+    "eventIds": ["e3"]
   },
   {
     "id": "vdv0075",
@@ -924,7 +924,7 @@
     "gioiTinh": "nam",
     "nhomTuoi": "Nhóm tuổi 3",
     "teamId": "t1",
-    "eventIds": ["e21"]
+    "eventIds": ["e3"]
   },
   {
     "id": "vdv0104",
@@ -978,7 +978,7 @@
     "gioiTinh": "nam",
     "nhomTuoi": "Nhóm tuổi 3",
     "teamId": "t2",
-    "eventIds": ["e21"]
+    "eventIds": ["e3"]
   },
   {
     "id": "vdv0110",
@@ -1086,7 +1086,7 @@
     "gioiTinh": "nam",
     "nhomTuoi": "Nhóm tuổi 2",
     "teamId": "t5",
-    "eventIds": ["e8", "e29"]
+    "eventIds": ["e8", "e1"]
   },
   {
     "id": "vdv0122",
@@ -1437,7 +1437,7 @@
     "gioiTinh": "nam",
     "nhomTuoi": "Nhóm tuổi 1",
     "teamId": "t12",
-    "eventIds": ["e6", "e13"]
+    "eventIds": ["e6", "e14"]
   },
   {
     "id": "vdv0161",
@@ -1473,7 +1473,7 @@
     "gioiTinh": "nam",
     "nhomTuoi": "Nhóm tuổi 1",
     "teamId": "t8",
-    "eventIds": ["e6", "e12"]
+    "eventIds": ["e6", "e14"]
   },
   {
     "id": "vdv0165",
@@ -1527,7 +1527,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 1",
     "teamId": "t14",
-    "eventIds": ["e7", "e25"]
+    "eventIds": ["e7", "e27"]
   },
   {
     "id": "vdv0171",
@@ -1626,7 +1626,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 1",
     "teamId": "t9",
-    "eventIds": ["e7", "e25"]
+    "eventIds": ["e7", "e27"]
   },
   {
     "id": "vdv0182",
@@ -1896,7 +1896,7 @@
     "gioiTinh": "nam",
     "nhomTuoi": "Nhóm tuổi 1",
     "teamId": "t12",
-    "eventIds": ["e12"]
+    "eventIds": ["e23"]
   },
   {
     "id": "vdv0212",
@@ -1914,7 +1914,7 @@
     "gioiTinh": "nam",
     "nhomTuoi": "Nhóm tuổi 1",
     "teamId": "t9",
-    "eventIds": ["e12"]
+    "eventIds": ["e14"]
   },
   {
     "id": "vdv0214",
@@ -1923,7 +1923,7 @@
     "gioiTinh": "nam",
     "nhomTuoi": "Nhóm tuổi 1",
     "teamId": "t6",
-    "eventIds": ["e12"]
+    "eventIds": ["e23"]
   },
   {
     "id": "vdv0215",
@@ -1932,7 +1932,7 @@
     "gioiTinh": "nam",
     "nhomTuoi": "Nhóm tuổi 1",
     "teamId": "t5",
-    "eventIds": ["e12"]
+    "eventIds": ["e14"]
   },
   {
     "id": "vdv0216",
@@ -2040,7 +2040,7 @@
     "gioiTinh": "nam",
     "nhomTuoi": "Nhóm tuổi 2",
     "teamId": "t8",
-    "eventIds": ["e15"]
+    "eventIds": ["e17"]
   },
   {
     "id": "vdv0228",
@@ -2067,7 +2067,7 @@
     "gioiTinh": "nam",
     "nhomTuoi": "Nhóm tuổi 2",
     "teamId": "t10",
-    "eventIds": ["e15", "e8"]
+    "eventIds": ["e17", "e8"]
   },
   {
     "id": "vdv0231",
@@ -2292,7 +2292,7 @@
     "gioiTinh": "nam",
     "nhomTuoi": "Nhóm tuổi 1",
     "teamId": "t7",
-    "eventIds": ["e24"]
+    "eventIds": ["e14"]
   },
   {
     "id": "vdv0256",
@@ -2301,7 +2301,7 @@
     "gioiTinh": "nam",
     "nhomTuoi": "Nhóm tuổi 1",
     "teamId": "t13",
-    "eventIds": ["e24"]
+    "eventIds": ["e14"]
   },
   {
     "id": "vdv0257",
@@ -2319,7 +2319,7 @@
     "gioiTinh": "nam",
     "nhomTuoi": "Nhóm tuổi 1",
     "teamId": "t6",
-    "eventIds": ["e24"]
+    "eventIds": ["e14"]
   },
   {
     "id": "vdv0259",
@@ -2328,7 +2328,7 @@
     "gioiTinh": "nam",
     "nhomTuoi": "Nhóm tuổi 1",
     "teamId": "t14",
-    "eventIds": ["e24"]
+    "eventIds": ["e14"]
   },
   {
     "id": "vdv0260",
@@ -2364,7 +2364,7 @@
     "gioiTinh": "nam",
     "nhomTuoi": "Nhóm tuổi 1",
     "teamId": "t8",
-    "eventIds": ["e24"]
+    "eventIds": ["e14"]
   },
   {
     "id": "vdv0264",
@@ -2400,7 +2400,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 1",
     "teamId": "t12",
-    "eventIds": ["e25"]
+    "eventIds": ["e26"]
   },
   {
     "id": "vdv0268",
@@ -2409,7 +2409,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 1",
     "teamId": "t13",
-    "eventIds": ["e25"]
+    "eventIds": ["e26"]
   },
   {
     "id": "vdv0269",
@@ -2418,7 +2418,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 1",
     "teamId": "t6",
-    "eventIds": ["e25"]
+    "eventIds": ["e27"]
   },
   {
     "id": "vdv0270",
@@ -2427,7 +2427,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 1",
     "teamId": "t3",
-    "eventIds": ["e25"]
+    "eventIds": ["e27"]
   },
   {
     "id": "vdv0271",
@@ -2670,7 +2670,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 1",
     "teamId": "t7",
-    "eventIds": ["e28"]
+    "eventIds": ["e27"]
   },
   {
     "id": "vdv0298",
@@ -2697,7 +2697,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 1",
     "teamId": "t4",
-    "eventIds": ["e28"]
+    "eventIds": ["e27"]
   },
   {
     "id": "vdv0301",
@@ -2706,7 +2706,7 @@
     "gioiTinh": "nam",
     "nhomTuoi": "Nhóm tuổi 2",
     "teamId": "t9",
-    "eventIds": ["e29", "e8"]
+    "eventIds": ["e1", "e8"]
   },
   {
     "id": "vdv0302",
@@ -2733,7 +2733,7 @@
     "gioiTinh": "nam",
     "nhomTuoi": "Nhóm tuổi 2",
     "teamId": "t8",
-    "eventIds": ["e29"]
+    "eventIds": ["e1"]
   },
   {
     "id": "vdv0305",
@@ -2742,7 +2742,7 @@
     "gioiTinh": "nam",
     "nhomTuoi": "Nhóm tuổi 2",
     "teamId": "t14",
-    "eventIds": ["e29", "e8"]
+    "eventIds": ["e1", "e8"]
   },
   {
     "id": "vdv0306",
@@ -2751,7 +2751,7 @@
     "gioiTinh": "nam",
     "nhomTuoi": "Nhóm tuổi 2",
     "teamId": "t10",
-    "eventIds": ["e29", "e8"]
+    "eventIds": ["e1", "e8"]
   },
   {
     "id": "vdv0307",
@@ -2760,7 +2760,7 @@
     "gioiTinh": "nam",
     "nhomTuoi": "Nhóm tuổi 2",
     "teamId": "t13",
-    "eventIds": ["e29"]
+    "eventIds": ["e1"]
   },
   {
     "id": "vdv0308",
@@ -2778,7 +2778,7 @@
     "gioiTinh": "nam",
     "nhomTuoi": "Nhóm tuổi 2",
     "teamId": "t6",
-    "eventIds": ["e29", "e22"]
+    "eventIds": ["e1", "e22"]
   },
   {
     "id": "vdv0310",
@@ -2796,7 +2796,7 @@
     "gioiTinh": "nam",
     "nhomTuoi": "Nhóm tuổi 2",
     "teamId": "t3",
-    "eventIds": ["e29", "e22"]
+    "eventIds": ["e1", "e22"]
   },
   {
     "id": "vdv0312",
@@ -2805,7 +2805,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 2",
     "teamId": "t9",
-    "eventIds": ["e30"]
+    "eventIds": ["e10"]
   },
   {
     "id": "vdv0313",
@@ -2814,7 +2814,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 2",
     "teamId": "t14",
-    "eventIds": ["e30", "e45"]
+    "eventIds": ["e4", "e45"]
   },
   {
     "id": "vdv0314",
@@ -2823,7 +2823,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 2",
     "teamId": "t10",
-    "eventIds": ["e30", "e41"]
+    "eventIds": ["e11", "e41"]
   },
   {
     "id": "vdv0315",
@@ -2841,7 +2841,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 2",
     "teamId": "t7",
-    "eventIds": ["e30", "e45"]
+    "eventIds": ["e10", "e45"]
   },
   {
     "id": "vdv0317",
@@ -2850,7 +2850,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 2",
     "teamId": "t11",
-    "eventIds": ["e30", "e45"]
+    "eventIds": ["e4", "e45"]
   },
   {
     "id": "vdv0318",
@@ -2868,7 +2868,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 2",
     "teamId": "t6",
-    "eventIds": ["e30", "e44"]
+    "eventIds": ["e4", "e44"]
   },
   {
     "id": "vdv0320",
@@ -2877,7 +2877,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 2",
     "teamId": "t12",
-    "eventIds": ["e30"]
+    "eventIds": ["e10"]
   },
   {
     "id": "vdv0321",
@@ -2895,7 +2895,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 2",
     "teamId": "t4",
-    "eventIds": ["e30", "e45"]
+    "eventIds": ["e4", "e45"]
   },
   {
     "id": "vdv0323",
@@ -2922,7 +2922,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 2",
     "teamId": "t10",
-    "eventIds": ["e31"]
+    "eventIds": ["e4"]
   },
   {
     "id": "vdv0326",
@@ -2940,7 +2940,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 2",
     "teamId": "t7",
-    "eventIds": ["e31"]
+    "eventIds": ["e4"]
   },
   {
     "id": "vdv0328",
@@ -2994,7 +2994,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 2",
     "teamId": "t5",
-    "eventIds": ["e31", "e44"]
+    "eventIds": ["e4", "e44"]
   },
   {
     "id": "vdv0334",
@@ -3012,7 +3012,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 2",
     "teamId": "t9",
-    "eventIds": ["e32"]
+    "eventIds": ["e10"]
   },
   {
     "id": "vdv0336",
@@ -3048,7 +3048,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 2",
     "teamId": "t11",
-    "eventIds": ["e32", "e45"]
+    "eventIds": ["e10", "e45"]
   },
   {
     "id": "vdv0340",
@@ -3057,7 +3057,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 2",
     "teamId": "t10",
-    "eventIds": ["e32"]
+    "eventIds": ["e10"]
   },
   {
     "id": "vdv0341",
@@ -3084,7 +3084,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 2",
     "teamId": "t6",
-    "eventIds": ["e32", "e44"]
+    "eventIds": ["e10", "e44"]
   },
   {
     "id": "vdv0344",
@@ -3111,7 +3111,7 @@
     "gioiTinh": "nam",
     "nhomTuoi": "Nhóm tuổi 3",
     "teamId": "t10",
-    "eventIds": ["e33", "e42"]
+    "eventIds": ["e20", "e42"]
   },
   {
     "id": "vdv0347",
@@ -3138,7 +3138,7 @@
     "gioiTinh": "nam",
     "nhomTuoi": "Nhóm tuổi 3",
     "teamId": "t8",
-    "eventIds": ["e33"]
+    "eventIds": ["e20"]
   },
   {
     "id": "vdv0350",
@@ -3174,7 +3174,7 @@
     "gioiTinh": "nam",
     "nhomTuoi": "Nhóm tuổi 3",
     "teamId": "t6",
-    "eventIds": ["e33", "e46"]
+    "eventIds": ["e20", "e46"]
   },
   {
     "id": "vdv0354",
@@ -3183,7 +3183,7 @@
     "gioiTinh": "nam",
     "nhomTuoi": "Nhóm tuổi 3",
     "teamId": "t4",
-    "eventIds": ["e33"]
+    "eventIds": ["e20"]
   },
   {
     "id": "vdv0355",
@@ -3201,7 +3201,7 @@
     "gioiTinh": "nam",
     "nhomTuoi": "Nhóm tuổi 3",
     "teamId": "t9",
-    "eventIds": ["e34"]
+    "eventIds": ["e20"]
   },
   {
     "id": "vdv0357",
@@ -3210,7 +3210,7 @@
     "gioiTinh": "nam",
     "nhomTuoi": "Nhóm tuổi 3",
     "teamId": "t14",
-    "eventIds": ["e34"]
+    "eventIds": ["e20"]
   },
   {
     "id": "vdv0358",
@@ -3237,7 +3237,7 @@
     "gioiTinh": "nam",
     "nhomTuoi": "Nhóm tuổi 3",
     "teamId": "t7",
-    "eventIds": ["e34", "e42"]
+    "eventIds": ["e20", "e42"]
   },
   {
     "id": "vdv0361",
@@ -3246,7 +3246,7 @@
     "gioiTinh": "nam",
     "nhomTuoi": "Nhóm tuổi 3",
     "teamId": "t8",
-    "eventIds": ["e34", "e42"]
+    "eventIds": ["e20", "e42"]
   },
   {
     "id": "vdv0362",
@@ -3255,7 +3255,7 @@
     "gioiTinh": "nam",
     "nhomTuoi": "Nhóm tuổi 3",
     "teamId": "t10",
-    "eventIds": ["e34", "e42"]
+    "eventIds": ["e20", "e42"]
   },
   {
     "id": "vdv0363",
@@ -3264,7 +3264,7 @@
     "gioiTinh": "nam",
     "nhomTuoi": "Nhóm tuổi 3",
     "teamId": "t12",
-    "eventIds": ["e34"]
+    "eventIds": ["e20"]
   },
   {
     "id": "vdv0364",
@@ -3273,7 +3273,7 @@
     "gioiTinh": "nam",
     "nhomTuoi": "Nhóm tuổi 3",
     "teamId": "t6",
-    "eventIds": ["e34", "e46"]
+    "eventIds": ["e19", "e46"]
   },
   {
     "id": "vdv0365",
@@ -3282,7 +3282,7 @@
     "gioiTinh": "nam",
     "nhomTuoi": "Nhóm tuổi 3",
     "teamId": "t4",
-    "eventIds": ["e34"]
+    "eventIds": ["e19"]
   },
   {
     "id": "vdv0366",
@@ -3300,7 +3300,7 @@
     "gioiTinh": "nam",
     "nhomTuoi": "Nhóm tuổi 3",
     "teamId": "t3",
-    "eventIds": ["e34"]
+    "eventIds": ["e19"]
   },
   {
     "id": "vdv0368",
@@ -3309,7 +3309,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 3",
     "teamId": "t9",
-    "eventIds": ["e35"]
+    "eventIds": ["e37"]
   },
   {
     "id": "vdv0369",
@@ -3327,7 +3327,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 3",
     "teamId": "t14",
-    "eventIds": ["e35", "e47"]
+    "eventIds": ["e37", "e47"]
   },
   {
     "id": "vdv0371",
@@ -3354,7 +3354,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 3",
     "teamId": "t13",
-    "eventIds": ["e35", "e47"]
+    "eventIds": ["e37", "e47"]
   },
   {
     "id": "vdv0374",
@@ -3363,7 +3363,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 3",
     "teamId": "t7",
-    "eventIds": ["e35"]
+    "eventIds": ["e37"]
   },
   {
     "id": "vdv0375",
@@ -3372,7 +3372,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 3",
     "teamId": "t12",
-    "eventIds": ["e35"]
+    "eventIds": ["e37"]
   },
   {
     "id": "vdv0376",
@@ -3651,7 +3651,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 3",
     "teamId": "t13",
-    "eventIds": ["e38"]
+    "eventIds": ["e37"]
   },
   {
     "id": "vdv0407",
@@ -3669,7 +3669,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 3",
     "teamId": "t7",
-    "eventIds": ["e38", "e47"]
+    "eventIds": ["e37", "e47"]
   },
   {
     "id": "vdv0409",
@@ -3678,7 +3678,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 3",
     "teamId": "t14",
-    "eventIds": ["e38", "e47"]
+    "eventIds": ["e37", "e47"]
   },
   {
     "id": "vdv0410",
@@ -3687,7 +3687,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 3",
     "teamId": "t11",
-    "eventIds": ["e38"]
+    "eventIds": ["e37"]
   },
   {
     "id": "vdv0411",
@@ -3723,7 +3723,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 3",
     "teamId": "t5",
-    "eventIds": ["e38"]
+    "eventIds": ["e37"]
   },
   {
     "id": "vdv0415",
@@ -3732,7 +3732,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 3",
     "teamId": "t4",
-    "eventIds": ["e38", "e47"]
+    "eventIds": ["e37", "e47"]
   },
   {
     "id": "vdv0416",
@@ -3750,7 +3750,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 3",
     "teamId": "t3",
-    "eventIds": ["e38"]
+    "eventIds": ["e37"]
   },
   {
     "id": "vdv0418",
@@ -3759,7 +3759,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 3",
     "teamId": "t1",
-    "eventIds": ["e38", "e47"]
+    "eventIds": ["e37", "e47"]
   },
   {
     "id": "vdv0419",
@@ -3768,7 +3768,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 3",
     "teamId": "t9",
-    "eventIds": ["e39", "e47"]
+    "eventIds": ["e5", "e47"]
   },
   {
     "id": "vdv0420",
@@ -3786,7 +3786,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 3",
     "teamId": "t14",
-    "eventIds": ["e39"]
+    "eventIds": ["e9"]
   },
   {
     "id": "vdv0422",
@@ -3795,7 +3795,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 3",
     "teamId": "t7",
-    "eventIds": ["e39"]
+    "eventIds": ["e5"]
   },
   {
     "id": "vdv0423",
@@ -3804,7 +3804,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 3",
     "teamId": "t8",
-    "eventIds": ["e39"]
+    "eventIds": ["e37"]
   },
   {
     "id": "vdv0424",
@@ -3813,7 +3813,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 3",
     "teamId": "t11",
-    "eventIds": ["e39"]
+    "eventIds": ["e37"]
   },
   {
     "id": "vdv0425",
@@ -3822,7 +3822,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 3",
     "teamId": "t13",
-    "eventIds": ["e39", "e47"]
+    "eventIds": ["e5", "e47"]
   },
   {
     "id": "vdv0426",
@@ -3831,7 +3831,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 3",
     "teamId": "t6",
-    "eventIds": ["e39"]
+    "eventIds": ["e37"]
   },
   {
     "id": "vdv0427",
@@ -3849,7 +3849,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 3",
     "teamId": "t4",
-    "eventIds": ["e39"]
+    "eventIds": ["e5"]
   },
   {
     "id": "vdv0429",
@@ -3858,7 +3858,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 3",
     "teamId": "t5",
-    "eventIds": ["e39"]
+    "eventIds": ["e5"]
   },
   {
     "id": "vdv0430",
@@ -3876,7 +3876,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 3",
     "teamId": "t2",
-    "eventIds": ["e39", "e47"]
+    "eventIds": ["e37", "e47"]
   },
   {
     "id": "vdv0432",
@@ -3885,7 +3885,7 @@
     "gioiTinh": "nu",
     "nhomTuoi": "Nhóm tuổi 3",
     "teamId": "t1",
-    "eventIds": ["e39", "e47"]
+    "eventIds": ["e37", "e47"]
   },
   {
     "id": "vdv0433",

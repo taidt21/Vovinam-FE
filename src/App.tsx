@@ -8,6 +8,7 @@ import NoiDungBocTham from "./pages/NoiDungBocTham/NoiDungBocTham";
 import BanThuKy from "./pages/BanThuKy/BanThuKy";
 import KetQua from "./pages/KetQua/KetQua";
 import TrongTaiChamDiem from "./pages/TrongTaiChamDiem/TrongTaiChamDiem";
+import ManHinhCongKhai from "./pages/ManHinhCongKhai/ManHinhCongKhai";
 
 export default function App() {
   return (
@@ -21,10 +22,7 @@ export default function App() {
         <Route path="ket-qua" element={<KetQua />} />
       </Route>
       <Route path="/trong-tai" element={<TrongTaiChamDiem />} />
-      <Route
-        path="/man-hinh-cong-khai"
-        element={<h1>Màn hình công khai (làm sau)</h1>}
-      />
+      <Route path="/man-hinh-cong-khai" element={<ManHinhCongKhai />} />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );

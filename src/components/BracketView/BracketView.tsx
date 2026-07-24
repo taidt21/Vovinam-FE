@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { Trophy } from "lucide-react";
 import type { Athlete, Match } from "../../types";
-import { groupByRound } from "../../lib/bracket";
+import { groupByRound, winnerLabel } from "../../lib/bracket";
 import styles from "./BracketView.module.scss";
 
 const CARD_W = 240; // nới từ 208 để chứa thêm tên đơn vị, CARD_H giữ nguyên
@@ -17,12 +17,17 @@ interface BracketViewProps {
   matches: Match[];
   athletes: Athlete[];
   teams: { id: string; ten: string }[];
+  // Số thứ tự toàn giải của từng trận (xem numberDoiKhangMatches trong
+  // lib/bracket) — dùng để hiện "Thắng trận N" cho ô chưa biết VĐV, khớp
+  // đúng với số hiện ở tab "Lịch thi đấu".
+  soByMatchId: Map<string, number>;
 }
 
 export default function BracketView({
   matches,
   athletes,
   teams,
+  soByMatchId,
 }: BracketViewProps) {
   const rounds = useMemo(() => groupByRound(matches), [matches]);
 
@@ -138,6 +143,11 @@ export default function BracketView({
               width: CARD_W,
               height: CARD_H,
             }}>
+            {soByMatchId.get(match.id) && (
+              <span className={styles.matchBadge}>
+                Trận {soByMatchId.get(match.id)}
+              </span>
+            )}
             <div className={`${styles.slotRow} ${styles.slotDo}`}>
               {match.athleteRedId ? (
                 <>
@@ -151,7 +161,7 @@ export default function BracketView({
                   )}
                 </>
               ) : (
-                "Chờ xác định"
+                winnerLabel(matches, soByMatchId, match.id, "do")
               )}
             </div>
             <div className={`${styles.slotRow} ${styles.slotXanh}`}>
@@ -167,7 +177,7 @@ export default function BracketView({
                   )}
                 </>
               ) : (
-                "Chờ xác định"
+                winnerLabel(matches, soByMatchId, match.id, "xanh")
               )}
             </div>
           </div>

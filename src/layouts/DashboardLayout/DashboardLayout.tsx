@@ -10,13 +10,14 @@ import {
   BarChart3,
   ChevronLeft,
   ChevronRight,
+  Shuffle,
 } from "lucide-react";
 import styles from "./DashboardLayout.module.scss";
 
 const NAV_ITEMS = [
   { to: "thiet-lap-giai", label: "Thiết lập giải", icon: LayoutGrid },
   { to: "doan-vdv", label: "Đoàn & VĐV", icon: Users },
-  { to: "noi-dung-boc-tham", label: "Nội dung & bốc thăm", icon: Trophy },
+  { to: "noi-dung-boc-tham", label: "Nội dung & bốc thăm", icon: Shuffle },
   { to: "ban-thu-ky", label: "Bàn thư ký", icon: ClipboardList },
   { to: "ket-qua", label: "Kết quả & báo cáo", icon: BarChart3 },
 ];
@@ -30,8 +31,10 @@ export default function DashboardLayout() {
       <aside
         className={`${styles.sidebar} ${collapsed ? styles.sidebarCollapsed : ""}`}>
         <div className={styles.brand}>
-          <span className={styles.brandMark}>VV</span>
-          {!collapsed && <span className={styles.brandName}>Vovinam</span>}
+          <span className={styles.brandMark}>
+            <img src="/public/favicon.svg" alt="Vovinam" />
+          </span>
+          {!collapsed && <span className={styles.brandName}>Vector Sport</span>}
         </div>
         <nav className={styles.nav}>
           {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
