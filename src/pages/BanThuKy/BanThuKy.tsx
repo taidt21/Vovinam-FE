@@ -1,6 +1,6 @@
 /** @format */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Minus,
   Plus,
@@ -12,8 +12,6 @@ import {
   RotateCcw,
   Pencil,
   Swords,
-  Sparkles,
-  Gauge,
   Award,
   BicepsFlexed,
   Check,
@@ -1404,13 +1402,51 @@ function DieuHanhQuyenTab({
     savedResult ? String(savedResult.diemTru) : "",
   );
 
+  // Đồng hồ bấm giờ đơn giản, chỉ chạy cục bộ — khác đối kháng, quyền không
+  // cần nhiều thiết bị cùng theo dõi 1 đồng hồ chung, nên không cần
+  // liveMatchStore/BroadcastChannel ở đây.
+  const [running, setRunning] = useState(false);
+  const [elapsedMs, setElapsedMs] = useState(0);
+  const startRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!running) return;
+    const id = setInterval(() => {
+      if (startRef.current !== null)
+        setElapsedMs(Date.now() - startRef.current);
+    }, 100);
+    return () => clearInterval(id);
+  }, [running]);
+
   if (!item) {
     return (
       <div className={styles.noMatch}>
-        Chưa có lượt thi quyền nào — vào Nội dung & bốc thăm để bốc thăm trước.
+        Chưa chọn VĐV/đội nào — sang tab "Lịch thi đấu quyền" và bấm "Chấm
+        điểm".
       </div>
     );
   }
+
+  const toggleStopwatch = () => {
+    if (running) {
+      setRunning(false);
+    } else {
+      startRef.current = Date.now() - elapsedMs;
+      setRunning(true);
+    }
+  };
+  const resetStopwatch = () => {
+    setRunning(false);
+    setElapsedMs(0);
+    startRef.current = null;
+  };
+
+  const elapsedSec = elapsedMs / 1000;
+  const refSec = item.event.thoiGianBaiGiay;
+  const overRef = refSec !== undefined && elapsedSec > refSec;
+  const mm = Math.floor(elapsedSec / 60);
+  const ss = Math.floor(elapsedSec % 60);
+  const elapsedLabel = `${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`;
 
   const diemThuc = Math.max(
     0,
@@ -1426,6 +1462,42 @@ function DieuHanhQuyenTab({
       <div className={styles.quyenPerformer}>
         <div className={styles.quyenPerformerName}>{item.label}</div>
         <div className={styles.quyenPerformerSub}>{item.sub}</div>
+      </div>
+
+      <div className={styles.stopwatchBox}>
+        <div className={styles.stopwatchInfo}>
+          <span
+            className={`${styles.stopwatchTime} ${overRef ? styles.stopwatchOver : ""}`}>
+            {elapsedLabel}
+          </span>
+          {refSec !== undefined && (
+            <span className={styles.stopwatchRef}>
+              Thời gian tham chiếu bài: {refSec}s
+            </span>
+          )}
+        </div>
+        <div className={styles.stopwatchBtns}>
+          <button
+            type="button"
+            className={styles.timerBtn}
+            onClick={toggleStopwatch}>
+            {running ? (
+              <>
+                <Pause size={14} /> Tạm dừng
+              </>
+            ) : (
+              <>
+                <Play size={14} /> {elapsedMs > 0 ? "Tiếp tục" : "Bắt đầu"}
+              </>
+            )}
+          </button>
+          <button
+            type="button"
+            className={styles.restartBtn}
+            onClick={resetStopwatch}>
+            <RotateCcw size={13} /> Đặt lại
+          </button>
+        </div>
       </div>
 
       <div className={styles.quyenScoreRow}>

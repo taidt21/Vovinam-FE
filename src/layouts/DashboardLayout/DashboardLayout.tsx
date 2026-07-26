@@ -5,7 +5,6 @@ import { NavLink, Outlet } from "react-router";
 import {
   LayoutGrid,
   Users,
-  Trophy,
   ClipboardList,
   BarChart3,
   ChevronLeft,

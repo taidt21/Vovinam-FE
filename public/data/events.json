@@ -50,7 +50,8 @@
     "ten": "Long hổ quyền",
     "loai": "quyen",
     "gioiTinh": "nam",
-    "nhomTuoi": 1
+    "nhomTuoi": 1,
+    "thoiGianBaiGiay": 50
   },
   {
     "id": "e7",
@@ -58,7 +59,8 @@
     "ten": "Nhập môn quyền",
     "loai": "quyen",
     "gioiTinh": "nu",
-    "nhomTuoi": 1
+    "nhomTuoi": 1,
+    "thoiGianBaiGiay": 35
   },
   {
     "id": "e8",
@@ -67,7 +69,8 @@
     "loai": "quyen",
     "gioiTinh": "nam",
     "nhomTuoi": 2,
-    "hinhThucThi": "doi"
+    "hinhThucThi": "doi",
+    "thoiGianBaiGiay": 45
   },
   {
     "id": "e9",
@@ -193,7 +196,8 @@
     "loai": "quyen",
     "gioiTinh": "nam",
     "nhomTuoi": 2,
-    "hinhThucThi": "doi"
+    "hinhThucThi": "doi",
+    "thoiGianBaiGiay": 75
   },
   {
     "id": "e23",
@@ -354,7 +358,8 @@
     "ten": "Ngũ môn quyền",
     "loai": "quyen",
     "gioiTinh": "nam",
-    "nhomTuoi": 2
+    "nhomTuoi": 2,
+    "thoiGianBaiGiay": 50
   },
   {
     "id": "e41",
@@ -362,7 +367,8 @@
     "ten": "Long hổ quyền nữ",
     "loai": "quyen",
     "gioiTinh": "nu",
-    "nhomTuoi": 2
+    "nhomTuoi": 2,
+    "thoiGianBaiGiay": 50
   },
   {
     "id": "e42",
@@ -370,7 +376,8 @@
     "ten": "Lão mai quyền",
     "loai": "quyen",
     "gioiTinh": "nam",
-    "nhomTuoi": 3
+    "nhomTuoi": 3,
+    "thoiGianBaiGiay": 50
   },
   {
     "id": "e43",
@@ -378,7 +385,8 @@
     "ten": "Hùng kê quyền",
     "loai": "quyen",
     "gioiTinh": "nu",
-    "nhomTuoi": 3
+    "nhomTuoi": 3,
+    "thoiGianBaiGiay": 50
   },
   {
     "id": "e44",
@@ -387,7 +395,8 @@
     "loai": "quyen",
     "gioiTinh": "nu",
     "nhomTuoi": 2,
-    "hinhThucThi": "doi"
+    "hinhThucThi": "doi",
+    "thoiGianBaiGiay": 45
   },
   {
     "id": "e45",
@@ -396,7 +405,8 @@
     "loai": "quyen",
     "gioiTinh": "nu",
     "nhomTuoi": 2,
-    "hinhThucThi": "doi"
+    "hinhThucThi": "doi",
+    "thoiGianBaiGiay": 75
   },
   {
     "id": "e46",
@@ -405,7 +415,8 @@
     "loai": "quyen",
     "gioiTinh": "nam",
     "nhomTuoi": 3,
-    "hinhThucThi": "doi"
+    "hinhThucThi": "doi",
+    "thoiGianBaiGiay": 75
   },
   {
     "id": "e47",
@@ -414,6 +425,7 @@
     "loai": "quyen",
     "gioiTinh": "nu",
     "nhomTuoi": 3,
-    "hinhThucThi": "doi"
+    "hinhThucThi": "doi",
+    "thoiGianBaiGiay": 75
   }
 ]

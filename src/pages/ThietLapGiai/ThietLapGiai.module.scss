@@ -39,7 +39,8 @@
     font-weight: 500;
     color: $color-text;
 
-    input {
+    input,
+    select {
         font: inherit;
         padding: $space-2 $space-3;
         border: 1px solid $color-border;
@@ -81,6 +82,9 @@
 }
 
 .btnPrimary {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-1;
     background: $color-do;
     color: white;
     border: none;
@@ -108,4 +112,125 @@
     &:hover {
         background: $color-bg;
     }
+}
+
+.eventsHead {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: $space-4;
+    margin-bottom: $space-4;
+    flex-wrap: wrap;
+}
+
+.eventsNote {
+    font-size: 12px;
+    color: $color-text-muted;
+    margin: 4px 0 0;
+    max-width: 480px;
+}
+
+.eventGroups {
+    display: flex;
+    flex-direction: column;
+    gap: $space-5;
+}
+
+.eventGroup {
+    display: flex;
+    flex-direction: column;
+    gap: $space-2;
+}
+
+.eventGroupTitle {
+    font-size: 13px;
+    font-weight: 700;
+    margin: 0;
+
+    span {
+        font-weight: 400;
+        color: $color-text-muted;
+    }
+}
+
+.eventList {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid $color-border;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.eventRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-3;
+    padding: $space-2 $space-3;
+    border-bottom: 1px solid $color-border;
+
+    &:last-child {
+        border-bottom: none;
+    }
+
+    &:hover {
+        background: $color-bg;
+    }
+}
+
+.eventInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.eventName {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.eventMeta {
+    font-size: 11px;
+    color: $color-text-muted;
+}
+
+.eventRowActions {
+    display: flex;
+    gap: $space-1;
+    flex-shrink: 0;
+
+    button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px;
+        height: 26px;
+        border: 1px solid $color-border;
+        background: $color-surface;
+        border-radius: 6px;
+        color: $color-text-muted;
+        cursor: pointer;
+
+        &:hover {
+            background: $color-bg;
+            color: $color-text;
+        }
+    }
+}
+
+.dangerBtn:hover {
+    color: $color-danger !important;
+    border-color: $color-danger !important;
+}
+
+.modalForm {
+    display: flex;
+    flex-direction: column;
+    gap: $space-3;
+}
+
+.hint {
+    font-size: 12px;
+    color: $color-text-muted;
 }

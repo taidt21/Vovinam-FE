@@ -5,11 +5,10 @@ export interface CompetitionEvent {
   tournamentId: string;
   ten: string;
   loai: EventKind;
-  gioiTinh: GioiTinh | 'ca_hai';
+  gioiTinh: GioiTinh | 'hon_hop';
   nhomTuoi: number;
-  hangCanHoacBaiQuyen: string;
-  soTrongTai: number;
-  congThucTinhDiem: string;
+  hangCan?: number; // chỉ đối kháng
+  thoiGianBaiGiay?: number; // chỉ quyền
   hinhThucThi?: 'ca_nhan' | 'doi';
 }
 

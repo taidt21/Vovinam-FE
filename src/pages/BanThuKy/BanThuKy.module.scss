@@ -904,3 +904,12 @@
     text-align: center;
     margin: 0;
 }
+.stopwatchBox {
+    display: flex; align-items: center; justify-content: space-between; gap: $space-3;
+    background: $color-bg; border-radius: 10px; padding: $space-4; flex-wrap: wrap;
+}
+.stopwatchInfo { display: flex; flex-direction: column; gap: 2px; }
+.stopwatchTime { font-size: 32px; font-weight: 700; font-family: $font-mono; }
+.stopwatchOver { color: $color-warning; }
+.stopwatchRef { font-size: 12px; color: $color-text-muted; }
+.stopwatchBtns { display: flex; gap: $space-2; }

@@ -31,28 +31,24 @@ const SEED_RESULTS: EventResult[] = [
       {
         hang: 1,
         hoTen: "Nguyễn Minh Khang",
-        maVdv: "B0001",
         donVi: "Bình Dương",
         medal: "vang",
       },
       {
         hang: 2,
         hoTen: "Lê Gia Huy",
-        maVdv: "HCM015",
         donVi: "TP. Hồ Chí Minh",
         medal: "bac",
       },
       {
         hang: 3,
         hoTen: "Đinh Quang Huy",
-        maVdv: "HN021",
         donVi: "Hà Nội",
         medal: "dong",
       },
       {
         hang: 3,
         hoTen: "Trần Nhật Nam",
-        maVdv: "CT028",
         donVi: "Cần Thơ",
         medal: "dong",
       },
@@ -71,12 +67,6 @@ const MEDAL_LABEL: Record<MedalType, string> = {
   bac: "Bạc",
   dong: "Đồng",
 };
-const MEDAL_TONE: Record<MedalType, string> = {
-  vang: (styles) => "",
-  bac: (styles) => "",
-  dong: (styles) => "",
-} as never;
-
 type Tab = "ket_qua" | "tong_sap";
 
 export default function KetQua() {
@@ -177,7 +167,6 @@ export default function KetQua() {
                         <td className={styles.rankNum}>{x.hang}</td>
                         <td>
                           <div className={styles.athName}>{x.hoTen}</div>
-                          <div className={styles.athCode}>{x.maVdv}</div>
                         </td>
                         <td>{x.donVi}</td>
                         <td>

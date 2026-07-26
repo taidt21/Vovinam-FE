@@ -8,7 +8,11 @@ import NoiDungBocTham from "./pages/NoiDungBocTham/NoiDungBocTham";
 import BanThuKy from "./pages/BanThuKy/BanThuKy";
 import KetQua from "./pages/KetQua/KetQua";
 import TrongTaiChamDiem from "./pages/TrongTaiChamDiem/TrongTaiChamDiem";
-import ManHinhCongKhai from "./pages/ManHinhCongKhai/ManHinhCongKhai";
+import DangNhap from "./pages/Portal/DangNhap";
+import DangKy from "./pages/Portal/DangKy";
+import PortalLayout from "./pages/Portal/PortalLayout";
+import TongQuan from "./pages/Portal/TongQuan";
+import VdvCuaDoan from "./pages/Portal/VdvCuaDoan";
 
 export default function App() {
   return (
@@ -22,7 +26,19 @@ export default function App() {
         <Route path="ket-qua" element={<KetQua />} />
       </Route>
       <Route path="/trong-tai" element={<TrongTaiChamDiem />} />
-      <Route path="/man-hinh-cong-khai" element={<ManHinhCongKhai />} />
+      <Route
+        path="/man-hinh-cong-khai"
+        element={<h1>Màn hình công khai (làm sau)</h1>}
+      />
+
+      <Route path="/dang-ky" element={<DangNhap />} />
+      <Route path="/dang-ky/tao-tai-khoan" element={<DangKy />} />
+      <Route path="/dang-ky/quan-ly" element={<PortalLayout />}>
+        <Route index element={<Navigate to="tong-quan" replace />} />
+        <Route path="tong-quan" element={<TongQuan />} />
+        <Route path="vdv" element={<VdvCuaDoan />} />
+      </Route>
+
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );

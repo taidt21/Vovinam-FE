@@ -15,23 +15,19 @@ import type {
   Match,
   Squad,
 } from "../../types";
-import {
-  loadBracketData,
-  saveBracketData,
-  subscribeBracketData,
-} from "../../lib/bracketStore";
+import { saveBracketData, subscribeBracketData } from "../../lib/bracketStore";
 import { generateBracket, numberDoiKhangMatches } from "../../lib/bracket";
 import BracketView from "../../components/BracketView/BracketView";
 import LichThiDau from "../../components/LichThiDau/LichThiDau";
 import styles from "./NoiDungBocTham.module.scss";
-
+import { loadEvents, subscribeEvents } from "../../lib/eventsStore";
 function getAthletesForEvent(
   athletes: AthleteRecord[],
   eventId: string,
   eventTen: string,
 ): Athlete[] {
   return athletes
-    .filter((a) => a.eventIds.includes(eventId))
+    .filter((a) => Array.isArray(a.eventIds) && a.eventIds.includes(eventId))
     .map(({ eventIds, ...rest }) => ({
       ...rest,
       noiDung: [eventTen],
@@ -126,7 +122,7 @@ export default function NoiDungBocTham() {
 
   useEffect(() => {
     Promise.all([
-      fetch("/data/events.json").then((r) => r.json()),
+      loadEvents(),
       fetch("/data/athletes.json").then((r) => r.json()),
       fetch("/data/squads.json").then((r) => r.json()),
       fetch("/data/teams.json").then((r) => r.json()),
@@ -143,6 +139,7 @@ export default function NoiDungBocTham() {
         ),
       )
       .finally(() => setLoading(false));
+    return subscribeEvents(setEvents);
   }, []);
 
   const [tab, setTab] = useState<"quyen" | "doi_khang" | "lich_thi_dau">(
