@@ -3,12 +3,19 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
     plugins: [react()],
-
-    // Dùng khi website chạy ở root domain
     base: "/",
-
     build: {
         outDir: "dist",
         emptyOutDir: true
-    }
+    },
+    server: {
+        proxy: {
+            "/api": {
+                // Đổi đúng cổng HTTP (không phải HTTPS) backend đang chạy khi bạn
+                // gõ "dotnet run" — xem lại dòng "Now listening on: http://..."
+                target: "http://localhost:5267",
+                changeOrigin: true,
+            },
+        },
+    },
 });

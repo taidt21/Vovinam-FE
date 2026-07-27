@@ -5,70 +5,57 @@ import { Upload, Download, AlertTriangle, CheckCircle2 } from "lucide-react";
 import type { CompetitionEvent } from "../../types";
 import Modal from "../Modal/Modal";
 import {
-  parseWorkbook,
-  buildTemplateFile,
-  type ImportRow,
-} from "../../lib/excelImport";
-import styles from "./ImportExcelModal.module.scss";
+  parseEventsWorkbook,
+  buildEventsTemplateFile,
+  type EventImportRow,
+} from "../../lib/eventExcelImport";
+import styles from "./ImportEventsExcelModal.module.scss";
 
-interface ImportExcelModalProps {
-  existingTeamNames: string[];
-  events: CompetitionEvent[];
-  existingAthletes: { hoTen: string; namSinh: number }[];
+interface ImportEventsExcelModalProps {
+  existingEvents: CompetitionEvent[];
   onClose: () => void;
-  onConfirm: (validRows: ImportRow[]) => void;
+  onConfirm: (validRows: EventImportRow[]) => void;
 }
 
-export default function ImportExcelModal({
-  existingTeamNames,
-  events,
-  existingAthletes,
+export default function ImportEventsExcelModal({
+  existingEvents,
   onClose,
   onConfirm,
-}: ImportExcelModalProps) {
+}: ImportEventsExcelModalProps) {
   const fileRef = useRef<HTMLInputElement>(null);
-  const [rows, setRows] = useState<ImportRow[] | null>(null);
+  const [rows, setRows] = useState<EventImportRow[] | null>(null);
   const [unknownColumns, setUnknownColumns] = useState<string[]>([]);
-
-  const normalizedExisting = new Set(
-    existingTeamNames.map((t) => t.trim().toLowerCase()),
-  );
 
   const onFileInputChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const buffer = await file.arrayBuffer();
-    const { rows: parsed, unknownColumns: unknown } = parseWorkbook(
+    const { rows: parsed, unknownColumns: unknown } = parseEventsWorkbook(
       buffer,
-      events,
-      existingAthletes,
+      existingEvents,
     );
     setRows(parsed);
     setUnknownColumns(unknown);
   };
 
   const downloadTemplate = () => {
-    const blob = buildTemplateFile();
+    const blob = buildEventsTemplateFile();
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "mau-import-vdv.xlsx";
+    a.download = "mau-import-noi-dung.xlsx";
     a.click();
     URL.revokeObjectURL(url);
   };
 
   const validRows = rows?.filter((r) => r.errors.length === 0) ?? [];
   const errorRows = rows?.filter((r) => r.errors.length > 0) ?? [];
-  const newTeamNames = Array.from(
-    new Set(
-      validRows
-        .map((r) => r.donVi.trim())
-        .filter((d) => d && !normalizedExisting.has(d.toLowerCase())),
-    ),
-  );
 
   return (
-    <Modal title="Import danh sách VĐV từ Excel" onClose={onClose} size="lg">
+    <Modal
+      title="Import nội dung, hạng cân & nhóm tuổi từ Excel"
+      onClose={onClose}
+      size="lg">
       {!rows ? (
         <div className={styles.uploadArea}>
           <button
@@ -89,7 +76,7 @@ export default function ImportExcelModal({
             type="button"
             className={styles.templateLink}
             onClick={downloadTemplate}>
-            <Download size={14} /> Tải file mẫu đúng cột
+            <Download size={14} /> Tải file mẫu — có ví dụ đối kháng và quyền
           </button>
         </div>
       ) : (
@@ -107,12 +94,6 @@ export default function ImportExcelModal({
               <span className={styles.summaryNum}>{errorRows.length}</span>
               <span>Có lỗi</span>
             </div>
-            {newTeamNames.length > 0 && (
-              <div className={styles.summaryItem}>
-                <span className={styles.summaryNum}>{newTeamNames.length}</span>
-                <span>Đơn vị mới</span>
-              </div>
-            )}
           </div>
 
           {unknownColumns.length > 0 && (
@@ -122,25 +103,19 @@ export default function ImportExcelModal({
             </p>
           )}
 
-          {newTeamNames.length > 0 && (
-            <p className={styles.infoNote}>
-              Sẽ tự tạo mới {newTeamNames.length} đơn vị:{" "}
-              {newTeamNames.join(", ")}
-            </p>
-          )}
-
           <div className={styles.tableWrap}>
             <table className={styles.table}>
               <thead>
                 <tr>
                   <th></th>
                   <th>Dòng</th>
-                  <th>Họ tên</th>
-                  <th>Năm sinh</th>
+                  <th>Tên nội dung</th>
+                  <th>Loại</th>
                   <th>Giới tính</th>
+                  <th>Hình thức</th>
                   <th>Nhóm tuổi</th>
-                  <th>Đơn vị</th>
-                  <th>Nội dung</th>
+                  <th>Hạng cân</th>
+                  <th>Thời gian</th>
                   <th>Ghi chú lỗi</th>
                 </tr>
               </thead>
@@ -159,14 +134,27 @@ export default function ImportExcelModal({
                       )}
                     </td>
                     <td>{r.rowNumber}</td>
-                    <td>{r.hoTen || "—"}</td>
-                    <td>{r.namSinh ?? "—"}</td>
+                    <td>{r.ten || "—"}</td>
                     <td>
-                      {r.gioiTinh ? (r.gioiTinh === "nam" ? "Nam" : "Nữ") : "—"}
+                      {r.loai === "quyen"
+                        ? "Quyền"
+                        : r.loai === "doi_khang"
+                          ? "Đối kháng"
+                          : "—"}
                     </td>
-                    <td>{r.nhomTuoi || "—"}</td>
-                    <td>{r.donVi || "—"}</td>
-                    <td>{r.noiDung.length > 0 ? r.noiDung.join(", ") : "—"}</td>
+                    <td>
+                      {r.gioiTinh === "nam"
+                        ? "Nam"
+                        : r.gioiTinh === "nu"
+                          ? "Nữ"
+                          : r.gioiTinh === "hon_hop"
+                            ? "Hỗn hợp"
+                            : "—"}
+                    </td>
+                    <td>{r.hinhThucThi === "doi" ? "Đội" : "Cá nhân"}</td>
+                    <td>{r.nhomTuoi ?? "—"}</td>
+                    <td>{r.hangCan ?? "—"}</td>
+                    <td>{r.thoiGianBaiGiay ?? "—"}</td>
                     <td className={styles.errorCell}>{r.errors.join("; ")}</td>
                   </tr>
                 ))}
@@ -186,7 +174,7 @@ export default function ImportExcelModal({
               className={styles.btnPrimary}
               disabled={validRows.length === 0}
               onClick={() => onConfirm(validRows)}>
-              Ghi nhận import {validRows.length} VĐV
+              Ghi nhận import {validRows.length} nội dung
             </button>
           </div>
         </div>

@@ -20,7 +20,7 @@ import { generateBracket, numberDoiKhangMatches } from "../../lib/bracket";
 import BracketView from "../../components/BracketView/BracketView";
 import LichThiDau from "../../components/LichThiDau/LichThiDau";
 import styles from "./NoiDungBocTham.module.scss";
-import { loadEvents, subscribeEvents } from "../../lib/eventsStore";
+import { apiGet } from "../../lib/api";
 function getAthletesForEvent(
   athletes: AthleteRecord[],
   eventId: string,
@@ -34,8 +34,26 @@ function getAthletesForEvent(
     }));
 }
 
-function getSquadsForEvent(squads: Squad[], eventId: string): Squad[] {
-  return squads.filter((s) => s.eventId === eventId);
+// Không còn bảng Squads riêng — "đội" giờ chỉ là nhóm VĐV cùng đơn vị,
+// cùng đăng ký 1 nội dung đội. Đúng luật mới: 1 đơn vị chỉ có 1 đội/nội
+// dung, nên không cần tên riêng để phân biệt nhiều đội cùng đơn vị nữa —
+// tên đội = tên đơn vị luôn.
+function deriveSquadsForEvent(
+  athletes: Athlete[],
+  eventId: string,
+  teams: { id: string; ten: string }[],
+): Squad[] {
+  const byTeam = new Map<string, string[]>();
+  for (const a of athletes) {
+    if (!byTeam.has(a.teamId)) byTeam.set(a.teamId, []);
+    byTeam.get(a.teamId)!.push(a.id);
+  }
+  return Array.from(byTeam.entries()).map(([teamId, athleteIds]) => ({
+    id: `squad-${eventId}-${teamId}`,
+    eventId,
+    ten: `Đội ${teamName(teamId, teams)}`,
+    athleteIds,
+  }));
 }
 
 function shuffleAndStore<T>(
@@ -115,31 +133,28 @@ export default function NoiDungBocTham() {
   // dưới (VD "/api/events") — phần còn lại của component không đổi gì.
   const [events, setEvents] = useState<CompetitionEvent[]>([]);
   const [athletes, setAthletes] = useState<AthleteRecord[]>([]);
-  const [squads, setSquads] = useState<Squad[]>([]);
   const [teams, setTeams] = useState<{ id: string; ten: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([
-      loadEvents(),
-      fetch("/data/athletes.json").then((r) => r.json()),
-      fetch("/data/squads.json").then((r) => r.json()),
-      fetch("/data/teams.json").then((r) => r.json()),
+      apiGet<CompetitionEvent[]>("/events"),
+      apiGet<AthleteRecord[]>("/dashboard/athletes"),
+      apiGet<{ id: string; ten: string }[]>("/dashboard/teams"),
     ])
-      .then(([eventsData, athletesData, squadsData, teamsData]) => {
+      .then(([eventsData, athletesData, teamsData]) => {
         setEvents(eventsData);
         setAthletes(athletesData);
-        setSquads(squadsData);
         setTeams(teamsData);
+        // Squads (đội quyền đồng đội) chưa có API thật — để dành làm
+        // riêng ở Giai đoạn 2, chưa gán gì ở đây, tránh hiện dữ liệu demo
+        // cũ tham chiếu tới ID VĐV không còn tồn tại trong SQL Server.
       })
       .catch(() =>
-        setLoadError(
-          "Không tải được dữ liệu — kiểm tra lại 3 file trong public/data/",
-        ),
+        setLoadError("Không tải được dữ liệu — kiểm tra backend đã chạy chưa"),
       )
       .finally(() => setLoading(false));
-    return subscribeEvents(setEvents);
   }, []);
 
   const [tab, setTab] = useState<"quyen" | "doi_khang" | "lich_thi_dau">(
@@ -180,7 +195,7 @@ export default function NoiDungBocTham() {
   const bracket = selected ? bracketsByEvent[selected.id] : undefined;
   const order = selected ? orderByEvent[selected.id] : undefined;
   const squadsOfSelected = selected
-    ? getSquadsForEvent(squads, selected.id)
+    ? deriveSquadsForEvent(athletesOfSelected, selected.id, teams)
     : [];
   const squadOrder = selected ? squadOrderByEvent[selected.id] : undefined;
   const isTeamEvent = selected?.hinhThucThi === "doi";
@@ -291,11 +306,8 @@ export default function NoiDungBocTham() {
                     <ol className={styles.athleteList}>
                       {squadsOfSelected.map((s) => (
                         <li key={s.id}>
-                          <strong>{s.ten}</strong>{" "}
-                          <span className={styles.teamTag}>
-                            ({squadTeamName(s, athletesOfSelected, teams)})
-                          </span>{" "}
-                          — {squadMemberNames(s, athletesOfSelected)}
+                          <strong>{s.ten}</strong> —{" "}
+                          {squadMemberNames(s, athletesOfSelected)}
                         </li>
                       ))}
                     </ol>

@@ -1,7 +1,7 @@
 /** @format */
 
 import { useEffect, useState, type FormEvent } from "react";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, FileSpreadsheet } from "lucide-react";
 import type {
   CompetitionEvent,
   EventKind,
@@ -9,27 +9,11 @@ import type {
   Tournament,
 } from "../../types";
 import Modal from "../../components/Modal/Modal";
-import { loadEvents, saveEvents, subscribeEvents } from "../../lib/eventsStore";
+import { apiGet, apiPost, apiPut, apiDelete } from "../../lib/api";
+import ImportEventsExcelModal from "../../components/ImportEventsExcelModal/ImportEventsExcelModal";
+import type { EventImportRow } from "../../lib/eventExcelImport";
 import styles from "./ThietLapGiai.module.scss";
-
-const LOAI_THI_OPTIONS: { value: EventKind; label: string }[] = [
-  { value: "quyen", label: "Quyền" },
-  { value: "doi_khang", label: "Đối kháng" },
-];
-
-type FormState = Omit<Tournament, "id">;
-
-const EMPTY_FORM: FormState = {
-  ten: "",
-  ngayBatDau: "",
-  ngayKetThuc: "",
-  diaDiem: "",
-  soSan: 1,
-  loaiThi: [],
-  trangThai: "chuan_bi",
-};
-
-const NHOM_TUOI_OPTIONS = [1, 2, 3];
+import { NHOM_TUOI_OPTIONS } from "../../lib/nhomTuoi";
 const formatNhomTuoi = (n: number) => `Nhóm tuổi ${n}`;
 
 type EventFormState = Omit<CompetitionEvent, "id" | "tournamentId">;
@@ -44,34 +28,54 @@ const EMPTY_EVENT_FORM: EventFormState = {
 };
 
 export default function ThietLapGiai() {
-  const [form, setForm] = useState<FormState>(EMPTY_FORM);
+  const [tournament, setTournament] = useState<Tournament | null>(null);
+  const [form, setForm] = useState({ ten: "", soSan: 1 });
+  const [savingTournament, setSavingTournament] = useState(false);
 
   const [events, setEvents] = useState<CompetitionEvent[]>([]);
   const [loadingEvents, setLoadingEvents] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [showEventModal, setShowEventModal] = useState(false);
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
+  const [submittingEvent, setSubmittingEvent] = useState(false);
   const [eventForm, setEventForm] = useState<EventFormState>(EMPTY_EVENT_FORM);
-
+  const [showImportEventsModal, setShowImportEventsModal] = useState(false);
+  const [importingEvents, setImportingEvents] = useState(false);
   useEffect(() => {
-    loadEvents()
+    apiGet<Tournament>("/tournament")
+      .then((t) => {
+        setTournament(t);
+        setForm({ ten: t.ten, soSan: t.soSan });
+      })
+      .catch(() =>
+        setLoadError(
+          "Không tải được thông tin giải — kiểm tra backend đã chạy chưa",
+        ),
+      );
+
+    apiGet<CompetitionEvent[]>("/events")
       .then(setEvents)
+      .catch(() =>
+        setLoadError(
+          "Không tải được danh sách nội dung — kiểm tra backend đã chạy chưa",
+        ),
+      )
       .finally(() => setLoadingEvents(false));
-    return subscribeEvents(setEvents);
   }, []);
 
-  const toggleLoaiThi = (value: EventKind) => {
-    setForm((prev) => ({
-      ...prev,
-      loaiThi: prev.loaiThi.includes(value)
-        ? prev.loaiThi.filter((v) => v !== value)
-        : [...prev.loaiThi, value],
-    }));
-  };
-
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmitTournament = async (e: FormEvent) => {
     e.preventDefault();
-    // TODO: gọi API khi có backend
-    console.log("Lưu giải:", form);
+    setSavingTournament(true);
+    try {
+      const updated = await apiPut<Tournament>("/tournament", form);
+      setTournament(updated);
+    } catch {
+      setLoadError(
+        "Lưu thông tin giải thất bại — kiểm tra backend đã chạy chưa",
+      );
+    } finally {
+      setSavingTournament(false);
+    }
   };
 
   const openAddEvent = () => {
@@ -89,37 +93,78 @@ export default function ThietLapGiai() {
       nhomTuoi: ev.nhomTuoi,
       hinhThucThi: ev.hinhThucThi,
       hangCan: ev.hangCan,
+      thoiGianBaiGiay: ev.thoiGianBaiGiay,
     });
     setShowEventModal(true);
   };
 
-  const submitEvent = (e: FormEvent) => {
+  const submitEvent = async (e: FormEvent) => {
     e.preventDefault();
-    const next = editingEventId
-      ? events.map((ev) =>
-          ev.id === editingEventId ? { ...ev, ...eventForm } : ev,
-        )
-      : [
-          { id: crypto.randomUUID(), tournamentId: "demo", ...eventForm },
-          ...events,
-        ];
-    setEvents(next);
-    saveEvents(next);
-    setShowEventModal(false);
+    setSubmittingEvent(true);
+    try {
+      if (editingEventId) {
+        await apiPut(`/events/${editingEventId}`, eventForm);
+        setEvents((prev) =>
+          prev.map((ev) =>
+            ev.id === editingEventId ? { ...ev, ...eventForm } : ev,
+          ),
+        );
+      } else {
+        const created = await apiPost<CompetitionEvent>("/events", eventForm);
+        setEvents((prev) => [created, ...prev]);
+      }
+      setShowEventModal(false);
+    } catch (err) {
+      window.alert(
+        err instanceof Error
+          ? err.message
+          : "Lưu nội dung thất bại — kiểm tra backend đã chạy chưa",
+      );
+    } finally {
+      setSubmittingEvent(false);
+    }
   };
 
-  const deleteEvent = (ev: CompetitionEvent) => {
+  const deleteEvent = async (ev: CompetitionEvent) => {
     if (
       !window.confirm(
         `Xóa nội dung "${ev.ten}"? Các đoàn đã đăng ký VĐV vào nội dung này sẽ không còn thấy được nữa. Không thể hoàn tác.`,
       )
     )
       return;
-    const next = events.filter((x) => x.id !== ev.id);
-    setEvents(next);
-    saveEvents(next);
+    try {
+      await apiDelete(`/events/${ev.id}`);
+      setEvents((prev) => prev.filter((x) => x.id !== ev.id));
+    } catch {
+      window.alert("Xóa nội dung thất bại — kiểm tra backend đã chạy chưa");
+    }
   };
-
+  const handleImportEventsConfirm = async (validRows: EventImportRow[]) => {
+    setImportingEvents(true);
+    try {
+      for (const r of validRows) {
+        const created = await apiPost<CompetitionEvent>("/events", {
+          ten: r.ten,
+          loai: r.loai,
+          gioiTinh: r.gioiTinh,
+          hinhThucThi: r.hinhThucThi,
+          nhomTuoi: r.nhomTuoi,
+          hangCan: r.hangCan,
+          thoiGianBaiGiay: r.thoiGianBaiGiay,
+        });
+        setEvents((prev) => [created, ...prev]);
+      }
+      setShowImportEventsModal(false);
+    } catch (err) {
+      window.alert(
+        err instanceof Error
+          ? `Import gặp lỗi giữa chừng: ${err.message} — 1 số dòng có thể đã được tạo, kiểm tra lại danh sách trước khi import lại.`
+          : "Import thất bại",
+      );
+    } finally {
+      setImportingEvents(false);
+    }
+  };
   const quyenEvents = [...events]
     .filter((e) => e.loai === "quyen")
     .sort((a, b) => a.nhomTuoi - b.nhomTuoi);
@@ -133,7 +178,9 @@ export default function ThietLapGiai() {
     <div className={styles.page}>
       <h1 className={styles.title}>Thiết lập giải</h1>
 
-      <form className={styles.card} onSubmit={handleSubmit}>
+      {loadError && <p className={styles.errorBanner}>{loadError}</p>}
+
+      <form className={styles.card} onSubmit={handleSubmitTournament}>
         <h2 className={styles.cardTitle}>Thông tin giải đấu</h2>
 
         <div className={styles.grid}>
@@ -146,63 +193,6 @@ export default function ThietLapGiai() {
               value={form.ten}
               onChange={(e) => setForm({ ...form, ten: e.target.value })}
               placeholder="VD: Giải Vovinam Trẻ Toàn quốc 2026"
-              required
-            />
-          </label>
-
-          <label className={styles.field}>
-            <span>
-              Loại thi <span className={styles.required}>*</span>
-            </span>
-            <div className={styles.checkGroup}>
-              {LOAI_THI_OPTIONS.map((opt) => (
-                <label key={opt.value} className={styles.checkOption}>
-                  <input
-                    type="checkbox"
-                    checked={form.loaiThi.includes(opt.value)}
-                    onChange={() => toggleLoaiThi(opt.value)}
-                  />
-                  {opt.label}
-                </label>
-              ))}
-            </div>
-          </label>
-
-          <label className={styles.field}>
-            <span>
-              Ngày bắt đầu <span className={styles.required}>*</span>
-            </span>
-            <input
-              type="date"
-              value={form.ngayBatDau}
-              onChange={(e) => setForm({ ...form, ngayBatDau: e.target.value })}
-              required
-            />
-          </label>
-
-          <label className={styles.field}>
-            <span>
-              Ngày kết thúc <span className={styles.required}>*</span>
-            </span>
-            <input
-              type="date"
-              value={form.ngayKetThuc}
-              onChange={(e) =>
-                setForm({ ...form, ngayKetThuc: e.target.value })
-              }
-              required
-            />
-          </label>
-
-          <label className={styles.field}>
-            <span>
-              Địa điểm <span className={styles.required}>*</span>
-            </span>
-            <input
-              type="text"
-              value={form.diaDiem}
-              onChange={(e) => setForm({ ...form, diaDiem: e.target.value })}
-              placeholder="VD: Nhà thi đấu tỉnh Bình Dương"
               required
             />
           </label>
@@ -224,13 +214,18 @@ export default function ThietLapGiai() {
         </div>
 
         <div className={styles.actions}>
-          <button type="submit" className={styles.btnPrimary}>
-            Lưu
-          </button>
-          <button type="button" className={styles.btnGhost}>
-            Hủy
+          <button
+            type="submit"
+            className={styles.btnPrimary}
+            disabled={savingTournament}>
+            {savingTournament ? "Đang lưu..." : "Lưu"}
           </button>
         </div>
+        {tournament && (
+          <p className={styles.hint}>
+            Đã lưu lần cuối — giải "{tournament.ten}", {tournament.soSan} sân.
+          </p>
+        )}
       </form>
 
       <section className={styles.card}>
@@ -244,12 +239,20 @@ export default function ThietLapGiai() {
               sách này — cổng đăng ký không cho tự thêm nội dung mới.
             </p>
           </div>
-          <button
-            type="button"
-            className={styles.btnPrimary}
-            onClick={openAddEvent}>
-            <Plus size={16} /> Thêm nội dung
-          </button>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button
+              type="button"
+              className={styles.btnGhost}
+              onClick={() => setShowImportEventsModal(true)}>
+              <FileSpreadsheet size={16} /> Import Excel
+            </button>
+            <button
+              type="button"
+              className={styles.btnPrimary}
+              onClick={openAddEvent}>
+              <Plus size={16} /> Thêm nội dung
+            </button>
+          </div>
         </div>
 
         {loadingEvents ? (
@@ -394,11 +397,30 @@ export default function ThietLapGiai() {
                 />
               </label>
             )}
-            <button type="submit" className={styles.btnPrimary}>
-              {editingEventId ? "Lưu" : "Thêm"}
+            <button
+              type="submit"
+              className={styles.btnPrimary}
+              disabled={submittingEvent}>
+              {submittingEvent
+                ? "Đang lưu..."
+                : editingEventId
+                  ? "Lưu"
+                  : "Thêm"}
             </button>
           </form>
         </Modal>
+      )}
+      {showImportEventsModal && (
+        <ImportEventsExcelModal
+          existingEvents={events}
+          onClose={() => setShowImportEventsModal(false)}
+          onConfirm={handleImportEventsConfirm}
+        />
+      )}
+      {importingEvents && (
+        <div className={styles.importingOverlay}>
+          Đang import, vui lòng đợi...
+        </div>
       )}
     </div>
   );

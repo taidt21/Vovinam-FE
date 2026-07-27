@@ -1,0 +1,1 @@
+export const NHOM_TUOI_OPTIONS = [1, 2, 3, 4];
