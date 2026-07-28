@@ -107,13 +107,24 @@ export function parseWorkbook(
     const donVi = get(row, 'donVi');
     if (!donVi) errors.push('Thiếu đơn vị');
 
-    const noiDungRaw = get(row, 'noiDung');
+const noiDungRaw = get(row, 'noiDung');
     const noiDungParts = noiDungRaw ? noiDungRaw.split(/[,;]/).map((s) => s.trim()).filter(Boolean) : [];
     const eventIds: string[] = [];
     for (const part of noiDungParts) {
-      const matched = events.find((ev) => normalize(ev.ten) === normalize(part));
-      if (matched) eventIds.push(matched.id);
-      else errors.push(`Không tìm thấy nội dung "${part}" trong danh sách đã tạo ở Thiết lập giải`);
+      const candidates = events.filter((ev) => normalize(ev.ten) === normalize(part));
+      if (candidates.length === 0) {
+        errors.push(`Không tìm thấy nội dung "${part}" trong danh sách đã tạo ở Thiết lập giải`);
+        continue;
+      }
+      // Nhiều nội dung trùng tên (khác nhóm tuổi) — ưu tiên đúng nhóm tuổi
+      // của chính VĐV này, sau đó mới tới nội dung hỗn hợp nhóm tuổi.
+      let matched = candidates.find((ev) => ev.nhomTuoi === nhomTuoiNum);
+      if (!matched) matched = candidates.find((ev) => ev.nhomTuoi === 'hon_hop');
+      if (!matched && candidates.length > 1) {
+        errors.push(`"${part}" có ${candidates.length} bản trùng tên khác nhóm tuổi, không bản nào khớp Nhóm tuổi ${nhomTuoiNum} của VĐV này — sửa lại nhóm tuổi hoặc tên nội dung cho khớp`);
+        continue;
+      }
+      eventIds.push((matched ?? candidates[0]).id);
     }
 
     return {

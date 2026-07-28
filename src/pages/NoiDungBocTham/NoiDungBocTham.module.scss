@@ -97,6 +97,12 @@
     color: $color-text-muted;
 }
 
+.eventName {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
 .main {
     flex: 1;
     background: $color-surface;
@@ -188,4 +194,27 @@
     color: $color-text-muted;
     font-size: 12px;
     font-weight: 400;
+}
+
+.drawnIcon {
+    color: $color-success;
+    flex-shrink: 0;
+}
+
+.eventItemDrawn {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    text-align: left;
+    padding: $space-2 $space-3;
+    border-radius: 6px;
+    border: none;
+    background: rgba($color-success, 0.06);
+    font-size: 13px;
+    cursor: pointer;
+    color: $color-text;
+
+    &:hover {
+        background: rgba($color-success, 0.12);
+    }
 }

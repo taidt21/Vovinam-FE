@@ -257,3 +257,61 @@
     font-weight: 600;
     z-index: 1000;
 }
+
+.dangerZone {
+    margin-top: 32px;
+    padding: 20px;
+    border: 1px solid rgba(#e11d48, 0.3);
+    border-radius: 10px;
+    background: rgba(#e11d48, 0.03);
+}
+
+.dangerTitle {
+    font-size: 15px;
+    font-weight: 700;
+    color: #e11d48;
+    margin: 0 0 8px;
+}
+
+.dangerDesc {
+    font-size: 13px;
+    color: $color-text-muted;
+    margin: 0 0 16px;
+    line-height: 1.6;
+}
+
+.dangerZoneBtn {
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    background: #e11d48;
+    border: none;
+    color: white;
+
+    &:hover:not(:disabled) {
+        opacity: 0.9;
+    }
+
+    &:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+}
+
+.confirmInput {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 14px;
+    border: 1px solid $color-border;
+    border-radius: 6px;
+    margin: 8px 0 16px;
+}
+
+.fieldHint {
+    font-size: 11px;
+    color: $color-text-muted;
+    font-style: italic;
+    margin-top: 2px;
+}

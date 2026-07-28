@@ -30,13 +30,15 @@ import Modal from "../../components/Modal/Modal";
 import AthleteAvatar from "../../components/AthleteAvatar/AthleteAvatar";
 import { COURTS } from "../../lib/courts";
 import { numberDoiKhangMatches, type NumberedMatch } from "../../lib/bracket";
+import { compareNhomTuoi, formatEventNhomTuoi } from "../../lib/nhomTuoi";
+import { apiGet } from "../../lib/api";
+import { fetchEvents } from "../../lib/eventsApi";
+import { fetchMatches, updateMatch } from "../../lib/matchesApi";
 import {
-  loadBracketData,
-  saveBracketData,
-  subscribeBracketData,
-  quyenResultKey,
-  type QuyenResult,
-} from "../../lib/bracketStore";
+  fetchQuyenResults,
+  upsertQuyenResult,
+} from "../../lib/quyenResultsApi";
+import { quyenResultKey, type QuyenResult } from "../../lib/bracketStore";
 import {
   clearMatchState,
   formatMmSs,
@@ -53,17 +55,23 @@ import styles from "./BanThuKy.module.scss";
 
 const LY_DO_OPTIONS: { value: LyDoKetThuc; label: string }[] = [
   { value: "thang_diem", label: "Thắng điểm" },
-  { value: "doi_thu_khong_thi_dau", label: "Đối thủ không thi đấu" },
+  { value: "boc_tham", label: "Bốc thăm" },
   { value: "bo_cuoc", label: "Bỏ cuộc" },
   { value: "dung_vi_y_te", label: "Dừng vì y tế" },
-  { value: "truat_quyen", label: "Truất quyền" },
 ];
 
-const DEFAULT_TONG_SO_HIEP = 3;
-const DEFAULT_THOI_GIAN_HIEP = 120;
-const DEFAULT_THOI_GIAN_NGHI = 60;
-const DEFAULT_SO_TRONG_TAI = 3;
+const DEFAULT_TONG_SO_HIEP = 2;
+const DEFAULT_THOI_GIAN_HIEP = 60;
+const DEFAULT_THOI_GIAN_NGHI = 30;
+const DEFAULT_SO_TRONG_TAI = 5;
 
+interface PerformanceOrderWire {
+  id: string;
+  eventId: string;
+  athleteId: string | null;
+  teamId: string | null;
+  thuTu: number;
+}
 interface QuyenItem {
   event: CompetitionEvent;
   performerId: string;
@@ -147,30 +155,101 @@ export default function BanThuKy() {
 
   useEffect(() => {
     Promise.all([
-      fetch("/data/events.json").then((r) => r.json()),
-      fetch("/data/athletes.json").then((r) => r.json()),
-      fetch("/data/teams.json").then((r) => r.json()),
+      fetchEvents(),
+      apiGet<AthleteRecord[]>("/dashboard/athletes"),
+      apiGet<{ id: string; ten: string }[]>("/dashboard/teams"),
+      fetchMatches(),
+      apiGet<PerformanceOrderWire[]>("/performance-orders"),
+      fetchQuyenResults(),
     ])
-      .then(([eventsData, athletesData, teamsData]) => {
-        setEvents(eventsData);
-        setAthletes(athletesData);
-        setTeams(teamsData);
-      })
+      .then(
+        ([
+          eventsData,
+          athletesData,
+          teamsData,
+          matchesData,
+          ordersData,
+          quyenResultsData,
+        ]) => {
+          setEvents(eventsData);
+          setAthletes(athletesData);
+          setTeams(teamsData);
+
+          const byEventMatches: Record<string, Match[]> = {};
+          for (const m of matchesData) {
+            if (!byEventMatches[m.eventId]) byEventMatches[m.eventId] = [];
+            byEventMatches[m.eventId].push(m);
+          }
+          setBracketsByEvent(byEventMatches);
+
+          const eventTenById = new Map(eventsData.map((e) => [e.id, e.ten]));
+
+          const athleteOrders = ordersData.filter((o) => o.athleteId);
+          const byEventOrder: Record<string, Athlete[]> = {};
+          const groupedAthlete = new Map<string, PerformanceOrderWire[]>();
+          for (const o of athleteOrders) {
+            if (!groupedAthlete.has(o.eventId))
+              groupedAthlete.set(o.eventId, []);
+            groupedAthlete.get(o.eventId)!.push(o);
+          }
+          for (const [eventId, list] of groupedAthlete) {
+            const eventTen = eventTenById.get(eventId) ?? "";
+            byEventOrder[eventId] = [...list]
+              .sort((a, b) => a.thuTu - b.thuTu)
+              .map((o) => {
+                const a = athletesData.find((x) => x.id === o.athleteId);
+                if (!a) return null;
+                const { eventIds: _eventIds, ...rest } = a;
+                return { ...rest, noiDung: [eventTen] };
+              })
+              .filter((a): a is Athlete => a !== null);
+          }
+          setOrderByEvent(byEventOrder);
+
+          const teamOrders = ordersData.filter((o) => o.teamId);
+          const byEventSquadOrder: Record<string, Squad[]> = {};
+          const groupedTeam = new Map<string, PerformanceOrderWire[]>();
+          for (const o of teamOrders) {
+            if (!groupedTeam.has(o.eventId)) groupedTeam.set(o.eventId, []);
+            groupedTeam.get(o.eventId)!.push(o);
+          }
+          for (const [eventId, list] of groupedTeam) {
+            byEventSquadOrder[eventId] = [...list]
+              .sort((a, b) => a.thuTu - b.thuTu)
+              .map((o) => ({
+                id: `squad-${eventId}-${o.teamId}`,
+                eventId,
+                ten: `Đội ${teamsData.find((t) => t.id === o.teamId)?.ten ?? "—"}`,
+                athleteIds: athletesData
+                  .filter(
+                    (a) =>
+                      a.teamId === o.teamId && a.eventIds.includes(eventId),
+                  )
+                  .map((a) => a.id),
+              }));
+          }
+          setSquadOrderByEvent(byEventSquadOrder);
+
+          const qrRecord: Record<string, QuyenResult> = {};
+          for (const r of quyenResultsData) {
+            const performerId = r.athleteId ?? r.teamId;
+            if (!performerId) continue;
+            const key = quyenResultKey(r.eventId, performerId);
+            qrRecord[key] = {
+              eventId: r.eventId,
+              performerId,
+              diem: r.diem,
+              diemTru: r.diemTru,
+              capNhatLuc: new Date(r.capNhatLuc).getTime(),
+            };
+          }
+          setQuyenResults(qrRecord);
+        },
+      )
       .catch(() =>
-        setLoadError(
-          "Không tải được dữ liệu — kiểm tra lại 3 file trong public/data/",
-        ),
+        setLoadError("Không tải được dữ liệu — kiểm tra backend đã chạy chưa"),
       )
       .finally(() => setLoading(false));
-
-    const applyBracketData = (d: ReturnType<typeof loadBracketData>) => {
-      setBracketsByEvent(d.bracketsByEvent);
-      setOrderByEvent(d.orderByEvent);
-      setSquadOrderByEvent(d.squadOrderByEvent);
-      setQuyenResults(d.quyenResults);
-    };
-    applyBracketData(loadBracketData());
-    return subscribeBracketData(applyBracketData);
   }, []);
 
   const athleteName = (id: string | null) =>
@@ -210,12 +289,7 @@ export default function BanThuKy() {
     : undefined;
   const activeEvent = activeEventId ? eventOf(activeEventId) : undefined;
 
-  const persistBrackets = (next: Record<string, Match[]>) => {
-    setBracketsByEvent(next);
-    saveBracketData({ bracketsByEvent: next });
-  };
-
-  const finishMatch = (
+  const finishMatch = async (
     match: Match,
     eventId: string,
     lyDo: LyDoKetThuc,
@@ -223,64 +297,95 @@ export default function BanThuKy() {
   ) => {
     const winnerId =
       thangSide === "do" ? match.athleteRedId : match.athleteBlueId;
-    const updated = (bracketsByEvent[eventId] ?? []).map((m) => {
-      if (m.id === match.id)
-        return {
-          ...m,
-          trangThai: "da_hoan_thanh" as const,
-          lyDoKetThuc: lyDo,
-          courtId: null,
-          nguoiThangId: winnerId,
-        };
-      if (
-        match.nextMatchId &&
-        m.id === match.nextMatchId &&
-        match.nextMatchSlot &&
-        winnerId
-      ) {
-        const slotField =
-          match.nextMatchSlot === "do" ? "athleteRedId" : "athleteBlueId";
-        return { ...m, [slotField]: winnerId };
-      }
-      return m;
-    });
-    persistBrackets({ ...bracketsByEvent, [eventId]: updated });
+    const updatedMatch: Match = {
+      ...match,
+      trangThai: "da_hoan_thanh",
+      lyDoKetThuc: lyDo,
+      courtId: null,
+      nguoiThangId: winnerId,
+    };
+    const next =
+      match.nextMatchId && match.nextMatchSlot && winnerId
+        ? (bracketsByEvent[eventId] ?? []).find(
+            (m) => m.id === match.nextMatchId,
+          )
+        : undefined;
+    const slotField =
+      match.nextMatchSlot === "do" ? "athleteRedId" : "athleteBlueId";
+    const updatedNext = next ? { ...next, [slotField]: winnerId } : undefined;
+
+    setBracketsByEvent((prev) => ({
+      ...prev,
+      [eventId]: (prev[eventId] ?? []).map((m) => {
+        if (m.id === updatedMatch.id) return updatedMatch;
+        if (updatedNext && m.id === updatedNext.id) return updatedNext;
+        return m;
+      }),
+    }));
     if (match.courtId) clearMatchState(match.courtId);
+
+    try {
+      await updateMatch(updatedMatch.id, updatedMatch);
+      if (updatedNext) await updateMatch(updatedNext.id, updatedNext);
+    } catch {
+      window.alert(
+        "Lưu kết quả thất bại — kiểm tra backend đã chạy chưa. Thử tải lại trang.",
+      );
+    }
   };
 
-  const openIntoCourt = (eventId: string, matchId: string) => {
+  const openIntoCourt = async (eventId: string, matchId: string) => {
     const current = activeOfCourt(currentCourtId);
     if (current) {
-      if (current.id === matchId) return; // đã đúng là trận đang chờ ở sân này
+      if (current.id === matchId) return;
       const live = getMatchSnapshot(currentCourtId);
       const dangDienRaThat =
         live?.trangThai === "dang_thi" ||
         live?.trangThai === "nghi_giua_hiep" ||
         live?.trangThai === "tam_dung";
-      // Chỉ chặn khi đồng hồ hiệp đã thật sự chạy/tạm dừng — còn nếu trận
-      // hiện tại trên sân mới ở trạng thái "chờ bắt đầu hiệp 1" (VD do
-      // effect tự-setup vừa đẩy vào), cho phép thay bằng trận khác: trả
-      // trận đó về "cho_thi" để còn quay lại hàng chờ, không mất.
       if (dangDienRaThat) return;
     }
     const match = bracketsByEvent[eventId]?.find((m) => m.id === matchId);
     const event = eventOf(eventId);
     if (!match || !event) return;
-    const nextBrackets: Record<string, Match[]> = {};
-    for (const [eid, list] of Object.entries(bracketsByEvent)) {
-      nextBrackets[eid] = list.map((m) => {
-        if (current && m.id === current.id)
-          return { ...m, trangThai: "cho_thi" as const, courtId: null };
-        if (m.id === matchId)
-          return {
-            ...m,
-            courtId: currentCourtId,
-            trangThai: "dang_thi" as const,
-          };
-        return m;
-      });
+
+    const updatedNew: Match = {
+      ...match,
+      courtId: currentCourtId,
+      trangThai: "dang_thi",
+    };
+    let updatedCurrent: Match | undefined;
+    let currentEventId: string | undefined;
+    if (current) {
+      currentEventId = Object.keys(bracketsByEvent).find((eid) =>
+        bracketsByEvent[eid].some((m) => m.id === current.id),
+      );
+      const currentMatch = currentEventId
+        ? bracketsByEvent[currentEventId].find((m) => m.id === current.id)
+        : undefined;
+      if (currentMatch)
+        updatedCurrent = {
+          ...currentMatch,
+          trangThai: "cho_thi",
+          courtId: null,
+        };
     }
-    persistBrackets(nextBrackets);
+
+    setBracketsByEvent((prev) => {
+      const next = {
+        ...prev,
+        [eventId]: (prev[eventId] ?? []).map((m) =>
+          m.id === matchId ? updatedNew : m,
+        ),
+      };
+      if (updatedCurrent && currentEventId) {
+        next[currentEventId] = (prev[currentEventId] ?? []).map((m) =>
+          m.id === updatedCurrent!.id ? updatedCurrent! : m,
+        );
+      }
+      return next;
+    });
+
     publishMatchState(
       makeLiveState(
         currentCourtId,
@@ -295,6 +400,15 @@ export default function BanThuKy() {
       ),
     );
     setTab("dieu_hanh_dk");
+
+    try {
+      await updateMatch(updatedNew.id, updatedNew);
+      if (updatedCurrent) await updateMatch(updatedCurrent.id, updatedCurrent);
+    } catch {
+      window.alert(
+        "Lưu trạng thái sân thất bại — kiểm tra backend đã chạy chưa. Thử tải lại trang.",
+      );
+    }
   };
 
   const quickFinish = (
@@ -311,7 +425,7 @@ export default function BanThuKy() {
   // nhật lại ô đó CHỈ KHI trận kế tiếp vẫn còn "cho_thi" (chưa ai đụng vào)
   // — an toàn, không cần hỏi. Nếu trận kế tiếp đã bắt đầu/xong rồi thì hỏi
   // xác nhận trước, vì sửa ở đây sẽ không tự kéo theo được nữa.
-  const editMatchResult = (
+  const editMatchResult = async (
     match: Match,
     eventId: string,
     lyDo: LyDoKetThuc,
@@ -341,20 +455,38 @@ export default function BanThuKy() {
       return;
 
     const shouldSyncNext = nextGiuNguoiThangCu && !nextDaTienXa;
-    const updated = list.map((m) => {
-      if (m.id === match.id)
-        return { ...m, lyDoKetThuc: lyDo, nguoiThangId: newWinnerId };
-      if (shouldSyncNext && m.id === next!.id)
-        return { ...m, [slotField]: newWinnerId };
-      return m;
-    });
-    persistBrackets({ ...bracketsByEvent, [eventId]: updated });
+    const updatedMatch: Match = {
+      ...match,
+      lyDoKetThuc: lyDo,
+      nguoiThangId: newWinnerId,
+    };
+    const updatedNext = shouldSyncNext
+      ? { ...next!, [slotField]: newWinnerId }
+      : undefined;
+
+    setBracketsByEvent((prev) => ({
+      ...prev,
+      [eventId]: (prev[eventId] ?? []).map((m) => {
+        if (m.id === updatedMatch.id) return updatedMatch;
+        if (updatedNext && m.id === updatedNext.id) return updatedNext;
+        return m;
+      }),
+    }));
+
+    try {
+      await updateMatch(updatedMatch.id, updatedMatch);
+      if (updatedNext) await updateMatch(updatedNext.id, updatedNext);
+    } catch {
+      window.alert(
+        "Lưu thay đổi thất bại — kiểm tra backend đã chạy chưa. Thử tải lại trang.",
+      );
+    }
   };
 
   // Xoá kết quả, đưa trận về "cho_thi" để thi đấu lại từ đầu — số thứ tự
   // (#so) và 2 VĐV giữ nguyên, không đổi. Cùng nguyên tắc gỡ/hỏi xác nhận
   // với trận kế tiếp như editMatchResult ở trên.
-  const replayMatch = (match: Match, eventId: string) => {
+  const replayMatch = async (match: Match, eventId: string) => {
     const oldWinnerId = match.nguoiThangId ?? null;
     const list = bracketsByEvent[eventId] ?? [];
     const slotField =
@@ -375,20 +507,34 @@ export default function BanThuKy() {
     if (!window.confirm(message)) return;
 
     const shouldClearNext = nextGiuNguoiThangCu && !nextDaTienXa;
-    const updated = list.map((m) => {
-      if (m.id === match.id)
-        return {
-          ...m,
-          trangThai: "cho_thi" as const,
-          lyDoKetThuc: undefined,
-          nguoiThangId: null,
-          courtId: null,
-        };
-      if (shouldClearNext && m.id === next!.id)
-        return { ...m, [slotField]: null };
-      return m;
-    });
-    persistBrackets({ ...bracketsByEvent, [eventId]: updated });
+    const updatedMatch: Match = {
+      ...match,
+      trangThai: "cho_thi",
+      lyDoKetThuc: undefined,
+      nguoiThangId: null,
+      courtId: null,
+    };
+    const updatedNext = shouldClearNext
+      ? { ...next!, [slotField]: null }
+      : undefined;
+
+    setBracketsByEvent((prev) => ({
+      ...prev,
+      [eventId]: (prev[eventId] ?? []).map((m) => {
+        if (m.id === updatedMatch.id) return updatedMatch;
+        if (updatedNext && m.id === updatedNext.id) return updatedNext;
+        return m;
+      }),
+    }));
+
+    try {
+      await updateMatch(updatedMatch.id, updatedMatch);
+      if (updatedNext) await updateMatch(updatedNext.id, updatedNext);
+    } catch {
+      window.alert(
+        "Lưu thay đổi thất bại — kiểm tra backend đã chạy chưa. Thử tải lại trang.",
+      );
+    }
   };
 
   /* ---------- Quyền ---------- */
@@ -400,7 +546,7 @@ export default function BanThuKy() {
         : !!orderByEvent[e.id],
     );
     const flat = [...ready]
-      .sort((a, b) => a.nhomTuoi - b.nhomTuoi)
+      .sort((a, b) => compareNhomTuoi(a.nhomTuoi, b.nhomTuoi))
       .flatMap((e) =>
         e.hinhThucThi === "doi"
           ? (squadOrderByEvent[e.id] ?? []).map((s) => ({
@@ -425,14 +571,14 @@ export default function BanThuKy() {
     (x) => quyenResultKey(x.event.id, x.performerId) === currentQuyenKey,
   );
 
-  const submitQuyenResult = (
+  const submitQuyenResult = async (
     item: QuyenItem,
     diem: number,
     diemTru: number,
   ) => {
     const key = quyenResultKey(item.event.id, item.performerId);
-    const next = {
-      ...quyenResults,
+    setQuyenResults((prev) => ({
+      ...prev,
       [key]: {
         eventId: item.event.id,
         performerId: item.performerId,
@@ -440,9 +586,20 @@ export default function BanThuKy() {
         diemTru,
         capNhatLuc: Date.now(),
       },
-    };
-    setQuyenResults(next);
-    saveBracketData({ quyenResults: next });
+    }));
+    try {
+      await upsertQuyenResult({
+        eventId: item.event.id,
+        athleteId: item.isTeam ? null : item.performerId,
+        teamId: item.isTeam ? item.performerId : null,
+        diem,
+        diemTru,
+      });
+    } catch {
+      window.alert(
+        "Lưu điểm thất bại — kiểm tra backend đã chạy chưa. Thử chấm lại.",
+      );
+    }
   };
 
   const pickQuyenItem = (item: QuyenItem) => {
@@ -867,7 +1024,7 @@ function QuyenScheduleTab({
               <span className={styles.listNo}>#{item.so}</span>
               <div className={styles.listInfo}>
                 <div className={styles.listEvent}>
-                  {item.event.ten} · Nhóm tuổi {item.event.nhomTuoi}
+                  {item.event.ten} · {formatEventNhomTuoi(item.event.nhomTuoi)}
                 </div>
                 <div className={styles.listNames}>
                   {item.label}{" "}
@@ -1456,7 +1613,7 @@ function DieuHanhQuyenTab({
   return (
     <div className={styles.dieuHanhQuyen}>
       <div className={styles.matchMeta}>
-        #{item.so} {item.event.ten} · Nhóm tuổi {item.event.nhomTuoi}
+        #{item.so} {item.event.ten} · {formatEventNhomTuoi(item.event.nhomTuoi)}
       </div>
 
       <div className={styles.quyenPerformer}>

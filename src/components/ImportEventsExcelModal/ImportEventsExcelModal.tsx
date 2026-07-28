@@ -151,8 +151,12 @@ export default function ImportEventsExcelModal({
                             ? "Hỗn hợp"
                             : "—"}
                     </td>
-                    <td>{r.hinhThucThi === "doi" ? "Đội" : "Cá nhân"}</td>
-                    <td>{r.nhomTuoi ?? "—"}</td>
+                    <td>{r.hinhThucThi === "doi" ? "Đồng đội" : "Cá nhân"}</td>
+                    <td>
+                      {r.nhomTuoi === "hon_hop"
+                        ? "Hỗn hợp"
+                        : (r.nhomTuoi ?? "—")}
+                    </td>
                     <td>{r.hangCan ?? "—"}</td>
                     <td>{r.thoiGianBaiGiay ?? "—"}</td>
                     <td className={styles.errorCell}>{r.errors.join("; ")}</td>

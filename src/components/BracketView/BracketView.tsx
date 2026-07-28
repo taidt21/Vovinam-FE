@@ -32,22 +32,52 @@ export default function BracketView({
   const rounds = useMemo(() => groupByRound(matches), [matches]);
 
   const layout = useMemo(() => {
-    let leafCounter = 0;
-    const unitById = new Map<string, number>();
+    const feedersOf = (matchId: string) =>
+      matches.filter((m) => m.nextMatchId === matchId);
+    const finalMatch = matches.find((m) => !m.nextMatchId);
 
+    // Bước 1 — gán số hàng "gốc" cho từng chỗ thật sự cần 1 hàng riêng:
+    // trận không có nguồn nuôi nào (2 người vào thẳng), hoặc phần "miễn"
+    // của trận chỉ có 1 nguồn nuôi. Đệ quy ĐÚNG 1 LẦN, bắt đầu từ chung
+    // kết (không lặp qua cả mảng matches theo thứ tự tuỳ ý — mảng này giờ
+    // tới từ database, không đảm bảo giữ thứ tự tạo ra ban đầu) — xử lý
+    // XONG HẲN nhánh nuôi trước rồi mới gán số cho phần miễn ngay sau đó,
+    // để số hàng luôn liền kề đúng vị trí thật. Cách cũ (1 dải đếm chung,
+    // tăng dần bất kể đang ở nhánh nào) khiến 2 trận khác nhau có thể vô
+    // tình tính ra cùng 1 vị trí — 2 quân bài đè thẳng lên nhau, 1 trận
+    // biến mất khỏi màn hình dù dữ liệu vẫn còn nguyên.
+    let leafCounter = 0;
+    const ownLeafSlot = new Map<string, number>();
+    function assignLeafPositions(matchId: string) {
+      const feeders = feedersOf(matchId);
+      if (feeders.length === 2) {
+        assignLeafPositions(feeders[0].id);
+        assignLeafPositions(feeders[1].id);
+      } else if (feeders.length === 1) {
+        assignLeafPositions(feeders[0].id);
+        ownLeafSlot.set(matchId, leafCounter++);
+      } else {
+        ownLeafSlot.set(matchId, leafCounter++);
+      }
+    }
+    if (finalMatch) assignLeafPositions(finalMatch.id);
+
+    // Bước 2 — vị trí thật của mỗi trận = trung bình vị trí 2 nguồn nuôi
+    // vào nó, dùng lại đúng số hàng đã gán ở bước 1 cho phần không có
+    // nguồn nuôi.
+    const unitById = new Map<string, number>();
     function resolveUnit(matchId: string): number {
       if (unitById.has(matchId)) return unitById.get(matchId)!;
-      const feeders = matches.filter((m) => m.nextMatchId === matchId);
+      const feeders = feedersOf(matchId);
       let unit: number;
-      if (feeders.length === 0) unit = leafCounter++;
+      if (feeders.length === 0) unit = ownLeafSlot.get(matchId)!;
       else if (feeders.length === 1)
-        unit = (resolveUnit(feeders[0].id) + leafCounter++) / 2;
+        unit = (resolveUnit(feeders[0].id) + ownLeafSlot.get(matchId)!) / 2;
       else unit = (resolveUnit(feeders[0].id) + resolveUnit(feeders[1].id)) / 2;
       unitById.set(matchId, unit);
       return unit;
     }
-
-    [...matches].reverse().forEach((m) => resolveUnit(m.id)); // từ chung kết lùi về
+    if (finalMatch) resolveUnit(finalMatch.id);
 
     const positioned = rounds.flatMap((roundMatches, r) =>
       roundMatches.map((m) => ({
@@ -73,7 +103,6 @@ export default function BracketView({
         return { key: p.match.id, d };
       });
 
-    const finalMatch = matches.find((m) => !m.nextMatchId);
     const isDecided = finalMatch?.trangThai === "da_hoan_thanh";
     const width =
       rounds.length * (CARD_W + ROUND_GAP) -

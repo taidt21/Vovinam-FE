@@ -8,6 +8,8 @@ import { NHOM_TUOI_OPTIONS } from "../../lib/nhomTuoi";
 import Modal from "../../components/Modal/Modal";
 import ImportExcelModal from "../../components/ImportExcelModal/ImportExcelModal";
 import type { ImportRow } from "../../lib/excelImport";
+import { fetchEvents } from "../../lib/eventsApi";
+import { formatEventNhomTuoi } from "../../lib/nhomTuoi";
 import styles from "./DoanVaVDV.module.scss";
 
 const CURRENT_YEAR = new Date().getFullYear();
@@ -51,7 +53,7 @@ export default function DoanVaVDV() {
 
   const loadAll = () =>
     Promise.all([
-      apiGet<CompetitionEvent[]>("/events"),
+      fetchEvents(),
       apiGet<Team[]>("/dashboard/teams"),
       apiGet<Athlete[]>("/dashboard/athletes"),
     ]).then(([eventsData, teamsData, athletesData]) => {
@@ -587,7 +589,7 @@ export default function DoanVaVDV() {
                     />
                     <span>{ev.ten}</span>
                     <span className={styles.eventCheckMeta}>
-                      Nhóm tuổi {ev.nhomTuoi}
+                      {formatEventNhomTuoi(ev.nhomTuoi)}
                     </span>
                   </label>
                 ))}

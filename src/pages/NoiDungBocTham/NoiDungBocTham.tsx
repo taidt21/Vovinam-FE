@@ -1,13 +1,7 @@
 /** @format */
 
-import {
-  useEffect,
-  useMemo,
-  useState,
-  type Dispatch,
-  type SetStateAction,
-} from "react";
-import { Shuffle } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Shuffle, CheckCircle2 } from "lucide-react";
 import type {
   Athlete,
   AthleteRecord,
@@ -15,12 +9,26 @@ import type {
   Match,
   Squad,
 } from "../../types";
-import { saveBracketData, subscribeBracketData } from "../../lib/bracketStore";
 import { generateBracket, numberDoiKhangMatches } from "../../lib/bracket";
+import { apiGet, apiPut } from "../../lib/api";
 import BracketView from "../../components/BracketView/BracketView";
 import LichThiDau from "../../components/LichThiDau/LichThiDau";
+import { fetchEvents } from "../../lib/eventsApi";
+import { formatEventNhomTuoi, compareNhomTuoi } from "../../lib/nhomTuoi";
 import styles from "./NoiDungBocTham.module.scss";
-import { apiGet } from "../../lib/api";
+
+interface PerformanceOrder {
+  id: string;
+  eventId: string;
+  athleteId: string | null;
+  teamId: string | null;
+  thuTu: number;
+}
+
+interface DerivedSquad extends Squad {
+  teamId: string;
+}
+
 function getAthletesForEvent(
   athletes: AthleteRecord[],
   eventId: string,
@@ -34,15 +42,14 @@ function getAthletesForEvent(
     }));
 }
 
-// Không còn bảng Squads riêng — "đội" giờ chỉ là nhóm VĐV cùng đơn vị,
-// cùng đăng ký 1 nội dung đội. Đúng luật mới: 1 đơn vị chỉ có 1 đội/nội
-// dung, nên không cần tên riêng để phân biệt nhiều đội cùng đơn vị nữa —
-// tên đội = tên đơn vị luôn.
+// Không còn bảng Squads riêng — "đội" chỉ là nhóm VĐV cùng đơn vị, cùng
+// đăng ký 1 nội dung đội. Đúng luật: 1 đơn vị chỉ có 1 đội/nội dung, nên
+// tên đội = tên đơn vị luôn, không cần đặt tên riêng để phân biệt.
 function deriveSquadsForEvent(
   athletes: Athlete[],
   eventId: string,
   teams: { id: string; ten: string }[],
-): Squad[] {
+): DerivedSquad[] {
   const byTeam = new Map<string, string[]>();
   for (const a of athletes) {
     if (!byTeam.has(a.teamId)) byTeam.set(a.teamId, []);
@@ -51,18 +58,10 @@ function deriveSquadsForEvent(
   return Array.from(byTeam.entries()).map(([teamId, athleteIds]) => ({
     id: `squad-${eventId}-${teamId}`,
     eventId,
+    teamId,
     ten: `Đội ${teamName(teamId, teams)}`,
     athleteIds,
   }));
-}
-
-function shuffleAndStore<T>(
-  items: T[],
-  eventId: string,
-  setter: Dispatch<SetStateAction<Record<string, T[]>>>,
-) {
-  const shuffled = [...items].sort(() => Math.random() - 0.5);
-  setter((prev) => ({ ...prev, [eventId]: shuffled }));
 }
 
 function squadMemberNames(s: Squad, athletes: Athlete[]): string {
@@ -70,34 +69,29 @@ function squadMemberNames(s: Squad, athletes: Athlete[]): string {
     .map((id) => athletes.find((a) => a.id === id)?.hoTen)
     .join(", ");
 }
-// function squadMemberNames(s: Squad, athletes: Athlete[]): string {
-//   return s.athleteIds
-//     .map((id) => {
-//       const a = athletes.find((x) => x.id === id);
-//       return a ? `${a.hoTen} (${a.namSinh})` : undefined;
-//     })
-//     .join(", ");
-// }
+
 function teamName(
   teamId: string,
   teams: { id: string; ten: string }[],
 ): string {
   return teams.find((t) => t.id === teamId)?.ten ?? "—";
 }
-
-function squadTeamName(
-  s: Squad,
-  athletes: Athlete[],
-  teams: { id: string; ten: string }[],
-): string {
-  const first = athletes.find((a) => s.athleteIds.includes(a.id));
-  return first ? teamName(first.teamId, teams) : "—";
+function isEventDrawn(
+  ev: CompetitionEvent,
+  bracketsByEvent: Record<string, Match[]>,
+  orderByEvent: Record<string, Athlete[]>,
+  squadOrderByEvent: Record<string, Squad[]>,
+): boolean {
+  if (ev.loai === "doi_khang") return !!bracketsByEvent[ev.id];
+  if (ev.hinhThucThi === "doi") return !!squadOrderByEvent[ev.id];
+  return !!orderByEvent[ev.id];
 }
 const LOAI_LABEL = {
   quyen: "Quyền",
   doi_khang: "Đối kháng",
   lich_thi_dau: "Lịch thi đấu",
 } as const;
+
 function BocThamButton({
   onClick,
   count,
@@ -128,34 +122,11 @@ function BocThamButton({
 }
 
 export default function NoiDungBocTham() {
-  // Dữ liệu gốc — không nằm trong file này nữa, load thật qua fetch() từ
-  // public/data/*.json. Sau này nối API thật, chỉ cần đổi đúng 3 URL bên
-  // dưới (VD "/api/events") — phần còn lại của component không đổi gì.
   const [events, setEvents] = useState<CompetitionEvent[]>([]);
   const [athletes, setAthletes] = useState<AthleteRecord[]>([]);
   const [teams, setTeams] = useState<{ id: string; ten: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
-
-  useEffect(() => {
-    Promise.all([
-      apiGet<CompetitionEvent[]>("/events"),
-      apiGet<AthleteRecord[]>("/dashboard/athletes"),
-      apiGet<{ id: string; ten: string }[]>("/dashboard/teams"),
-    ])
-      .then(([eventsData, athletesData, teamsData]) => {
-        setEvents(eventsData);
-        setAthletes(athletesData);
-        setTeams(teamsData);
-        // Squads (đội quyền đồng đội) chưa có API thật — để dành làm
-        // riêng ở Giai đoạn 2, chưa gán gì ở đây, tránh hiện dữ liệu demo
-        // cũ tham chiếu tới ID VĐV không còn tồn tại trong SQL Server.
-      })
-      .catch(() =>
-        setLoadError("Không tải được dữ liệu — kiểm tra backend đã chạy chưa"),
-      )
-      .finally(() => setLoading(false));
-  }, []);
 
   const [tab, setTab] = useState<"quyen" | "doi_khang" | "lich_thi_dau">(
     "doi_khang",
@@ -170,22 +141,89 @@ export default function NoiDungBocTham() {
   const [squadOrderByEvent, setSquadOrderByEvent] = useState<
     Record<string, Squad[]>
   >({});
-  useEffect(() => {
-    saveBracketData({ bracketsByEvent, orderByEvent, squadOrderByEvent });
-  }, [bracketsByEvent, orderByEvent, squadOrderByEvent]);
 
   useEffect(() => {
-    return subscribeBracketData((data) => {
-      setBracketsByEvent(data.bracketsByEvent);
-      setOrderByEvent(data.orderByEvent);
-      setSquadOrderByEvent(data.squadOrderByEvent);
-    });
+    Promise.all([
+      fetchEvents(),
+      apiGet<AthleteRecord[]>("/dashboard/athletes"),
+      apiGet<{ id: string; ten: string }[]>("/dashboard/teams"),
+      apiGet<Match[]>("/matches"),
+      apiGet<PerformanceOrder[]>("/performance-orders"),
+    ])
+      .then(
+        ([eventsData, athletesData, teamsData, matchesData, ordersData]) => {
+          setEvents(eventsData);
+          setAthletes(athletesData);
+          setTeams(teamsData);
+
+          const eventTenById = new Map(eventsData.map((e) => [e.id, e.ten]));
+
+          const byEventMatches: Record<string, Match[]> = {};
+          for (const m of matchesData) {
+            if (!byEventMatches[m.eventId]) byEventMatches[m.eventId] = [];
+            byEventMatches[m.eventId].push(m);
+          }
+          setBracketsByEvent(byEventMatches);
+
+          const athleteOrders = ordersData.filter((o) => o.athleteId);
+          const byEventOrder: Record<string, Athlete[]> = {};
+          const athleteOrderByEvent = new Map<string, PerformanceOrder[]>();
+          for (const o of athleteOrders) {
+            if (!athleteOrderByEvent.has(o.eventId))
+              athleteOrderByEvent.set(o.eventId, []);
+            athleteOrderByEvent.get(o.eventId)!.push(o);
+          }
+          for (const [eventId, list] of athleteOrderByEvent) {
+            const eventTen = eventTenById.get(eventId) ?? "";
+            byEventOrder[eventId] = [...list]
+              .sort((a, b) => a.thuTu - b.thuTu)
+              .map((o) => {
+                const a = athletesData.find((x) => x.id === o.athleteId);
+                if (!a) return null;
+                const { eventIds: _eventIds, ...rest } = a;
+                return { ...rest, noiDung: [eventTen] };
+              })
+              .filter((a): a is Athlete => a !== null);
+          }
+          setOrderByEvent(byEventOrder);
+
+          const teamOrders = ordersData.filter((o) => o.teamId);
+          const byEventSquadOrder: Record<string, Squad[]> = {};
+          const teamOrderByEvent = new Map<string, PerformanceOrder[]>();
+          for (const o of teamOrders) {
+            if (!teamOrderByEvent.has(o.eventId))
+              teamOrderByEvent.set(o.eventId, []);
+            teamOrderByEvent.get(o.eventId)!.push(o);
+          }
+          for (const [eventId, list] of teamOrderByEvent) {
+            byEventSquadOrder[eventId] = [...list]
+              .sort((a, b) => a.thuTu - b.thuTu)
+              .map((o) => ({
+                id: `squad-${eventId}-${o.teamId}`,
+                eventId,
+                ten: `Đội ${teamName(o.teamId!, teamsData)}`,
+                athleteIds: athletesData
+                  .filter(
+                    (a) =>
+                      a.teamId === o.teamId && a.eventIds.includes(eventId),
+                  )
+                  .map((a) => a.id),
+              }));
+          }
+          setSquadOrderByEvent(byEventSquadOrder);
+        },
+      )
+      .catch(() =>
+        setLoadError("Không tải được dữ liệu — kiểm tra backend đã chạy chưa"),
+      )
+      .finally(() => setLoading(false));
   }, []);
+
   const eventsInTab = useMemo(
     () =>
       events
         .filter((ev) => ev.loai === tab)
-        .sort((a, b) => a.nhomTuoi - b.nhomTuoi),
+        .sort((a, b) => compareNhomTuoi(a.nhomTuoi, b.nhomTuoi)),
     [events, tab],
   );
   const selected = events.find((ev) => ev.id === selectedId) ?? eventsInTab[0];
@@ -194,31 +232,65 @@ export default function NoiDungBocTham() {
     : [];
   const bracket = selected ? bracketsByEvent[selected.id] : undefined;
   const order = selected ? orderByEvent[selected.id] : undefined;
-  const squadsOfSelected = selected
+  const squadsOfSelected: DerivedSquad[] = selected
     ? deriveSquadsForEvent(athletesOfSelected, selected.id, teams)
     : [];
   const squadOrder = selected ? squadOrderByEvent[selected.id] : undefined;
   const isTeamEvent = selected?.hinhThucThi === "doi";
 
-  // Số thứ tự toàn giải cho từng trận đối kháng — tính 1 lần ở đây, dùng
-  // chung cho cả sơ đồ nhánh (BracketView) lẫn tab Lịch thi đấu, để số
-  // trận hiển thị luôn khớp nhau ở mọi nơi.
   const soByMatchId = useMemo(() => {
     const numbered = numberDoiKhangMatches(events, bracketsByEvent);
     return new Map(numbered.map((x) => [x.match.id, x.so]));
   }, [events, bracketsByEvent]);
 
-  const handleBocTham = () => {
+  const handleBocTham = async () => {
     if (!selected) return;
     const matches = generateBracket(athletesOfSelected, selected.id);
     setBracketsByEvent((prev) => ({ ...prev, [selected.id]: matches }));
+    try {
+      await apiPut(`/matches/by-event/${selected.id}`, matches);
+    } catch {
+      window.alert(
+        "Lưu kết quả bốc thăm thất bại — kiểm tra backend đã chạy chưa",
+      );
+    }
   };
-  const handleBocThamQuyen = () =>
-    selected &&
-    shuffleAndStore(athletesOfSelected, selected.id, setOrderByEvent);
-  const handleBocThamSquads = () =>
-    selected &&
-    shuffleAndStore(squadsOfSelected, selected.id, setSquadOrderByEvent);
+
+  const handleBocThamQuyen = async () => {
+    if (!selected) return;
+    const shuffled = [...athletesOfSelected].sort(() => Math.random() - 0.5);
+    setOrderByEvent((prev) => ({ ...prev, [selected.id]: shuffled }));
+    try {
+      await apiPut(
+        `/performance-orders/by-event/${selected.id}`,
+        shuffled.map((a, i) => ({ athleteId: a.id, teamId: null, thuTu: i })),
+      );
+    } catch {
+      window.alert(
+        "Lưu thứ tự thi diễn thất bại — kiểm tra backend đã chạy chưa",
+      );
+    }
+  };
+
+  const handleBocThamSquads = async () => {
+    if (!selected) return;
+    const shuffled = [...squadsOfSelected].sort(() => Math.random() - 0.5);
+    setSquadOrderByEvent((prev) => ({ ...prev, [selected.id]: shuffled }));
+    try {
+      await apiPut(
+        `/performance-orders/by-event/${selected.id}`,
+        shuffled.map((s, i) => ({
+          athleteId: null,
+          teamId: s.teamId,
+          thuTu: i,
+        })),
+      );
+    } catch {
+      window.alert(
+        "Lưu thứ tự thi diễn thất bại — kiểm tra backend đã chạy chưa",
+      );
+    }
+  };
 
   if (loading) {
     return (
@@ -252,21 +324,36 @@ export default function NoiDungBocTham() {
         {tab !== "lich_thi_dau" && (
           <aside className={styles.sidebar}>
             <div className={styles.eventList}>
-              {eventsInTab.map((ev) => (
-                <button
-                  key={ev.id}
-                  className={
-                    ev.id === selectedId
-                      ? styles.eventItemActive
-                      : styles.eventItem
-                  }
-                  onClick={() => setSelectedId(ev.id)}>
-                  <span className={styles.eventName}>{ev.ten}</span>
-                  <span className={styles.eventMeta}>
-                    Nhóm tuổi {ev.nhomTuoi}
-                  </span>
-                </button>
-              ))}
+              {eventsInTab.map((ev) => {
+                const drawn = isEventDrawn(
+                  ev,
+                  bracketsByEvent,
+                  orderByEvent,
+                  squadOrderByEvent,
+                );
+                return (
+                  <button
+                    key={ev.id}
+                    className={
+                      ev.id === selectedId
+                        ? styles.eventItemActive
+                        : drawn
+                          ? styles.eventItemDrawn
+                          : styles.eventItem
+                    }
+                    onClick={() => setSelectedId(ev.id)}>
+                    <span className={styles.eventName}>
+                      {ev.ten}
+                      {drawn && (
+                        <CheckCircle2 size={13} className={styles.drawnIcon} />
+                      )}
+                    </span>
+                    <span className={styles.eventMeta}>
+                      {formatEventNhomTuoi(ev.nhomTuoi)}
+                    </span>
+                  </button>
+                );
+              })}
               {eventsInTab.length === 0 && (
                 <p className={styles.emptyList}>Chưa có nội dung nào</p>
               )}
@@ -289,7 +376,8 @@ export default function NoiDungBocTham() {
           ) : (
             <>
               <h1 className={styles.title}>
-                {selected.ten} | <small>Nhóm tuổi {selected.nhomTuoi}</small>
+                {selected.ten} |{" "}
+                <small>{formatEventNhomTuoi(selected.nhomTuoi)}</small>
               </h1>
 
               <section className={styles.registeredSection}>
@@ -365,11 +453,8 @@ export default function NoiDungBocTham() {
                       <ol className={styles.athleteList}>
                         {squadOrder.map((s) => (
                           <li key={s.id}>
-                            <strong>{s.ten}</strong>{" "}
-                            <span className={styles.teamTag}>
-                              ({squadTeamName(s, athletesOfSelected, teams)})
-                            </span>{" "}
-                            — {squadMemberNames(s, athletesOfSelected)}
+                            <strong>{s.ten}</strong> —{" "}
+                            {squadMemberNames(s, athletesOfSelected)}
                           </li>
                         ))}
                       </ol>

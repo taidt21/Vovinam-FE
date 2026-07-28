@@ -1,7 +1,9 @@
 /** @format */
 
+import { useState } from "react";
 import type { Athlete, CompetitionEvent, Match, Squad } from "../../types";
 import { numberDoiKhangMatches, winnerLabel } from "../../lib/bracket";
+import { compareNhomTuoi, formatEventNhomTuoi } from "../../lib/nhomTuoi";
 import styles from "./LichThiDau.module.scss";
 
 interface AthleteBasic {
@@ -28,6 +30,8 @@ export default function LichThiDau({
   orderByEvent,
   squadOrderByEvent,
 }: LichThiDauProps) {
+  const [subTab, setSubTab] = useState<"quyen" | "doi_khang">("doi_khang");
+
   const teamName = (teamId: string) =>
     teams.find((t) => t.id === teamId)?.ten ?? "—";
   const athleteLabel = (id: string | null) => {
@@ -61,7 +65,7 @@ export default function LichThiDau({
     e.hinhThucThi === "doi" ? !!squadOrderByEvent[e.id] : !!orderByEvent[e.id],
   );
   const quyenSorted = [...quyenReady]
-    .sort((a, b) => a.nhomTuoi - b.nhomTuoi)
+    .sort((a, b) => compareNhomTuoi(a.nhomTuoi, b.nhomTuoi))
     .flatMap((e) =>
       e.hinhThucThi === "doi"
         ? squadOrderByEvent[e.id]!.map((s) => ({
@@ -78,7 +82,7 @@ export default function LichThiDau({
   const quyenNumbered = quyenSorted.map((x, i) => ({ ...x, so: i + 1 }));
 
   const nhomTuoiList = Array.from(new Set(events.map((e) => e.nhomTuoi))).sort(
-    (a, b) => a - b,
+    compareNhomTuoi,
   );
 
   return (
@@ -92,76 +96,101 @@ export default function LichThiDau({
         </p>
       )}
 
-      {quyenNumbered.length > 0 && (
-        <section className={styles.loaiSection}>
-          <h2 className={styles.loaiTitle}>Quyền</h2>
-          {nhomTuoiList.map((nt) => {
-            const items = quyenNumbered.filter((x) => x.event.nhomTuoi === nt);
-            if (items.length === 0) return null;
-            return (
-              <div key={nt} className={styles.ntBlock}>
-                <h3 className={styles.ntTitle}>Nhóm tuổi {nt}</h3>
-                <ol className={styles.matchList}>
-                  {items.map(({ event, key, label, so }) => (
-                    <li key={key}>
-                      <span className={styles.matchNo}>{so}</span>
-                      <span className={styles.matchEvent}>{event.ten}</span>
-                      <span className={styles.matchup}>{label}</span>
-                    </li>
-                  ))}
-                </ol>
-              </div>
-            );
-          })}
-        </section>
-      )}
+      <div className={styles.subTabsBar}>
+        <button
+          className={
+            subTab === "doi_khang" ? styles.subTabActive : styles.subTab
+          }
+          onClick={() => setSubTab("doi_khang")}>
+          Đối kháng
+        </button>
+        <button
+          className={subTab === "quyen" ? styles.subTabActive : styles.subTab}
+          onClick={() => setSubTab("quyen")}>
+          Quyền
+        </button>
+      </div>
 
-      {doiKhangNumbered.length > 0 && (
-        <section className={styles.loaiSection}>
-          <h2 className={styles.loaiTitle}>Đối kháng</h2>
-          {nhomTuoiList.map((nt) => {
-            const items = doiKhangNumbered.filter(
-              (x) => x.event.nhomTuoi === nt,
-            );
-            if (items.length === 0) return null;
-            return (
-              <div key={nt} className={styles.ntBlock}>
-                <h3 className={styles.ntTitle}>Nhóm tuổi {nt}</h3>
-                <ol className={styles.matchList}>
-                  {items.map(({ event, match, so }) => (
-                    <li key={match.id}>
-                      <span className={styles.matchNo}>{so}</span>
-                      <span className={styles.matchVong}>{match.vong}</span>
-                      <span className={styles.matchEvent}>{event.ten}</span>
-                      <span className={styles.matchup}>
-                        <span className={styles.matchDo}>
-                          {athleteLabel(match.athleteRedId) ??
-                            winnerLabel(
-                              bracketsByEvent[event.id] ?? [],
-                              soByMatchId,
-                              match.id,
-                              "do",
-                            )}
+      {subTab === "quyen" &&
+        (quyenNumbered.length > 0 ? (
+          <section className={styles.loaiSection}>
+            {nhomTuoiList.map((nt) => {
+              const items = quyenNumbered.filter(
+                (x) => x.event.nhomTuoi === nt,
+              );
+              if (items.length === 0) return null;
+              return (
+                <div key={nt} className={styles.ntBlock}>
+                  <h3 className={styles.ntTitle}>{formatEventNhomTuoi(nt)}</h3>
+                  <ol className={styles.matchList}>
+                    {items.map(({ event, key, label, so }) => (
+                      <li key={key}>
+                        <span className={styles.matchNo}>{so}</span>
+                        <span className={styles.matchEvent}>{event.ten}</span>
+                        <span className={styles.matchup}>{label}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              );
+            })}
+          </section>
+        ) : (
+          <p className={styles.hint}>
+            Chưa có nội dung quyền nào sẵn sàng (đã bốc thăm/xếp thứ tự).
+          </p>
+        ))}
+
+      {subTab === "doi_khang" &&
+        (doiKhangNumbered.length > 0 ? (
+          <section className={styles.loaiSection}>
+            {nhomTuoiList.map((nt) => {
+              const items = doiKhangNumbered.filter(
+                (x) => x.event.nhomTuoi === nt,
+              );
+              if (items.length === 0) return null;
+              return (
+                <div key={nt} className={styles.ntBlock}>
+                  <h3 className={styles.ntTitle}>{formatEventNhomTuoi(nt)}</h3>
+                  <ol className={styles.matchList}>
+                    {items.map(({ event, match, so }) => (
+                      <li key={match.id}>
+                        <span className={styles.matchNo}>{so}</span>
+                        <span className={styles.matchVong}>{match.vong}</span>
+                        <span className={styles.matchEvent}>{event.ten}</span>
+                        <span className={styles.matchup}>
+                          <span className={styles.matchDo}>
+                            {athleteLabel(match.athleteRedId) ??
+                              winnerLabel(
+                                bracketsByEvent[event.id] ?? [],
+                                soByMatchId,
+                                match.id,
+                                "do",
+                              )}
+                          </span>
+                          <span className={styles.vs}>vs</span>
+                          <span className={styles.matchXanh}>
+                            {athleteLabel(match.athleteBlueId) ??
+                              winnerLabel(
+                                bracketsByEvent[event.id] ?? [],
+                                soByMatchId,
+                                match.id,
+                                "xanh",
+                              )}
+                          </span>
                         </span>
-                        <span className={styles.vs}>vs</span>
-                        <span className={styles.matchXanh}>
-                          {athleteLabel(match.athleteBlueId) ??
-                            winnerLabel(
-                              bracketsByEvent[event.id] ?? [],
-                              soByMatchId,
-                              match.id,
-                              "xanh",
-                            )}
-                        </span>
-                      </span>
-                    </li>
-                  ))}
-                </ol>
-              </div>
-            );
-          })}
-        </section>
-      )}
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              );
+            })}
+          </section>
+        ) : (
+          <p className={styles.hint}>
+            Chưa có nội dung đối kháng nào sẵn sàng (đã bốc thăm).
+          </p>
+        ))}
     </div>
   );
 }

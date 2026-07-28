@@ -9,19 +9,23 @@ import type {
   Tournament,
 } from "../../types";
 import Modal from "../../components/Modal/Modal";
-import { apiGet, apiPost, apiPut, apiDelete } from "../../lib/api";
+import { apiGet, apiPut, apiDelete } from "../../lib/api";
+import { fetchEvents, createEvent, updateEvent } from "../../lib/eventsApi";
+import {
+  EVENT_NHOM_TUOI_OPTIONS,
+  formatEventNhomTuoi,
+  compareNhomTuoi,
+} from "../../lib/nhomTuoi";
 import ImportEventsExcelModal from "../../components/ImportEventsExcelModal/ImportEventsExcelModal";
 import type { EventImportRow } from "../../lib/eventExcelImport";
 import styles from "./ThietLapGiai.module.scss";
-import { NHOM_TUOI_OPTIONS } from "../../lib/nhomTuoi";
-const formatNhomTuoi = (n: number) => `Nhóm tuổi ${n}`;
 
 type EventFormState = Omit<CompetitionEvent, "id" | "tournamentId">;
 const EMPTY_EVENT_FORM: EventFormState = {
   ten: "",
   loai: "doi_khang",
   gioiTinh: "nam",
-  nhomTuoi: NHOM_TUOI_OPTIONS[0],
+  nhomTuoi: EVENT_NHOM_TUOI_OPTIONS[0],
   hinhThucThi: "ca_nhan",
   hangCan: undefined,
   thoiGianBaiGiay: undefined,
@@ -41,6 +45,7 @@ export default function ThietLapGiai() {
   const [eventForm, setEventForm] = useState<EventFormState>(EMPTY_EVENT_FORM);
   const [showImportEventsModal, setShowImportEventsModal] = useState(false);
   const [importingEvents, setImportingEvents] = useState(false);
+
   useEffect(() => {
     apiGet<Tournament>("/tournament")
       .then((t) => {
@@ -53,7 +58,7 @@ export default function ThietLapGiai() {
         ),
       );
 
-    apiGet<CompetitionEvent[]>("/events")
+    fetchEvents()
       .then(setEvents)
       .catch(() =>
         setLoadError(
@@ -103,14 +108,14 @@ export default function ThietLapGiai() {
     setSubmittingEvent(true);
     try {
       if (editingEventId) {
-        await apiPut(`/events/${editingEventId}`, eventForm);
+        await updateEvent(editingEventId, eventForm);
         setEvents((prev) =>
           prev.map((ev) =>
             ev.id === editingEventId ? { ...ev, ...eventForm } : ev,
           ),
         );
       } else {
-        const created = await apiPost<CompetitionEvent>("/events", eventForm);
+        const created = await createEvent(eventForm);
         setEvents((prev) => [created, ...prev]);
       }
       setShowEventModal(false);
@@ -139,18 +144,19 @@ export default function ThietLapGiai() {
       window.alert("Xóa nội dung thất bại — kiểm tra backend đã chạy chưa");
     }
   };
+
   const handleImportEventsConfirm = async (validRows: EventImportRow[]) => {
     setImportingEvents(true);
     try {
       for (const r of validRows) {
-        const created = await apiPost<CompetitionEvent>("/events", {
+        const created = await createEvent({
           ten: r.ten,
-          loai: r.loai,
-          gioiTinh: r.gioiTinh,
+          loai: r.loai!,
+          gioiTinh: r.gioiTinh!,
           hinhThucThi: r.hinhThucThi,
-          nhomTuoi: r.nhomTuoi,
-          hangCan: r.hangCan,
-          thoiGianBaiGiay: r.thoiGianBaiGiay,
+          nhomTuoi: r.nhomTuoi!,
+          hangCan: r.hangCan ?? undefined,
+          thoiGianBaiGiay: r.thoiGianBaiGiay ?? undefined,
         });
         setEvents((prev) => [created, ...prev]);
       }
@@ -165,13 +171,16 @@ export default function ThietLapGiai() {
       setImportingEvents(false);
     }
   };
+
   const quyenEvents = [...events]
     .filter((e) => e.loai === "quyen")
-    .sort((a, b) => a.nhomTuoi - b.nhomTuoi);
+    .sort((a, b) => compareNhomTuoi(a.nhomTuoi, b.nhomTuoi));
   const doiKhangEvents = [...events]
     .filter((e) => e.loai === "doi_khang")
     .sort(
-      (a, b) => a.nhomTuoi - b.nhomTuoi || (a.hangCan ?? 0) - (b.hangCan ?? 0),
+      (a, b) =>
+        compareNhomTuoi(a.nhomTuoi, b.nhomTuoi) ||
+        (a.hangCan ?? 0) - (b.hangCan ?? 0),
     );
 
   return (
@@ -317,12 +326,17 @@ export default function ThietLapGiai() {
               <span>Hình thức thi</span>
               <select
                 value={eventForm.hinhThucThi ?? "ca_nhan"}
-                onChange={(e) =>
+                onChange={(e) => {
+                  const v = e.target.value as "ca_nhan" | "doi";
                   setEventForm({
                     ...eventForm,
-                    hinhThucThi: e.target.value as "ca_nhan" | "doi",
-                  })
-                }>
+                    hinhThucThi: v,
+                    gioiTinh:
+                      v === "ca_nhan" && eventForm.gioiTinh === "hon_hop"
+                        ? "nam"
+                        : eventForm.gioiTinh,
+                  });
+                }}>
                 <option value="ca_nhan">Cá nhân</option>
                 <option value="doi">Đội</option>
               </select>
@@ -339,25 +353,41 @@ export default function ThietLapGiai() {
                 }>
                 <option value="nam">Nam</option>
                 <option value="nu">Nữ</option>
-                <option value="hon_hop">Hỗn hợp (chỉ đội)</option>
+                {eventForm.hinhThucThi === "doi" && (
+                  <option value="hon_hop">Hỗn hợp nam nữ</option>
+                )}
               </select>
+              {eventForm.hinhThucThi === "doi" &&
+                eventForm.gioiTinh === "hon_hop" && (
+                  <span className={styles.fieldHint}>
+                    Đội được phép có cả VĐV nam lẫn nữ cùng thi đấu chung 1 đội.
+                  </span>
+                )}
             </label>
             <label className={styles.field}>
               <span>Nhóm tuổi</span>
               <select
                 value={eventForm.nhomTuoi}
-                onChange={(e) =>
+                onChange={(e) => {
+                  const v = e.target.value;
                   setEventForm({
                     ...eventForm,
-                    nhomTuoi: Number(e.target.value),
-                  })
-                }>
-                {NHOM_TUOI_OPTIONS.map((nt) => (
+                    nhomTuoi: v === "hon_hop" ? "hon_hop" : Number(v),
+                  });
+                }}>
+                {EVENT_NHOM_TUOI_OPTIONS.map((nt) => (
                   <option key={nt} value={nt}>
-                    {formatNhomTuoi(nt)}
+                    {formatEventNhomTuoi(nt)}
                   </option>
                 ))}
               </select>
+              {eventForm.nhomTuoi === "hon_hop" && (
+                <span className={styles.fieldHint}>
+                  {eventForm.hinhThucThi === "doi"
+                    ? "Đội được phép có VĐV thuộc nhiều nhóm tuổi khác nhau cùng thi đấu chung 1 đội."
+                    : "Nội dung mở cho VĐV thuộc nhiều nhóm tuổi khác nhau cùng đăng ký."}
+                </span>
+              )}
             </label>
             {eventForm.loai === "doi_khang" && (
               <label className={styles.field}>
@@ -410,6 +440,9 @@ export default function ThietLapGiai() {
           </form>
         </Modal>
       )}
+
+      <ResetAllDangerZone />
+
       {showImportEventsModal && (
         <ImportEventsExcelModal
           existingEvents={events}
@@ -451,7 +484,7 @@ function EventGroupList({
               <div className={styles.eventInfo}>
                 <span className={styles.eventName}>{ev.ten}</span>
                 <span className={styles.eventMeta}>
-                  {formatNhomTuoi(ev.nhomTuoi)} ·{" "}
+                  {formatEventNhomTuoi(ev.nhomTuoi)} ·{" "}
                   {ev.gioiTinh === "nam"
                     ? "Nam"
                     : ev.gioiTinh === "nu"
@@ -478,5 +511,77 @@ function EventGroupList({
         </div>
       )}
     </div>
+  );
+}
+
+const RESET_CONFIRM_PHRASE = "XÓA HẾT";
+
+function ResetAllDangerZone() {
+  const [showModal, setShowModal] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const [resetting, setResetting] = useState(false);
+
+  const doReset = async () => {
+    setResetting(true);
+    try {
+      await apiDelete("/admin/reset-all");
+      window.location.reload();
+    } catch (err) {
+      window.alert(
+        err instanceof Error
+          ? err.message
+          : "Reset thất bại — kiểm tra backend đã chạy chưa",
+      );
+      setResetting(false);
+    }
+  };
+
+  return (
+    <section className={styles.dangerZone}>
+      <h2 className={styles.dangerTitle}>Vùng nguy hiểm</h2>
+      <p className={styles.dangerDesc}>
+        Xóa sạch toàn bộ dữ liệu giải hiện tại — thông tin giải, nội dung, đoàn,
+        VĐV, đăng ký, kết quả bốc thăm. Không đụng tới tài khoản đăng nhập của
+        cổng đăng ký trưởng đoàn. <strong>Không thể hoàn tác.</strong>
+      </p>
+      <button
+        type="button"
+        className={styles.dangerZoneBtn}
+        onClick={() => setShowModal(true)}>
+        Reset toàn bộ dữ liệu
+      </button>
+
+      {showModal && (
+        <Modal
+          title="Xác nhận xóa sạch dữ liệu"
+          onClose={() => setShowModal(false)}>
+          <div className={styles.modalForm}>
+            <p>
+              Thao tác này sẽ xóa <strong>vĩnh viễn</strong>: thông tin giải,
+              toàn bộ nội dung/hạng cân/nhóm tuổi, toàn bộ đoàn và VĐV, toàn bộ
+              đăng ký, toàn bộ kết quả bốc thăm và thứ tự thi diễn.
+            </p>
+            <p>
+              Gõ đúng <strong>{RESET_CONFIRM_PHRASE}</strong> vào ô dưới để mở
+              khóa nút xóa:
+            </p>
+            <input
+              className={styles.confirmInput}
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              placeholder={RESET_CONFIRM_PHRASE}
+              autoFocus
+            />
+            <button
+              type="button"
+              className={styles.dangerZoneBtn}
+              disabled={confirmText !== RESET_CONFIRM_PHRASE || resetting}
+              onClick={doReset}>
+              {resetting ? "Đang xóa..." : "Tôi hiểu — xóa sạch toàn bộ"}
+            </button>
+          </div>
+        </Modal>
+      )}
+    </section>
   );
 }

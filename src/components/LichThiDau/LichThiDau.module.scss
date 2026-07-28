@@ -136,3 +136,37 @@
     text-transform: uppercase;
     color: $color-text-muted;
 }
+
+.subTabsBar {
+    display: flex;
+    gap: $space-2;
+    margin-bottom: $space-4;
+}
+
+.subTab,
+.subTabActive {
+    padding: $space-2 $space-4;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 6px;
+    border: 1px solid $color-border;
+    background: $color-surface;
+    cursor: pointer;
+    color: $color-text-muted;
+
+    &:hover {
+        color: $color-text;
+    }
+}
+
+.subTabActive {
+    background: rgba($color-do, 0.08);
+    border-color: $color-do;
+    color: $color-do;
+}
+
+.hint {
+    font-size: 13px;
+    color: $color-text-muted;
+    padding: $space-4 0;
+}

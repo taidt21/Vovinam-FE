@@ -19,10 +19,17 @@ export interface EventImportRow {
   loai: 'quyen' | 'doi_khang' | null;
   gioiTinh: 'nam' | 'nu' | 'hon_hop' | null;
   hinhThucThi: 'ca_nhan' | 'doi';
-  nhomTuoi: number | null;
+  nhomTuoi: number | 'hon_hop' | null;
   hangCan: number | null;
   thoiGianBaiGiay: number | null;
   errors: string[];
+}
+
+// "Trùng" phải tính theo CẢ tên lẫn nhóm tuổi — cùng tên nhưng khác nhóm
+// tuổi là 2 nội dung khác nhau thật sự (VD "Đối kháng nam - 48kg" thi ở
+// cả Nhóm tuổi 1 và Nhóm tuổi 2), không phải bản sao của nhau.
+function eventKey(ten: string, nhomTuoi: number | 'hon_hop'): string {
+  return `${normalize(ten)}::${nhomTuoi}`;
 }
 
 export function parseEventsWorkbook(
@@ -53,7 +60,7 @@ export function parseEventsWorkbook(
     return idx === undefined ? '' : String(row[idx] ?? '').trim();
   };
 
-  const existingNames = new Set(existingEvents.map((e) => normalize(e.ten)));
+  const existingKeys = new Set(existingEvents.map((e) => eventKey(e.ten, e.nhomTuoi)));
   const seenInThisFile = new Map<string, number>();
 
   const rows: EventImportRow[] = raw.slice(1).map((row, i) => {
@@ -62,12 +69,6 @@ export function parseEventsWorkbook(
 
     const ten = get(row, 'ten');
     if (!ten) errors.push('Thiếu tên nội dung');
-    else {
-      const key = normalize(ten);
-      if (existingNames.has(key)) errors.push(`Nội dung "${ten}" đã tồn tại rồi`);
-      else if (seenInThisFile.has(key)) errors.push(`Trùng với dòng ${seenInThisFile.get(key)} trong cùng file này`);
-      else seenInThisFile.set(key, rowNumber);
-    }
 
     const loaiRaw = normalize(get(row, 'loai'));
     let loai: 'quyen' | 'doi_khang' | null = null;
@@ -84,19 +85,36 @@ export function parseEventsWorkbook(
     else if (gioiTinhRaw === 'hon hop') gioiTinh = 'hon_hop';
     else errors.push(`Giới tính không hợp lệ ("${get(row, 'gioiTinh')}") — chỉ nhận Nam/Nữ/Hỗn hợp`);
 
-    const hinhThucRaw = normalize(get(row, 'hinhThucThi'));
+const hinhThucRaw = normalize(get(row, 'hinhThucThi'));
     let hinhThucThi: 'ca_nhan' | 'doi' = 'ca_nhan';
-    if (hinhThucRaw === 'doi') hinhThucThi = 'doi';
+    if (hinhThucRaw === 'dong doi') hinhThucThi = 'doi';
     else if (hinhThucRaw && hinhThucRaw !== 'ca nhan') {
-      errors.push(`Hình thức thi không hợp lệ ("${get(row, 'hinhThucThi')}") — chỉ nhận Cá nhân/Đội, để trống = Cá nhân`);
+      errors.push(`Hình thức thi không hợp lệ ("${get(row, 'hinhThucThi')}") — chỉ nhận Cá nhân/Đồng đội, để trống = Cá nhân`);
     }
 
-    const nhomTuoiRaw = get(row, 'nhomTuoi');
-    const nhomTuoiNum = nhomTuoiRaw ? parseInt(nhomTuoiRaw.replace(/[^0-9]/g, ''), 10) : NaN;
-    let nhomTuoi: number | null = null;
-    if (!nhomTuoiRaw) errors.push('Thiếu nhóm tuổi');
-    else if (!NHOM_TUOI_OPTIONS.includes(nhomTuoiNum)) errors.push(`Nhóm tuổi không hợp lệ ("${nhomTuoiRaw}") — chỉ nhận ${NHOM_TUOI_OPTIONS.join('/')}`);
-    else nhomTuoi = nhomTuoiNum;
+const nhomTuoiRaw = get(row, 'nhomTuoi');
+    let nhomTuoi: number | 'hon_hop' | null = null;
+    if (!nhomTuoiRaw) {
+      errors.push('Thiếu nhóm tuổi');
+    } else if (normalize(nhomTuoiRaw) === 'hon hop') {
+      nhomTuoi = 'hon_hop';
+    } else {
+      const nhomTuoiNum = parseInt(nhomTuoiRaw.replace(/[^0-9]/g, ''), 10);
+      if (!NHOM_TUOI_OPTIONS.includes(nhomTuoiNum)) {
+        errors.push(`Nhóm tuổi không hợp lệ ("${nhomTuoiRaw}") — chỉ nhận ${NHOM_TUOI_OPTIONS.join('/')}/Hỗn hợp`);
+      } else {
+        nhomTuoi = nhomTuoiNum;
+      }
+    }
+
+    // Kiểm tra trùng — chỉ làm được SAU khi đã có cả tên lẫn nhóm tuổi hợp
+    // lệ, vì khóa so sánh cần cả 2.
+    if (ten && nhomTuoi !== null) {
+      const key = eventKey(ten, nhomTuoi);
+      if (existingKeys.has(key)) errors.push(`Nội dung "${ten}" ở Nhóm tuổi ${nhomTuoi} đã tồn tại rồi`);
+      else if (seenInThisFile.has(key)) errors.push(`Trùng với dòng ${seenInThisFile.get(key)} trong cùng file này (cùng tên, cùng nhóm tuổi)`);
+      else seenInThisFile.set(key, rowNumber);
+    }
 
     const hangCanRaw = get(row, 'hangCan');
     const thoiGianRaw = get(row, 'thoiGianBaiGiay');
@@ -131,6 +149,7 @@ export function buildEventsTemplateFile(): Blob {
   const examples = [
     ['Đối kháng nam - 55kg', 'Đối kháng', 'Nam', 'Cá nhân', 2, 55, ''],
     ['Nhập môn quyền', 'Quyền', 'Nữ', 'Cá nhân', 1, '', 35],
+    ['Đồng đội long hổ quyền nam', 'Quyền', 'Nam', 'Đồng đội', 2, '', 75],
   ];
   const ws = XLSX.utils.aoa_to_sheet([headers, ...examples]);
   const wb = XLSX.utils.book_new();

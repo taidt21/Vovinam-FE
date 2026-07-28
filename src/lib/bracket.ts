@@ -1,5 +1,5 @@
 import type { Athlete, CompetitionEvent, Match } from '../types';
-
+import { compareNhomTuoi } from './nhomTuoi';
 // Đặt tên vòng theo khoảng cách THẬT tới chung kết — không theo số trận
 // trong vòng nữa. 0 bước = Chung kết, 1 = Bán kết, 2 = Tứ kết, xa hơn
 // thì theo số người thi đấu ở vòng đó (2^(khoảng cách + 1)).
@@ -133,7 +133,18 @@ export function groupByRound(matches: Match[]): Match[][] {
     if (!map.has(m.vong)) map.set(m.vong, []);
     map.get(m.vong)!.push(m);
   }
-  return Array.from(map.values()); // trận xa chung kết nhất luôn được tạo/push đầu tiên -> tự đứng cột đầu
+
+  // KHÔNG dựa vào thứ tự mảng đầu vào nữa — dữ liệu giờ có thể tới từ
+  // database (không đảm bảo giữ nguyên thứ tự đã tạo ra ban đầu, khác hẳn
+  // lúc còn nằm nguyên trong React state). Tự tính lại khoảng cách thật
+  // tới chung kết cho từng nhóm, sắp xa nhất đứng trước.
+  const groups = Array.from(map.entries());
+  groups.sort(([, matchesA], [, matchesB]) => {
+    const distA = distanceFromFinal(matchesA[0], matches);
+    const distB = distanceFromFinal(matchesB[0], matches);
+    return distB - distA;
+  });
+  return groups.map(([, ms]) => ms);
 }
 
 /**
@@ -168,7 +179,7 @@ export function numberDoiKhangMatches(
       }));
     })
     .sort((a, b) =>
-      a.event.nhomTuoi !== b.event.nhomTuoi ? a.event.nhomTuoi - b.event.nhomTuoi : b.distance - a.distance,
+      a.event.nhomTuoi !== b.event.nhomTuoi ? compareNhomTuoi(a.event.nhomTuoi, b.event.nhomTuoi) : b.distance - a.distance,
     );
   return items.map((x, i) => ({ event: x.event, match: x.match, so: i + 1 }));
 }

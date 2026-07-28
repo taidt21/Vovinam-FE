@@ -6,7 +6,7 @@ export interface CompetitionEvent {
   ten: string;
   loai: EventKind;
   gioiTinh: GioiTinh | 'hon_hop';
-  nhomTuoi: number;
+  nhomTuoi: number | 'hon_hop';
   hangCan?: number; // chỉ đối kháng
   thoiGianBaiGiay?: number; // chỉ quyền
   hinhThucThi?: 'ca_nhan' | 'doi';

@@ -1,10 +1,9 @@
 export type MatchStatus = 'cho_thi' | 'dang_thi' | 'da_hoan_thanh';
 export type LyDoKetThuc =
   | 'thang_diem'
-  | 'doi_thu_khong_thi_dau'
   | 'bo_cuoc'
   | 'dung_vi_y_te'
-  | 'truat_quyen';
+  | 'boc_tham';
 
 export interface Match {
   id: string;
