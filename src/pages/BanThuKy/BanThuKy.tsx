@@ -1,6 +1,6 @@
 /** @format */
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo /*, useRef*/, useState } from "react";
 import {
   Minus,
   Plus,
@@ -15,30 +15,41 @@ import {
   Award,
   BicepsFlexed,
   Check,
+  Users,
+  X,
 } from "lucide-react";
 import type {
   Athlete,
   AthleteRecord,
   CompetitionEvent,
-  DiemTrongTai,
+  // DiemTrongTai,
   LiveMatchState,
   LyDoKetThuc,
   Match,
-  Squad,
 } from "../../types";
+import type { LiveQuyenState, LyDoKetThucQuyen } from "../../types/liveQuyen";
 import Modal from "../../components/Modal/Modal";
 import AthleteAvatar from "../../components/AthleteAvatar/AthleteAvatar";
-import { COURTS } from "../../lib/courts";
+import { useCourts } from "../../lib/useCourts";
+import type { CourtBasic } from "../../lib/courts";
 import { numberDoiKhangMatches, type NumberedMatch } from "../../lib/bracket";
 import { compareNhomTuoi, formatEventNhomTuoi } from "../../lib/nhomTuoi";
+import { serverNow } from "../../lib/serverClock";
 import { apiGet } from "../../lib/api";
 import { fetchEvents } from "../../lib/eventsApi";
 import { fetchMatches, updateMatch } from "../../lib/matchesApi";
 import {
-  fetchQuyenResults,
-  upsertQuyenResult,
-} from "../../lib/quyenResultsApi";
-import { quyenResultKey, type QuyenResult } from "../../lib/bracketStore";
+  fetchQuyenJudgeScores,
+  type QuyenJudgeScoreWire,
+} from "../../lib/quyenJudgeScoreApi";
+import { tinhDiemQuyenTongHop } from "../../lib/quyenScoring";
+import {
+  fetchTrongTai,
+  createTrongTai,
+  updateTrongTai,
+  deleteTrongTai,
+  type TrongTaiWire,
+} from "../../lib/trongTaiApi";
 import {
   clearMatchState,
   formatMmSs,
@@ -48,17 +59,40 @@ import {
   tinhThoiGianConLai,
 } from "../../lib/liveMatchStore";
 import {
-  getAllScoresForCourt,
-  subscribeCourtScores,
-} from "../../lib/refereeScoreStore";
+  clearQuyenState,
+  getQuyenSnapshot,
+  publishQuyenState,
+  subscribeQuyenState,
+  tinhThoiGianDaTroi,
+} from "../../lib/liveQuyenStore";
+import MatchLogPanel from "../../components/MatchLogPanel/MatchLogPanel";
+import LiveLightsPanel from "../../components/LiveLightsPanel/LiveLightsPanel";
+import LightBoxes from "../../components/LightBoxes/LightBoxes";
+import { usePressedLights } from "../../lib/usePressedLights";
+
 import styles from "./BanThuKy.module.scss";
 
 const LY_DO_OPTIONS: { value: LyDoKetThuc; label: string }[] = [
   { value: "thang_diem", label: "Thắng điểm" },
   { value: "boc_tham", label: "Bốc thăm" },
   { value: "bo_cuoc", label: "Bỏ cuộc" },
-  { value: "dung_vi_y_te", label: "Dừng vì y tế" },
 ];
+
+const LY_DO_KET_THUC_QUYEN_OPTIONS: {
+  value: LyDoKetThucQuyen;
+  label: string;
+}[] = [
+  { value: "hoan_thanh", label: "Hoàn thành bình thường" },
+  { value: "quen_bai", label: "Quên bài" },
+  { value: "dung_bai", label: "Dừng bài giữa chừng" },
+  { value: "roi_vu_khi", label: "Rơi vũ khí" },
+  { value: "chan_thuong", label: "Chấn thương" },
+  { value: "loi_may", label: "Mất điện / lỗi máy" },
+];
+const LY_DO_KET_THUC_QUYEN_LABEL: Record<LyDoKetThucQuyen, string> =
+  Object.fromEntries(
+    LY_DO_KET_THUC_QUYEN_OPTIONS.map((o) => [o.value, o.label]),
+  ) as Record<LyDoKetThucQuyen, string>;
 
 const DEFAULT_TONG_SO_HIEP = 2;
 const DEFAULT_THOI_GIAN_HIEP = 60;
@@ -74,11 +108,30 @@ interface PerformanceOrderWire {
 }
 interface QuyenItem {
   event: CompetitionEvent;
-  performerId: string;
+  athleteId: string | null;
+  teamId: string | null;
   label: string;
   sub: string;
   isTeam: boolean;
   so: number;
+}
+
+function quyenKeyOf(
+  eventId: string,
+  athleteId: string | null,
+  teamId: string | null,
+): string {
+  return `${eventId}::${athleteId ?? ""}::${teamId ?? ""}`;
+}
+function scoreMatchesQuyenItem(
+  s: QuyenJudgeScoreWire,
+  item: Pick<QuyenItem, "event" | "athleteId" | "teamId">,
+): boolean {
+  return (
+    s.eventId === item.event.id &&
+    s.athleteId === item.athleteId &&
+    s.teamId === item.teamId
+  );
 }
 
 function makeLiveState(
@@ -109,7 +162,7 @@ function makeLiveState(
     thoiGianHiepGiay: DEFAULT_THOI_GIAN_HIEP,
     thoiGianNghiGiay: DEFAULT_THOI_GIAN_NGHI,
     thoiGianConLaiGiay: DEFAULT_THOI_GIAN_HIEP,
-    capNhatDongHoLuc: Date.now(),
+    capNhatDongHoLuc: serverNow(),
     soTrongTaiCanCo: DEFAULT_SO_TRONG_TAI,
     diemChinhThucDo: 0,
     diemChinhThucXanh: 0,
@@ -126,6 +179,7 @@ const TABS = [
   { id: "lich_quyen", label: "Lịch thi đấu quyền", icon: BicepsFlexed },
   { id: "dieu_hanh_dk", label: "Điều hành đối kháng", icon: Swords },
   { id: "dieu_hanh_quyen", label: "Điều hành quyền", icon: BicepsFlexed },
+  { id: "trong_tai", label: "Trọng tài", icon: Users },
 ] as const;
 type TabId = (typeof TABS)[number]["id"];
 
@@ -142,16 +196,29 @@ export default function BanThuKy() {
   const [orderByEvent, setOrderByEvent] = useState<Record<string, Athlete[]>>(
     {},
   );
+  interface BanThuKySquad {
+    id: string;
+    eventId: string;
+    teamId: string;
+    ten: string;
+    athleteIds: string[];
+  }
   const [squadOrderByEvent, setSquadOrderByEvent] = useState<
-    Record<string, Squad[]>
+    Record<string, BanThuKySquad[]>
   >({});
-  const [quyenResults, setQuyenResults] = useState<Record<string, QuyenResult>>(
-    {},
-  );
+  const [quyenJudgeScores, setQuyenJudgeScores] = useState<
+    QuyenJudgeScoreWire[]
+  >([]);
+  const [trongTaiList, setTrongTaiList] = useState<TrongTaiWire[]>([]);
+  const refreshTrongTai = () => fetchTrongTai().then(setTrongTaiList).catch(() => {});
 
+  const { courts, loadingCourts } = useCourts();
   const [tab, setTab] = useState<TabId>("lich_dk");
-  const [currentCourtId, setCurrentCourtId] = useState(COURTS[0]?.id ?? "");
-  const [currentQuyenKey, setCurrentQuyenKey] = useState<string | null>(null);
+  const [currentCourtId, setCurrentCourtId] = useState("");
+
+  useEffect(() => {
+    if (!currentCourtId && courts.length > 0) setCurrentCourtId(courts[0].id);
+  }, [courts, currentCourtId]);
 
   useEffect(() => {
     Promise.all([
@@ -160,7 +227,8 @@ export default function BanThuKy() {
       apiGet<{ id: string; ten: string }[]>("/dashboard/teams"),
       fetchMatches(),
       apiGet<PerformanceOrderWire[]>("/performance-orders"),
-      fetchQuyenResults(),
+      fetchQuyenJudgeScores(),
+      fetchTrongTai(),
     ])
       .then(
         ([
@@ -169,7 +237,8 @@ export default function BanThuKy() {
           teamsData,
           matchesData,
           ordersData,
-          quyenResultsData,
+          quyenJudgeScoresData,
+          trongTaiData,
         ]) => {
           setEvents(eventsData);
           setAthletes(athletesData);
@@ -207,7 +276,7 @@ export default function BanThuKy() {
           setOrderByEvent(byEventOrder);
 
           const teamOrders = ordersData.filter((o) => o.teamId);
-          const byEventSquadOrder: Record<string, Squad[]> = {};
+          const byEventSquadOrder: Record<string, BanThuKySquad[]> = {};
           const groupedTeam = new Map<string, PerformanceOrderWire[]>();
           for (const o of teamOrders) {
             if (!groupedTeam.has(o.eventId)) groupedTeam.set(o.eventId, []);
@@ -219,6 +288,7 @@ export default function BanThuKy() {
               .map((o) => ({
                 id: `squad-${eventId}-${o.teamId}`,
                 eventId,
+                teamId: o.teamId!,
                 ten: `Đội ${teamsData.find((t) => t.id === o.teamId)?.ten ?? "—"}`,
                 athleteIds: athletesData
                   .filter(
@@ -229,21 +299,8 @@ export default function BanThuKy() {
               }));
           }
           setSquadOrderByEvent(byEventSquadOrder);
-
-          const qrRecord: Record<string, QuyenResult> = {};
-          for (const r of quyenResultsData) {
-            const performerId = r.athleteId ?? r.teamId;
-            if (!performerId) continue;
-            const key = quyenResultKey(r.eventId, performerId);
-            qrRecord[key] = {
-              eventId: r.eventId,
-              performerId,
-              diem: r.diem,
-              diemTru: r.diemTru,
-              capNhatLuc: new Date(r.capNhatLuc).getTime(),
-            };
-          }
-          setQuyenResults(qrRecord);
+          setQuyenJudgeScores(quyenJudgeScoresData);
+          setTrongTaiList(trongTaiData);
         },
       )
       .catch(() =>
@@ -251,7 +308,14 @@ export default function BanThuKy() {
       )
       .finally(() => setLoading(false));
   }, []);
-
+  useEffect(() => {
+    const id = setInterval(() => {
+      fetchQuyenJudgeScores()
+        .then(setQuyenJudgeScores)
+        .catch(() => {});
+    }, 3000);
+    return () => clearInterval(id);
+  }, []);
   const athleteName = (id: string | null) =>
     id ? (athletes.find((a) => a.id === id)?.hoTen ?? "—") : null;
   const athleteTeam = (id: string | null) => {
@@ -263,7 +327,7 @@ export default function BanThuKy() {
   const athletePhoto = (id: string | null): string | null =>
     id ? (athletes.find((a) => a.id === id)?.anhDaiDien ?? null) : null;
   const eventOf = (eventId: string) => events.find((e) => e.id === eventId);
-  const squadTeam = (s: Squad) => {
+  const squadTeam = (s: BanThuKySquad) => {
     const first = athletes.find((a) => s.athleteIds.includes(a.id));
     return first ? athleteTeam(first.id) : "—";
   };
@@ -420,11 +484,6 @@ export default function BanThuKy() {
     if (match) finishMatch(match, eventId, "thang_diem", side);
   };
 
-  // Sửa lại người thắng/lý do của 1 trận ĐÃ có kết quả. Nếu người thắng
-  // thay đổi và trận đó từng đẩy người thắng cũ vào trận kế tiếp: tự cập
-  // nhật lại ô đó CHỈ KHI trận kế tiếp vẫn còn "cho_thi" (chưa ai đụng vào)
-  // — an toàn, không cần hỏi. Nếu trận kế tiếp đã bắt đầu/xong rồi thì hỏi
-  // xác nhận trước, vì sửa ở đây sẽ không tự kéo theo được nữa.
   const editMatchResult = async (
     match: Match,
     eventId: string,
@@ -483,9 +542,6 @@ export default function BanThuKy() {
     }
   };
 
-  // Xoá kết quả, đưa trận về "cho_thi" để thi đấu lại từ đầu — số thứ tự
-  // (#so) và 2 VĐV giữ nguyên, không đổi. Cùng nguyên tắc gỡ/hỏi xác nhận
-  // với trận kế tiếp như editMatchResult ở trên.
   const replayMatch = async (match: Match, eventId: string) => {
     const oldWinnerId = match.nguoiThangId ?? null;
     const list = bracketsByEvent[eventId] ?? [];
@@ -545,74 +601,63 @@ export default function BanThuKy() {
         ? !!squadOrderByEvent[e.id]
         : !!orderByEvent[e.id],
     );
-    const flat = [...ready]
+    const flat: Omit<QuyenItem, "so">[] = [...ready]
       .sort((a, b) => compareNhomTuoi(a.nhomTuoi, b.nhomTuoi))
-      .flatMap((e) =>
-        e.hinhThucThi === "doi"
-          ? (squadOrderByEvent[e.id] ?? []).map((s) => ({
+      .flatMap((e): Omit<QuyenItem, "so">[] => {
+        if (e.hinhThucThi === "doi") {
+          return (squadOrderByEvent[e.id] ?? []).map(
+            (s): Omit<QuyenItem, "so"> => ({
               event: e,
-              performerId: s.id,
+              athleteId: null,
+              teamId: s.teamId,
               label: s.ten,
               sub: squadTeam(s),
               isTeam: true,
-            }))
-          : (orderByEvent[e.id] ?? []).map((a) => ({
-              event: e,
-              performerId: a.id,
-              label: a.hoTen,
-              sub: `${a.namSinh} · ${athleteTeam(a.id)}`,
-              isTeam: false,
-            })),
-      );
+            }),
+          );
+        }
+        return (orderByEvent[e.id] ?? []).map(
+          (a): Omit<QuyenItem, "so"> => ({
+            event: e,
+            athleteId: a.id,
+            teamId: null,
+            label: a.hoTen,
+            sub: `${a.namSinh} · ${athleteTeam(a.id)}`,
+            isTeam: false,
+          }),
+        );
+      });
     return flat.map((x, i) => ({ ...x, so: i + 1 }));
   }, [events, orderByEvent, squadOrderByEvent, athletes, teams]);
 
-  const currentQuyenItem = quyenNumbered.find(
-    (x) => quyenResultKey(x.event.id, x.performerId) === currentQuyenKey,
-  );
-
-  const submitQuyenResult = async (
-    item: QuyenItem,
-    diem: number,
-    diemTru: number,
-  ) => {
-    const key = quyenResultKey(item.event.id, item.performerId);
-    setQuyenResults((prev) => ({
-      ...prev,
-      [key]: {
-        eventId: item.event.id,
-        performerId: item.performerId,
-        diem,
-        diemTru,
-        capNhatLuc: Date.now(),
-      },
-    }));
-    try {
-      await upsertQuyenResult({
-        eventId: item.event.id,
-        athleteId: item.isTeam ? null : item.performerId,
-        teamId: item.isTeam ? item.performerId : null,
-        diem,
-        diemTru,
-      });
-    } catch {
-      window.alert(
-        "Lưu điểm thất bại — kiểm tra backend đã chạy chưa. Thử chấm lại.",
-      );
-    }
-  };
-
-  const pickQuyenItem = (item: QuyenItem) => {
-    setCurrentQuyenKey(quyenResultKey(item.event.id, item.performerId));
+  // Đưa 1 lượt quyền vào ĐÚNG khu vực đang thao tác (currentCourtId) —
+  // dùng chung đúng bộ chọn sân đã có sẵn cho đối kháng, không cần thêm 1
+  // bộ chọn "khu vực quyền" riêng.
+  const startQuyenPerformance = (item: QuyenItem) => {
+    if (!currentCourtId) return;
+    const photoUrl = item.athleteId ? athletePhoto(item.athleteId) : null;
+    const coGioiHan = item.event.thoiGianBaiGiay !== undefined;
+    const state: LiveQuyenState = {
+      courtId: currentCourtId,
+      eventId: item.event.id,
+      athleteId: item.athleteId,
+      teamId: item.teamId,
+      eventTen: item.event.ten,
+      performerLabel: item.label,
+      performerSub: item.sub,
+      photoUrl,
+      trangThai: "cho_bat_dau",
+      coGioiHan,
+      thoiGianGioiHanGiay: item.event.thoiGianBaiGiay ?? null,
+      thoiGianDaTroiGiay: 0,
+      capNhatDongHoLuc: serverNow(),
+      lyDoKetThuc: null,
+      capNhatLuc: Date.now(),
+    };
+    publishQuyenState(state);
     setTab("dieu_hanh_quyen");
   };
 
-  // Tự động mở trận kế tiếp (đúng thứ tự lịch thi đấu, lấy từ `numbered`)
-  // vào sân đang thao tác, mỗi khi đang ở tab Điều hành đối kháng mà sân
-  // đang trống — thư ký không cần quay lại tab Lịch thi đấu để bấm "Bắt
-  // đầu" nữa. Tự dừng lặp: ngay sau khi mở trận, activeOnMyCourt hết rỗng
-  // nên điều kiện dưới false ở lần chạy kế tiếp. Trận đang thi ở sân khác
-  // vẫn có trangThai "dang_thi" nên không bao giờ bị chọn nhầm lần 2.
   useEffect(() => {
     if (tab !== "dieu_hanh_dk" || activeOnMyCourt) return;
     const next = numbered.find(
@@ -624,22 +669,7 @@ export default function BanThuKy() {
     if (next) openIntoCourt(next.event.id, next.match.id);
   }, [tab, activeOnMyCourt, numbered]);
 
-  // Tương tự cho Điều hành quyền: chưa chọn ai HOẶC người/đội đang chọn đã
-  // chấm xong (vừa bấm "Xác nhận điểm") -> tự nhảy sang lượt kế tiếp chưa
-  // có điểm, theo đúng thứ tự đã đánh số ở quyenNumbered. Nếu không còn ai
-  // để chấm nữa thì giữ nguyên lượt vừa chấm (không có "next" để nhảy tới).
-  useEffect(() => {
-    if (tab !== "dieu_hanh_quyen") return;
-    const daChamXong = !!(currentQuyenKey && quyenResults[currentQuyenKey]);
-    if (currentQuyenItem && !daChamXong) return;
-    const next = quyenNumbered.find(
-      (item) => !quyenResults[quyenResultKey(item.event.id, item.performerId)],
-    );
-    if (next)
-      setCurrentQuyenKey(quyenResultKey(next.event.id, next.performerId));
-  }, [tab, currentQuyenKey, currentQuyenItem, quyenResults, quyenNumbered]);
-
-  if (loading)
+  if (loading || loadingCourts)
     return (
       <div className={styles.page}>
         <p className={styles.hint}>Đang tải dữ liệu...</p>
@@ -652,23 +682,37 @@ export default function BanThuKy() {
       </div>
     );
 
+  const courtName = courts.find((c) => c.id === currentCourtId)?.ten ?? "";
+  // Mở màn hình công khai, tự đặt vị trí bắt đầu ngay tại mép phải màn
+  // hình chính đang dùng — rơi đúng vào màn hình mở rộng liền kề (đúng
+  // cách Windows sắp xếp mặc định khi cắm thêm màn hình, không cần biết
+  // trước độ phân giải màn phụ là bao nhiêu).
+  const openPublicScreenExtended = () => {
+    const url = `/man-hinh-cong-khai?san=${currentCourtId}`;
+    const left = window.screen.width;
+    const width = window.screen.availWidth;
+    const height = window.screen.availHeight;
+    window.open(
+      url,
+      "_blank",
+      `left=${left},top=0,width=${width},height=${height}`,
+    );
+  };
   return (
     <div className={styles.page}>
       <div className={styles.topbar}>
         <h1 className={styles.title}>Bàn thư ký</h1>
         <div className={styles.topbarActions}>
-          <a
+          <button
             className={styles.publicScreenLink}
-            href={`/man-hinh-cong-khai?san=${currentCourtId}`}
-            target="_blank"
-            rel="noopener noreferrer">
+            onClick={openPublicScreenExtended}>
             Mở màn hình công khai ↗
-          </a>
+          </button>
           <select
             className={styles.courtSelect}
             value={currentCourtId}
             onChange={(e) => setCurrentCourtId(e.target.value)}>
-            {COURTS.map((c) => (
+            {courts.map((c) => (
               <option key={c.id} value={c.id}>
                 Đang thao tác: {c.ten}
               </option>
@@ -687,9 +731,6 @@ export default function BanThuKy() {
             {id === "dieu_hanh_dk" && activeOnMyCourt && (
               <span className={styles.tabDot} />
             )}
-            {id === "dieu_hanh_quyen" && currentQuyenItem && (
-              <span className={styles.tabDot} />
-            )}
           </button>
         ))}
       </div>
@@ -700,6 +741,7 @@ export default function BanThuKy() {
           eventOf={eventOf}
           athleteName={athleteName}
           currentCourtId={currentCourtId}
+          courts={courts}
           onStart={openIntoCourt}
           onQuickFinish={quickFinish}
           onEditResult={editMatchResult}
@@ -710,8 +752,9 @@ export default function BanThuKy() {
       {tab === "lich_quyen" && (
         <QuyenScheduleTab
           items={quyenNumbered}
-          quyenResults={quyenResults}
-          onPick={pickQuyenItem}
+          quyenJudgeScores={quyenJudgeScores}
+          courtName={courtName}
+          onStart={startQuyenPerformance}
         />
       )}
 
@@ -738,15 +781,18 @@ export default function BanThuKy() {
 
       {tab === "dieu_hanh_quyen" && (
         <DieuHanhQuyenTab
-          key={currentQuyenKey ?? "none"}
-          item={currentQuyenItem}
-          savedResult={
-            currentQuyenKey ? quyenResults[currentQuyenKey] : undefined
-          }
-          onSubmit={(diem, diemTru) =>
-            currentQuyenItem &&
-            submitQuyenResult(currentQuyenItem, diem, diemTru)
-          }
+          key={currentCourtId}
+          courtId={currentCourtId}
+          quyenJudgeScores={quyenJudgeScores}
+          trongTaiList={trongTaiList}
+        />
+      )}
+
+      {tab === "trong_tai" && (
+        <TrongTaiTab
+          courts={courts}
+          trongTaiList={trongTaiList}
+          onRefresh={refreshTrongTai}
         />
       )}
     </div>
@@ -759,6 +805,7 @@ function DoiKhangScheduleTab({
   eventOf,
   athleteName,
   currentCourtId,
+  courts,
   onStart,
   onQuickFinish,
   onEditResult,
@@ -768,6 +815,7 @@ function DoiKhangScheduleTab({
   eventOf: (id: string) => CompetitionEvent | undefined;
   athleteName: (id: string | null) => string | null;
   currentCourtId: string;
+  courts: CourtBasic[];
   onStart: (eventId: string, matchId: string) => void;
   onQuickFinish: (
     eventId: string,
@@ -782,7 +830,7 @@ function DoiKhangScheduleTab({
   ) => void;
   onReplay: (match: Match, eventId: string) => void;
 }) {
-  const courtName = COURTS.find((c) => c.id === currentCourtId)?.ten ?? "";
+  const courtName = courts.find((c) => c.id === currentCourtId)?.ten ?? "";
   const [editingItem, setEditingItem] = useState<NumberedMatch | null>(null);
   const [editLyDo, setEditLyDo] = useState<LyDoKetThuc>("thang_diem");
 
@@ -791,34 +839,23 @@ function DoiKhangScheduleTab({
     setEditingItem(item);
   };
 
-  // Trạng thái "sống" của từng sân — dùng để biết trận đã vào sân
-  // (match.trangThai = "dang_thi") có ĐANG THẬT SỰ đếm giờ hay không, hay
-  // mới chỉ vào sân/đang tạm dừng. Chỉ subscribe khi tab này đang hiển thị
-  // (component mount/unmount theo tab ở component cha) nên không tốn gì
-  // lúc đang ở tab khác.
   const [liveStatesByCourtId, setLiveStatesByCourtId] = useState<
     Record<string, LiveMatchState | null>
-  >(() =>
-    Object.fromEntries(COURTS.map((c) => [c.id, getMatchSnapshot(c.id)])),
-  );
+  >({});
 
   useEffect(() => {
     setLiveStatesByCourtId(
-      Object.fromEntries(COURTS.map((c) => [c.id, getMatchSnapshot(c.id)])),
+      Object.fromEntries(courts.map((c) => [c.id, getMatchSnapshot(c.id)])),
     );
-    const unsubs = COURTS.map((c) =>
+    const unsubs = courts.map((c) =>
       subscribeMatchState(c.id, (state) =>
         setLiveStatesByCourtId((prev) => ({ ...prev, [c.id]: state })),
       ),
     );
     return () => unsubs.forEach((unsub) => unsub());
-  }, []);
+  }, [courts]);
 
   const currentCourtLive = liveStatesByCourtId[currentCourtId];
-  // "Bận thật" = đồng hồ hiệp đang chạy, đang nghỉ giữa hiệp, hoặc đang tạm
-  // dừng — những lúc này KHÔNG cho bắt đầu/xử trận khác vào sân. "Chờ bắt
-  // đầu" (chưa bấm hiệp 1, thường do effect tự-setup vừa đẩy vào) không
-  // tính là bận — thư ký vẫn chọn trận khác để thay được.
   const trueCourtBusy =
     currentCourtLive?.trangThai === "dang_thi" ||
     currentCourtLive?.trangThai === "nghi_giua_hiep" ||
@@ -844,15 +881,9 @@ function DoiKhangScheduleTab({
           const live = match.courtId
             ? liveStatesByCourtId[match.courtId]
             : null;
-          // Chỉ tính "đang thi" khi đồng hồ hiệp thật sự đang chạy hoặc
-          // đang nghỉ giữa hiệp — KHÔNG tính lúc mới vào sân chờ bấm bắt
-          // đầu hiệp 1, hay lúc thư ký bấm tạm dừng.
           const dangThiThat =
             live?.trangThai === "dang_thi" ||
             live?.trangThai === "nghi_giua_hiep";
-          // Ai thua = bên còn lại của người thắng đã lưu. null nếu chưa có
-          // (VD kết quả cũ từ trước khi có field nguoiThangId) — khi đó
-          // không gạch bên nào, tránh gạch nhầm.
           const loserSide: "do" | "xanh" | null =
             daXong && match.nguoiThangId
               ? match.nguoiThangId === match.athleteRedId
@@ -1003,12 +1034,14 @@ function DoiKhangScheduleTab({
 /* ============ Lịch thi đấu — Quyền ============ */
 function QuyenScheduleTab({
   items,
-  quyenResults,
-  onPick,
+  quyenJudgeScores,
+  courtName,
+  onStart,
 }: {
   items: QuyenItem[];
-  quyenResults: Record<string, QuyenResult>;
-  onPick: (item: QuyenItem) => void;
+  quyenJudgeScores: QuyenJudgeScoreWire[];
+  courtName: string;
+  onStart: (item: QuyenItem) => void;
 }) {
   return (
     <section className={styles.listCard}>
@@ -1017,10 +1050,14 @@ function QuyenScheduleTab({
       </div>
       <div className={styles.listBody}>
         {items.map((item) => {
-          const key = quyenResultKey(item.event.id, item.performerId);
-          const result = quyenResults[key];
+          const scores = quyenJudgeScores.filter((s) =>
+            scoreMatchesQuyenItem(s, item),
+          );
+          const tongHop = tinhDiemQuyenTongHop(scores.map((s) => s.diem));
           return (
-            <div key={key} className={styles.listRow}>
+            <div
+              key={quyenKeyOf(item.event.id, item.athleteId, item.teamId)}
+              className={styles.listRow}>
               <span className={styles.listNo}>#{item.so}</span>
               <div className={styles.listInfo}>
                 <div className={styles.listEvent}>
@@ -1031,15 +1068,15 @@ function QuyenScheduleTab({
                   <span className={styles.subInline}>({item.sub})</span>
                 </div>
               </div>
-              {result ? (
+              {tongHop !== null ? (
                 <span className={styles.resultTag}>
-                  Đã chấm: {(result.diem - result.diemTru).toFixed(2)}
+                  Kết quả: {tongHop.toFixed(2)}
                 </span>
               ) : (
                 <button
                   className={styles.startBtn}
-                  onClick={() => onPick(item)}>
-                  Chấm điểm
+                  onClick={() => onStart(item)}>
+                  Bắt đầu tại {courtName}
                 </button>
               )}
             </div>
@@ -1053,6 +1090,374 @@ function QuyenScheduleTab({
         )}
       </div>
     </section>
+  );
+}
+
+/* ============ Điều hành — Quyền ============ */
+function DieuHanhQuyenTab({
+  courtId,
+  quyenJudgeScores,
+  trongTaiList,
+}: {
+  courtId: string;
+  quyenJudgeScores: QuyenJudgeScoreWire[];
+  trongTaiList: TrongTaiWire[];
+}) {
+  const [live, setLive] = useState<LiveQuyenState | null>(() =>
+    getQuyenSnapshot(courtId),
+  );
+  const [, setTick] = useState(0);
+  const [showEndFlow, setShowEndFlow] = useState(false);
+  const [lyDo, setLyDo] = useState<LyDoKetThucQuyen>("hoan_thanh");
+
+  useEffect(() => {
+    setLive(getQuyenSnapshot(courtId));
+    return subscribeQuyenState(courtId, setLive);
+  }, [courtId]);
+
+  useEffect(() => {
+    const id = setInterval(() => setTick((n) => n + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  if (!live) {
+    return (
+      <div className={styles.noMatch}>
+        Chưa có ai đang thi ở khu vực này — sang tab "Lịch thi đấu quyền" và bấm
+        "Bắt đầu" ở 1 lượt để đưa vào đây.
+      </div>
+    );
+  }
+
+  const patch = (p: Partial<LiveQuyenState>) => {
+    const next = { ...live, ...p, capNhatLuc: Date.now() };
+    publishQuyenState(next);
+    setLive(next);
+  };
+
+  const daTroi = tinhThoiGianDaTroi(live);
+  const hienThi = live.coGioiHan
+    ? Math.max(0, (live.thoiGianGioiHanGiay ?? 0) - daTroi)
+    : daTroi;
+  const hetGio =
+    live.coGioiHan && hienThi <= 0 && live.trangThai === "dang_thi";
+  const dangThi = live.trangThai === "dang_thi";
+  const dangTamDung = live.trangThai === "tam_dung";
+  const daKetThuc = live.trangThai === "da_ket_thuc";
+
+  const batDau = () =>
+    patch({ trangThai: "dang_thi", capNhatDongHoLuc: serverNow() });
+  const tamDung = () =>
+    patch({ trangThai: "tam_dung", thoiGianDaTroiGiay: daTroi });
+  const tiepTuc = () =>
+    patch({ trangThai: "dang_thi", capNhatDongHoLuc: serverNow() });
+
+  const ketThuc = (reason: LyDoKetThucQuyen) => {
+    patch({
+      trangThai: "da_ket_thuc",
+      lyDoKetThuc: reason,
+      thoiGianDaTroiGiay: daTroi,
+    });
+    setShowEndFlow(false);
+  };
+
+  const xongHan = () => clearQuyenState(courtId);
+
+  const choThiLai = () => {
+    if (
+      !window.confirm(
+        "Cho thi lại từ đầu? Đồng hồ sẽ về 0 — các điểm giám khảo đã gửi cho " +
+          "lượt này VẪN CÒN, cần tự nhắc giám khảo gửi lại nếu cần chấm lại.",
+      )
+    )
+      return;
+    patch({
+      trangThai: "cho_bat_dau",
+      thoiGianDaTroiGiay: 0,
+      lyDoKetThuc: null,
+    });
+  };
+
+  const scores = quyenJudgeScores.filter(
+    (s) =>
+      s.eventId === live.eventId &&
+      s.athleteId === live.athleteId &&
+      s.teamId === live.teamId,
+  );
+  const tongHop = tinhDiemQuyenTongHop(scores.map((s) => s.diem));
+  // 5 giám định ĐANG HOẠT ĐỘNG tại đúng sân này, xếp theo đúng số vị trí
+  // Bàn thư ký đã gán — không phải theo thứ tự gửi điểm.
+  const giamDinhSan = trongTaiList
+    .filter((t) => t.courtId === live.courtId && t.thuTuGiamDinh !== null)
+    .sort((a, b) => (a.thuTuGiamDinh ?? 0) - (b.thuTuGiamDinh ?? 0));
+
+  const mm = Math.floor(hienThi / 60);
+  const ss = Math.floor(hienThi % 60);
+  const timeLabel = `${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`;
+
+  return (
+    <div className={styles.dieuHanhQuyen}>
+      <div className={styles.matchMeta}>{live.eventTen}</div>
+
+      <div className={styles.quyenJudgeList}>
+        {[1, 2, 3, 4, 5].map((n) => {
+          const gd = giamDinhSan.find((t) => t.thuTuGiamDinh === n);
+          const diem = gd
+            ? scores.find((s) => s.giamKhaoId === gd.id)?.diem
+            : undefined;
+          return (
+            <div key={n} className={styles.quyenJudgeRow}>
+              <span className={styles.quyenJudgeLabel}>
+                Giám định {n}
+                {gd ? ` — ${gd.hoTen}` : " — chưa gán"}
+              </span>
+              <span
+                className={
+                  diem !== undefined
+                    ? styles.quyenJudgeScore
+                    : styles.quyenJudgeScorePending
+                }>
+                {diem !== undefined ? diem : gd ? "chưa chấm" : "—"}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      {tongHop !== null && (
+        <div className={styles.quyenResultBox}>
+          <span>Tổng điểm</span>
+          <strong>{tongHop.toFixed(2)}</strong>
+        </div>
+      )}
+
+      <div className={styles.quyenPerformer}>
+        <AthleteAvatar
+          name={live.performerLabel}
+          photoUrl={live.photoUrl}
+          size={96}
+        />
+        <div className={styles.quyenPerformerName}>{live.performerLabel}</div>
+        <div className={styles.quyenPerformerSub}>{live.performerSub}</div>
+      </div>
+
+      {daKetThuc ? (
+        <div className={styles.endedBox}>
+          <Award size={28} />
+          <span className={styles.endedLabel}>
+            {live.lyDoKetThuc === "hoan_thanh"
+              ? "Đã hoàn thành"
+              : `Đã kết thúc — ${LY_DO_KET_THUC_QUYEN_LABEL[live.lyDoKetThuc!]}`}
+          </span>
+          <div className={styles.controlBtns}>
+            <button className={styles.btnPrimary} onClick={xongHan}>
+              <Check size={16} /> Xong, qua lượt tiếp theo
+            </button>
+            <button className={styles.linkBtn} onClick={choThiLai}>
+              Cho thi lại
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
+          <span
+            className={`${styles.timerBig} ${hetGio ? styles.timerDone : ""}`}>
+            {timeLabel}
+          </span>
+          {!live.coGioiHan && (
+            <p className={styles.hint}>
+              Không giới hạn thời gian — đồng hồ chỉ đếm để tham khảo.
+            </p>
+          )}
+          {hetGio && (
+            <p className={styles.hint}>Đã hết thời gian tham chiếu của bài.</p>
+          )}
+
+          {live.trangThai === "cho_bat_dau" && (
+            <button className={styles.timerBtn} onClick={batDau}>
+              <Play size={15} /> Bắt đầu
+            </button>
+          )}
+          {dangThi && (
+            <button className={styles.timerBtn} onClick={tamDung}>
+              <Pause size={15} /> Tạm dừng
+            </button>
+          )}
+          {dangTamDung && (
+            <button className={styles.timerBtn} onClick={tiepTuc}>
+              <Play size={15} /> Tiếp tục
+            </button>
+          )}
+
+          {!showEndFlow ? (
+            <button
+              className={styles.btnDangerBig}
+              onClick={() => setShowEndFlow(true)}>
+              <Flag size={18} /> Kết thúc lượt
+            </button>
+          ) : (
+            <div className={styles.settingsForm}>
+              <label className={styles.reasonRow}>
+                <span>Lý do</span>
+                <select
+                  value={lyDo}
+                  onChange={(e) => setLyDo(e.target.value as LyDoKetThucQuyen)}>
+                  {LY_DO_KET_THUC_QUYEN_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button
+                className={styles.btnPrimary}
+                onClick={() => ketThuc(lyDo)}>
+                Xác nhận kết thúc
+              </button>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+/* ============ Trọng tài (danh sách) ============ */
+function TrongTaiTab({
+  courts,
+  trongTaiList,
+  onRefresh,
+}: {
+  courts: CourtBasic[];
+  trongTaiList: TrongTaiWire[];
+  onRefresh: () => void;
+}) {
+  const [hoTenMoi, setHoTenMoi] = useState("");
+  const [courtMoi, setCourtMoi] = useState(courts[0]?.id ?? "");
+  const [saving, setSaving] = useState(false);
+
+  const themTrongTai = async () => {
+    if (!hoTenMoi.trim()) return;
+    setSaving(true);
+    try {
+      await createTrongTai({
+        hoTen: hoTenMoi.trim(),
+        courtId: courtMoi || null,
+        thuTuGiamDinh: null,
+      });
+      setHoTenMoi("");
+      onRefresh();
+    } catch {
+      window.alert("Thêm trọng tài thất bại.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const doiViTri = async (t: TrongTaiWire, thuTu: number | null) => {
+    try {
+      await updateTrongTai(t.id, {
+        hoTen: t.hoTen,
+        courtId: t.courtId,
+        thuTuGiamDinh: thuTu,
+      });
+      onRefresh();
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : "Đổi vị trí thất bại.");
+    }
+  };
+
+  const doiSan = async (t: TrongTaiWire, courtId: string) => {
+    try {
+      // Đổi sân thì reset về dự bị luôn — số Giám định cũ gắn với sân cũ,
+      // mang qua sân mới dễ đụng người khác đang giữ đúng số đó.
+      await updateTrongTai(t.id, { hoTen: t.hoTen, courtId, thuTuGiamDinh: null });
+      onRefresh();
+    } catch {
+      window.alert("Đổi sân thất bại.");
+    }
+  };
+
+  const xoa = async (t: TrongTaiWire) => {
+    if (!window.confirm(`Xoá "${t.hoTen}" khỏi danh sách trọng tài?`)) return;
+    try {
+      await deleteTrongTai(t.id);
+      onRefresh();
+    } catch {
+      window.alert("Xoá thất bại.");
+    }
+  };
+
+  return (
+    <div className={styles.trongTaiTab}>
+      <div className={styles.trongTaiAddForm}>
+        <input
+          value={hoTenMoi}
+          onChange={(e) => setHoTenMoi(e.target.value)}
+          placeholder="Tên trọng tài mới"
+        />
+        <select value={courtMoi} onChange={(e) => setCourtMoi(e.target.value)}>
+          {courts.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.ten}
+            </option>
+          ))}
+        </select>
+        <button
+          className={styles.btnPrimary}
+          disabled={saving || !hoTenMoi.trim()}
+          onClick={themTrongTai}>
+          <Plus size={16} /> Thêm
+        </button>
+      </div>
+
+      {courts.map((court) => {
+        const nguoiOSan = trongTaiList.filter((t) => t.courtId === court.id);
+        return (
+          <div key={court.id} className={styles.trongTaiCourtGroup}>
+            <div className={styles.trongTaiCourtName}>
+              {court.ten} · {nguoiOSan.length} trọng tài
+            </div>
+            {nguoiOSan.length === 0 && (
+              <p className={styles.hint}>Chưa có trọng tài nào ở sân này.</p>
+            )}
+            {nguoiOSan.map((t) => (
+              <div key={t.id} className={styles.trongTaiRow}>
+                <span className={styles.trongTaiName}>{t.hoTen}</span>
+                <select
+                  value={t.thuTuGiamDinh ?? ""}
+                  onChange={(e) =>
+                    doiViTri(t, e.target.value ? Number(e.target.value) : null)
+                  }>
+                  <option value="">Dự bị</option>
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <option key={n} value={n}>
+                      Giám định {n}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={t.courtId ?? ""}
+                  onChange={(e) => doiSan(t, e.target.value)}>
+                  {courts.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.ten}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className={styles.trongTaiDelete}
+                  onClick={() => xoa(t)}
+                  aria-label="Xoá trọng tài">
+                  <X size={14} />
+                </button>
+              </div>
+            ))}
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
@@ -1076,51 +1481,47 @@ function DieuHanhDoiKhangTab({
   const [live, setLive] = useState<LiveMatchState | null>(() =>
     getMatchSnapshot(courtId),
   );
+  const pressed = usePressedLights(courtId);
   const [, setTick] = useState(0);
-  const [refScores, setRefScores] = useState<DiemTrongTai[]>(() =>
-    getAllScoresForCourt(courtId),
-  );
+
   const [showEndFlow, setShowEndFlow] = useState(false);
   const [lyDo, setLyDo] = useState<LyDoKetThuc>("thang_diem");
   const [showSettings, setShowSettings] = useState(false);
-
+  const [showRecovery, setShowRecovery] = useState(false);
   useEffect(() => {
     setLive(getMatchSnapshot(courtId));
-    setRefScores(getAllScoresForCourt(courtId));
-    const unsubMatch = subscribeMatchState(courtId, setLive);
-    const unsubScores = subscribeCourtScores(
-      courtId,
-      (score) =>
-        setRefScores((prev) => [
-          ...prev.filter((s) => s.giamDinhId !== score.giamDinhId),
-          score,
-        ]),
-      (giamDinhId) =>
-        setRefScores((prev) => prev.filter((s) => s.giamDinhId !== giamDinhId)),
-    );
-    return () => {
-      unsubMatch();
-      unsubScores();
-    };
+    return subscribeMatchState(courtId, setLive);
   }, [courtId]);
-
   useEffect(() => {
     const id = setInterval(() => setTick((n) => n + 1), 1000);
     return () => clearInterval(id);
   }, []);
-
-  if (!live) return <p className={styles.hint}>Đang khởi tạo trận...</p>;
+  useEffect(() => {
+    if (live) {
+      setShowRecovery(false);
+      return;
+    }
+    const t = setTimeout(() => setShowRecovery(true), 2000);
+    return () => clearTimeout(t);
+  }, [live, courtId]);
+  if (!live) {
+    if (!showRecovery)
+      return <p className={styles.hint}>Đang khởi tạo trận...</p>;
+    return (
+      <RecoveryScreen
+        match={match}
+        eventTen={eventTen}
+        athleteName={athleteName}
+        athleteTeam={athleteTeam}
+      />
+    );
+  }
 
   const remaining = tinhThoiGianConLai(live);
   const dangChay = live.trangThai === "dang_thi";
   const dangNghi = live.trangThai === "nghi_giua_hiep";
   const laHiepCuoi = live.hiepHienTai >= live.tongSoHiep;
   const hetGio = remaining <= 0 && (dangChay || dangNghi);
-  // "da_ket_thuc" ở đây là trạng thái TẠM — đã chọn người thắng nhưng thư
-  // ký chưa bấm xác nhận cuối cùng. Dùng patch() (broadcast qua
-  // liveMatchStore) thay vì gọi onEndMatch ngay, để: (1) có 1 nhịp nổi bật
-  // người thắng trước khi chuyển trận, (2) Màn hình công khai xem cùng lúc
-  // cũng thấy được y hệt, vì cùng đọc chung 1 LiveMatchState.
 
   const patch = (p: Partial<LiveMatchState>) => {
     const next = { ...live, ...p, capNhatLuc: Date.now() };
@@ -1133,12 +1534,12 @@ function DieuHanhDoiKhangTab({
       trangThai: "dang_thi",
       hiepHienTai: live.hiepHienTai + 1,
       thoiGianConLaiGiay: live.thoiGianHiepGiay,
-      capNhatDongHoLuc: Date.now(),
+      capNhatDongHoLuc: serverNow(),
     });
   const tamDung = () =>
     patch({ trangThai: "tam_dung", thoiGianConLaiGiay: remaining });
   const tiepTuc = () =>
-    patch({ trangThai: "dang_thi", capNhatDongHoLuc: Date.now() });
+    patch({ trangThai: "dang_thi", capNhatDongHoLuc: serverNow() });
   const ketThucHiep = () =>
     patch(
       laHiepCuoi
@@ -1146,11 +1547,10 @@ function DieuHanhDoiKhangTab({
         : {
             trangThai: "nghi_giua_hiep",
             thoiGianConLaiGiay: live.thoiGianNghiGiay,
-            capNhatDongHoLuc: Date.now(),
+            capNhatDongHoLuc: serverNow(),
           },
     );
 
-  // Không còn chặn ở 0 nữa — điểm được phép âm (VD do bị trừ phạt nhiều lần khi đang thấp điểm)
   const adjustScore = (side: "do" | "xanh", delta: number) => {
     const key = side === "do" ? "diemChinhThucDo" : "diemChinhThucXanh";
     patch({
@@ -1159,7 +1559,6 @@ function DieuHanhDoiKhangTab({
     } as Partial<LiveMatchState>);
   };
 
-  // Đủ 3 lần nhắc nhở -> tự trừ 2 điểm bên đó (có thể xuống âm), reset nhắc nhở về 0 để tính tiếp
   const adjustNhacNho = (side: "do" | "xanh", delta: number) => {
     const key = side === "do" ? "canhCaoDo" : "canhCaoXanh";
     const scoreKey = side === "do" ? "diemChinhThucDo" : "diemChinhThucXanh";
@@ -1196,21 +1595,13 @@ function DieuHanhDoiKhangTab({
 
   const daKetThuc = live.trangThai === "da_ket_thuc";
 
-  // Bấm "Đỏ/Xanh thắng": chỉ CÔNG BỐ người thắng (broadcast cho mọi màn
-  // hình đang xem sân này), CHƯA đụng vào bảng đấu — cho 1 nhịp nổi bật
-  // trước khi thật sự chuyển trận.
   const confirmWinner = (thang: "do" | "xanh") => {
     patch({ trangThai: "da_ket_thuc", nguoiThang: thang, lyDoKetThuc: lyDo });
     setShowEndFlow(false);
   };
-  // Xác nhận cuối: giờ mới thật sự cập nhật bảng đấu (onEndMatch ở component
-  // cha) — chuyển trận sang đã hoàn thành, đẩy người thắng vào trận kế, xoá
-  // live state của sân này.
   const confirmFinish = () => {
     if (live.nguoiThang) onEndMatch(live.lyDoKetThuc ?? lyDo, live.nguoiThang);
   };
-  // Bấm nhầm bên thắng? Quay lại màn hình điều khiển bình thường, không
-  // đụng gì tới bảng đấu (vì confirmWinner chưa đụng tới nó).
   const huyKetThuc = () =>
     patch({ trangThai: "tam_dung", nguoiThang: null, lyDoKetThuc: undefined });
 
@@ -1233,56 +1624,61 @@ function DieuHanhDoiKhangTab({
           ]
             .filter(Boolean)
             .join(" ")}>
-          <span className={styles.cornerLabelDo}>ĐỎ</span>
-          <AthleteAvatar
-            name={athleteName(match.athleteRedId) ?? "—"}
-            photoUrl={live.anhDo}
-            size={72}
-          />
-          <div className={styles.athNameBig}>
-            {athleteName(match.athleteRedId)}
-          </div>
-          <div className={styles.athUnit}>
-            {athleteTeam(match.athleteRedId)}
-          </div>
-          <div className={styles.scoreNumDoBig}>{live.diemChinhThucDo}</div>
-          {daKetThuc ? (
-            live.nguoiThang === "do" && (
-              <div className={styles.winnerBadge}>
-                <Award size={16} /> Thắng
-              </div>
-            )
-          ) : (
-            <>
-              <div className={styles.stepBtnsBig}>
-                <button onClick={() => adjustScore("do", -1)}>
-                  <Minus size={22} />
-                </button>
-                <button onClick={() => adjustScore("do", 1)}>
-                  <Plus size={22} />
-                </button>
-              </div>
-              <div className={styles.warnRowBig}>
-                <span>Nhắc nhở (3 → tự trừ 2đ)</span>
-                <div className={styles.dotsBig}>
-                  {[0, 1, 2].map((i) => (
-                    <span
-                      key={i}
-                      className={
-                        i < live.canhCaoDo ? styles.dotOnDo : styles.dotOff
-                      }
-                    />
-                  ))}
-                </div>
-                <button onClick={() => adjustNhacNho("do", -1)}>
-                  <Minus size={14} />
-                </button>
-                <button onClick={() => adjustNhacNho("do", 1)}>
-                  <Plus size={14} />
-                </button>
-              </div>
-            </>
+          {!daKetThuc && (
+            <LightBoxes presses={pressed.do.map((p) => p.diem)} />
           )}
+          <div className={styles.cornerMain}>
+            <span className={styles.cornerLabelDo}>ĐỎ</span>
+            <AthleteAvatar
+              name={athleteName(match.athleteRedId) ?? "—"}
+              photoUrl={live.anhDo}
+              size={72}
+            />
+            <div className={styles.athNameBig}>
+              {athleteName(match.athleteRedId)}
+            </div>
+            <div className={styles.athUnit}>
+              {athleteTeam(match.athleteRedId)}
+            </div>
+            <div className={styles.scoreNumDoBig}>{live.diemChinhThucDo}</div>
+            {daKetThuc ? (
+              live.nguoiThang === "do" && (
+                <div className={styles.winnerBadge}>
+                  <Award size={16} /> Thắng
+                </div>
+              )
+            ) : (
+              <>
+                <div className={styles.stepBtnsBig}>
+                  <button onClick={() => adjustScore("do", -1)}>
+                    <Minus size={22} />
+                  </button>
+                  <button onClick={() => adjustScore("do", 1)}>
+                    <Plus size={22} />
+                  </button>
+                </div>
+                <div className={styles.warnRowBig}>
+                  <span>Nhắc nhở (3 → tự trừ 2đ)</span>
+                  <div className={styles.dotsBig}>
+                    {[0, 1, 2].map((i) => (
+                      <span
+                        key={i}
+                        className={
+                          i < live.canhCaoDo ? styles.dotOnDo : styles.dotOff
+                        }
+                      />
+                    ))}
+                  </div>
+                  <button onClick={() => adjustNhacNho("do", -1)}>
+                    <Minus size={14} />
+                  </button>
+                  <button onClick={() => adjustNhacNho("do", 1)}>
+                    <Plus size={14} />
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
 
         <div className={styles.timerCol}>
@@ -1371,75 +1767,69 @@ function DieuHanhDoiKhangTab({
           ]
             .filter(Boolean)
             .join(" ")}>
-          <span className={styles.cornerLabelXanh}>XANH</span>
-          <AthleteAvatar
-            name={athleteName(match.athleteBlueId) ?? "—"}
-            photoUrl={live.anhXanh}
-            size={72}
-          />
-          <div className={styles.athNameBig}>
-            {athleteName(match.athleteBlueId)}
-          </div>
-          <div className={styles.athUnit}>
-            {athleteTeam(match.athleteBlueId)}
-          </div>
-          <div className={styles.scoreNumXanhBig}>{live.diemChinhThucXanh}</div>
-          {daKetThuc ? (
-            live.nguoiThang === "xanh" && (
-              <div className={styles.winnerBadge}>
-                <Award size={16} /> Thắng
-              </div>
-            )
-          ) : (
-            <>
-              <div className={styles.stepBtnsBig}>
-                <button onClick={() => adjustScore("xanh", -1)}>
-                  <Minus size={22} />
-                </button>
-                <button onClick={() => adjustScore("xanh", 1)}>
-                  <Plus size={22} />
-                </button>
-              </div>
-              <div className={styles.warnRowBig}>
-                <span>Nhắc nhở (3 → tự trừ 2đ)</span>
-                <div className={styles.dotsBig}>
-                  {[0, 1, 2].map((i) => (
-                    <span
-                      key={i}
-                      className={
-                        i < live.canhCaoXanh ? styles.dotOnXanh : styles.dotOff
-                      }
-                    />
-                  ))}
+          <div className={styles.cornerMain}>
+            <span className={styles.cornerLabelXanh}>XANH</span>
+            <AthleteAvatar
+              name={athleteName(match.athleteBlueId) ?? "—"}
+              photoUrl={live.anhXanh}
+              size={72}
+            />
+            <div className={styles.athNameBig}>
+              {athleteName(match.athleteBlueId)}
+            </div>
+            <div className={styles.athUnit}>
+              {athleteTeam(match.athleteBlueId)}
+            </div>
+            <div className={styles.scoreNumXanhBig}>
+              {live.diemChinhThucXanh}
+            </div>
+            {daKetThuc ? (
+              live.nguoiThang === "xanh" && (
+                <div className={styles.winnerBadge}>
+                  <Award size={16} /> Thắng
                 </div>
-                <button onClick={() => adjustNhacNho("xanh", -1)}>
-                  <Minus size={14} />
-                </button>
-                <button onClick={() => adjustNhacNho("xanh", 1)}>
-                  <Plus size={14} />
-                </button>
-              </div>
-            </>
+              )
+            ) : (
+              <>
+                <div className={styles.stepBtnsBig}>
+                  <button onClick={() => adjustScore("xanh", -1)}>
+                    <Minus size={22} />
+                  </button>
+                  <button onClick={() => adjustScore("xanh", 1)}>
+                    <Plus size={22} />
+                  </button>
+                </div>
+                <div className={styles.warnRowBig}>
+                  <span>Nhắc nhở (3 → tự trừ 2đ)</span>
+                  <div className={styles.dotsBig}>
+                    {[0, 1, 2].map((i) => (
+                      <span
+                        key={i}
+                        className={
+                          i < live.canhCaoXanh
+                            ? styles.dotOnXanh
+                            : styles.dotOff
+                        }
+                      />
+                    ))}
+                  </div>
+                  <button onClick={() => adjustNhacNho("xanh", -1)}>
+                    <Minus size={14} />
+                  </button>
+                  <button onClick={() => adjustNhacNho("xanh", 1)}>
+                    <Plus size={14} />
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+          {!daKetThuc && (
+            <LightBoxes presses={pressed.xanh.map((p) => p.diem)} />
           )}
         </div>
       </div>
 
-      {!daKetThuc && refScores.length > 0 && (
-        <div className={styles.refBox}>
-          <span className={styles.refBoxTitle}>
-            Điểm trọng tài biên đã gửi ({refScores.length}/
-            {live.soTrongTaiCanCo})
-          </span>
-          <div className={styles.refList}>
-            {refScores.map((s) => (
-              <span key={s.giamDinhId} className={styles.refItem}>
-                {s.tenTrongTai}: <b className={styles.refDo}>{s.diemDo}</b>–
-                <b className={styles.refXanh}>{s.diemXanh}</b>
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
+      <LiveLightsPanel courtId={courtId} />
 
       {!daKetThuc && (
         <div className={styles.controls}>
@@ -1479,6 +1869,7 @@ function DieuHanhDoiKhangTab({
           )}
         </div>
       )}
+      <MatchLogPanel courtId={courtId} />
 
       {showSettings && (
         <Modal title="Cài đặt trận đấu" onClose={() => setShowSettings(false)}>
@@ -1520,188 +1911,89 @@ function DieuHanhDoiKhangTab({
                 }
               />
             </label>
-            <label className={styles.field}>
-              <span>Số trọng tài biên</span>
-              <input
-                type="number"
-                min={1}
-                max={5}
-                value={live.soTrongTaiCanCo}
-                onChange={(e) =>
-                  patch({ soTrongTaiCanCo: Number(e.target.value) })
-                }
-              />
-            </label>
-            <button
-              className={styles.btnPrimary}
-              onClick={() => setShowSettings(false)}>
-              Xong
-            </button>
           </div>
         </Modal>
       )}
     </div>
   );
 }
-
-/* ============ Điều hành — Quyền ============ */
-function DieuHanhQuyenTab({
-  item,
-  savedResult,
-  onSubmit,
+/* ============ Hồi phục trận sau khi mất trạng thái sống ============ */
+function RecoveryScreen({
+  match,
+  eventTen,
+  athleteName,
+  athleteTeam,
 }: {
-  item: QuyenItem | undefined;
-  savedResult: QuyenResult | undefined;
-  onSubmit: (diem: number, diemTru: number) => void;
+  match: Match;
+  eventTen: string;
+  athleteName: (id: string | null) => string | null;
+  athleteTeam: (id: string | null) => string;
 }) {
-  const [diem, setDiem] = useState(savedResult ? String(savedResult.diem) : "");
-  const [diemTru, setDiemTru] = useState(
-    savedResult ? String(savedResult.diemTru) : "",
-  );
+  const [hiep, setHiep] = useState(1);
+  const [diemDo, setDiemDo] = useState(0);
+  const [diemXanh, setDiemXanh] = useState(0);
 
-  // Đồng hồ bấm giờ đơn giản, chỉ chạy cục bộ — khác đối kháng, quyền không
-  // cần nhiều thiết bị cùng theo dõi 1 đồng hồ chung, nên không cần
-  // liveMatchStore/BroadcastChannel ở đây.
-  const [running, setRunning] = useState(false);
-  const [elapsedMs, setElapsedMs] = useState(0);
-  const startRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    if (!running) return;
-    const id = setInterval(() => {
-      if (startRef.current !== null)
-        setElapsedMs(Date.now() - startRef.current);
-    }, 100);
-    return () => clearInterval(id);
-  }, [running]);
-
-  if (!item) {
-    return (
-      <div className={styles.noMatch}>
-        Chưa chọn VĐV/đội nào — sang tab "Lịch thi đấu quyền" và bấm "Chấm
-        điểm".
-      </div>
+  const khoiPhuc = () => {
+    const base = makeLiveState(
+      match.courtId!,
+      eventTen,
+      match,
+      athleteName(match.athleteRedId) ?? "—",
+      athleteTeam(match.athleteRedId),
+      null,
+      athleteName(match.athleteBlueId) ?? "—",
+      athleteTeam(match.athleteBlueId),
+      null,
     );
-  }
-
-  const toggleStopwatch = () => {
-    if (running) {
-      setRunning(false);
-    } else {
-      startRef.current = Date.now() - elapsedMs;
-      setRunning(true);
-    }
+    publishMatchState({
+      ...base,
+      trangThai: "tam_dung",
+      hiepHienTai: hiep,
+      diemChinhThucDo: diemDo,
+      diemChinhThucXanh: diemXanh,
+      capNhatDongHoLuc: serverNow(),
+    });
   };
-  const resetStopwatch = () => {
-    setRunning(false);
-    setElapsedMs(0);
-    startRef.current = null;
-  };
-
-  const elapsedSec = elapsedMs / 1000;
-  const refSec = item.event.thoiGianBaiGiay;
-  const overRef = refSec !== undefined && elapsedSec > refSec;
-  const mm = Math.floor(elapsedSec / 60);
-  const ss = Math.floor(elapsedSec % 60);
-  const elapsedLabel = `${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`;
-
-  const diemThuc = Math.max(
-    0,
-    (parseFloat(diem) || 0) - (parseFloat(diemTru) || 0),
-  );
 
   return (
-    <div className={styles.dieuHanhQuyen}>
-      <div className={styles.matchMeta}>
-        #{item.so} {item.event.ten} · {formatEventNhomTuoi(item.event.nhomTuoi)}
-      </div>
-
-      <div className={styles.quyenPerformer}>
-        <div className={styles.quyenPerformerName}>{item.label}</div>
-        <div className={styles.quyenPerformerSub}>{item.sub}</div>
-      </div>
-
-      <div className={styles.stopwatchBox}>
-        <div className={styles.stopwatchInfo}>
-          <span
-            className={`${styles.stopwatchTime} ${overRef ? styles.stopwatchOver : ""}`}>
-            {elapsedLabel}
-          </span>
-          {refSec !== undefined && (
-            <span className={styles.stopwatchRef}>
-              Thời gian tham chiếu bài: {refSec}s
-            </span>
-          )}
-        </div>
-        <div className={styles.stopwatchBtns}>
-          <button
-            type="button"
-            className={styles.timerBtn}
-            onClick={toggleStopwatch}>
-            {running ? (
-              <>
-                <Pause size={14} /> Tạm dừng
-              </>
-            ) : (
-              <>
-                <Play size={14} /> {elapsedMs > 0 ? "Tiếp tục" : "Bắt đầu"}
-              </>
-            )}
-          </button>
-          <button
-            type="button"
-            className={styles.restartBtn}
-            onClick={resetStopwatch}>
-            <RotateCcw size={13} /> Đặt lại
-          </button>
-        </div>
-      </div>
-
-      <div className={styles.quyenScoreRow}>
-        <label className={styles.quyenField}>
-          <span>Điểm cuối cùng</span>
+    <div className={styles.recoveryBox}>
+      <h3 className={styles.recoveryTitle}>⚠ Mất trạng thái trận đấu</h3>
+      <p className={styles.recoveryDesc}>
+        Trận này đang được đánh dấu "đang thi" trong hệ thống, nhưng máy chủ
+        không còn dữ liệu điểm/hiệp sống — khả năng cao do máy chủ vừa khởi động
+        lại. <strong>Nhập đúng tiến trình thật</strong> trước khi tiếp tục — hỏi
+        lại trọng tài nếu không chắc, không tự đoán.
+      </p>
+      <div className={styles.settingsForm}>
+        <label className={styles.field}>
+          <span>Đang ở hiệp</span>
           <input
             type="number"
-            inputMode="decimal"
-            step="0.01"
-            value={diem}
-            onChange={(e) => setDiem(e.target.value)}
-            placeholder="0.00"
-            autoFocus
+            min={1}
+            value={hiep}
+            onChange={(e) => setHiep(Number(e.target.value))}
           />
         </label>
-        <label className={styles.quyenField}>
-          <span>Điểm trừ (nếu có)</span>
+        <label className={styles.field}>
+          <span>Điểm Đỏ hiện tại</span>
           <input
             type="number"
-            inputMode="decimal"
-            step="0.01"
-            value={diemTru}
-            onChange={(e) => setDiemTru(e.target.value)}
-            placeholder="0.00"
+            value={diemDo}
+            onChange={(e) => setDiemDo(Number(e.target.value))}
           />
         </label>
-        <div className={styles.quyenResultBox}>
-          <span>Điểm thực</span>
-          <strong>{diemThuc.toFixed(2)}</strong>
-        </div>
+        <label className={styles.field}>
+          <span>Điểm Xanh hiện tại</span>
+          <input
+            type="number"
+            value={diemXanh}
+            onChange={(e) => setDiemXanh(Number(e.target.value))}
+          />
+        </label>
+        <button className={styles.btnPrimary} onClick={khoiPhuc}>
+          Khôi phục — trận sẽ ở trạng thái Tạm dừng
+        </button>
       </div>
-
-      <button
-        className={styles.btnPrimaryBig}
-        disabled={diem === ""}
-        onClick={() =>
-          onSubmit(parseFloat(diem) || 0, parseFloat(diemTru) || 0)
-        }>
-        <Check size={18} /> Xác nhận điểm
-      </button>
-
-      {savedResult && (
-        <p className={styles.savedNote}>
-          Đã lưu lúc{" "}
-          {new Date(savedResult.capNhatLuc).toLocaleTimeString("vi-VN")}
-        </p>
-      )}
     </div>
   );
 }

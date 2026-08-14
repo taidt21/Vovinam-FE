@@ -1,0 +1,68 @@
+@use '../../styles/variables'as *;
+
+.panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: $space-3;
+    padding: $space-3;
+    border: 1px solid $color-border;
+    border-radius: 10px;
+    background: $color-surface;
+}
+
+.col {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: center;
+}
+
+.label {
+    font-size: 11px;
+    font-weight: 700;
+    color: $color-text-muted;
+    text-transform: uppercase;
+}
+
+.badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+    min-height: 26px;
+}
+
+.badgeDo,
+.badgeXanh {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    color: white;
+    animation: lightPop 0.15s ease-out;
+}
+
+.badgeDo {
+    background: $color-do;
+}
+
+.badgeXanh {
+    background: $color-xanh;
+}
+
+.empty {
+    color: $color-text-muted;
+    font-size: 12px;
+}
+
+@keyframes lightPop {
+    from {
+        transform: scale(0.7);
+        opacity: 0.4;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}

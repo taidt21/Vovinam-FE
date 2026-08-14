@@ -1,6 +1,6 @@
 import type { Athlete, CompetitionEvent, Match } from '../types';
 import { compareNhomTuoi } from './nhomTuoi';
-// Đặt tên vòng theo khoảng cách THẬT tới chung kết — không theo số trận
+import { generateGuid } from './deviceId';// Đặt tên vòng theo khoảng cách THẬT tới chung kết — không theo số trận
 // trong vòng nữa. 0 bước = Chung kết, 1 = Bán kết, 2 = Tứ kết, xa hơn
 // thì theo số người thi đấu ở vòng đó (2^(khoảng cách + 1)).
 function tenVong(distance: number): string {
@@ -63,7 +63,7 @@ export function generateBracket(athletes: Athlete[], eventId: string): Match[] {
     const soBoMatches: Match[] = soBoAthletes.reduce<Match[]>((acc, _, i) => {
       if (i % 2 !== 0) return acc;
       acc.push({
-        id: crypto.randomUUID(),
+        id:generateGuid(),
         eventId,
         courtId: null,
         nextMatchId: null,
@@ -92,7 +92,7 @@ export function generateBracket(athletes: Athlete[], eventId: string): Match[] {
       const left = entrants[i * 2];
       const right = entrants[i * 2 + 1];
       const m: Match = {
-        id: crypto.randomUUID(),
+        id: generateGuid(),
         eventId,
         courtId: null,
         nextMatchId: null,

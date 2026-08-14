@@ -29,15 +29,15 @@ $text-muted-arena: rgba(255, 255, 255, 0.55);
 }
 
 .brand {
-    font-size: 15px;
+    font-size: 2vw;
     font-weight: 700;
     letter-spacing: 0.14em;
-    color: $text-muted-arena;
+    color: #fff;
 }
 
 .courtNameHeader {
     flex: 1;
-    font-size: 20px;
+    font-size: 1.5vw;
     font-weight: 800;
     letter-spacing: 0.04em;
     text-align: center;
@@ -45,9 +45,11 @@ $text-muted-arena: rgba(255, 255, 255, 0.55);
 
 .wallClock {
     font-family: $font-mono;
-    font-size: 20px;
+    font-size: 24px;
     font-weight: 700;
+    width: 213px;
     color: white;
+    text-align: right;
 }
 
 // ---- Màn hình chọn sân (hiện khi mở /man-hinh-cong-khai không kèm ?san=) ----
@@ -176,10 +178,11 @@ $text-muted-arena: rgba(255, 255, 255, 0.55);
 .sideDo,
 .sideXanh {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
     gap: $space-3;
+
     padding: $space-6 $space-5;
     border-radius: 20px;
     text-align: center;
@@ -201,19 +204,19 @@ $text-muted-arena: rgba(255, 255, 255, 0.55);
 }
 
 .athName {
-    font-size: 44px;
+    font-size: 2.5vw;
     font-weight: 800;
     line-height: 1.15;
 }
 
 .athUnit {
-    font-size: 18px;
+    font-size: 1.5vw;
     color: rgba(255, 255, 255, 0.78);
 }
 
 .scoreNum {
     font-family: $font-mono;
-    font-size: 190px;
+    font-size: 6vw;
     font-weight: 800;
     line-height: 1;
     color: $color-vang;
@@ -270,8 +273,8 @@ $text-muted-arena: rgba(255, 255, 255, 0.55);
 }
 
 .vsBadge {
-    width: 64px;
-    height: 64px;
+    width: 4vw;
+    height: 4vw;
     border-radius: 50%;
     border: 2px solid $color-vang;
     background: $card-arena;
@@ -280,25 +283,25 @@ $text-muted-arena: rgba(255, 255, 255, 0.55);
     align-items: center;
     justify-content: center;
     font-weight: 800;
-    font-size: 19px;
+    font-size: 1.2vw;
     letter-spacing: 0.03em;
 }
 
 .roundLabel {
-    font-size: 16px;
+    font-size: 1.2vw;
     color: $text-muted-arena;
     text-align: center;
 }
 
 .clock {
     font-family: $font-mono;
-    font-size: 96px;
+    font-size: 4vw;
     font-weight: 800;
     color: white;
 }
 
 .endedLabel {
-    font-size: 18px;
+    font-size: 1.2vw;
     font-weight: 800;
     letter-spacing: 0.08em;
     color: $color-vang;
@@ -328,4 +331,43 @@ $text-muted-arena: rgba(255, 255, 255, 0.55);
     .clock {
         font-size: 64px;
     }
+}
+
+.upcomingBadge {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: rgba(255, 210, 63, 0.15);
+    border: 1px solid #ffd23f;
+    color: #ffd23f;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+}
+
+.sideMain {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    flex-grow: 1;
+}
+
+// Màn hình công khai không cố định 1 kích thước cho mọi giải — dùng vw để
+// tự co giãn theo đúng màn hình/máy chiếu đang chiếu, ghi đè lên mặc định
+// px cố định của component dùng chung.
+.lightBoxesArena {
+    --lb-w: 7vw;
+    --lb-h: 4vw;
+    --lb-gap-inner: 1vw;
+}
+
+.quyenPerformerBig {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    justify-content: center;
 }

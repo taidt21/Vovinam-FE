@@ -134,10 +134,21 @@
     align-items: center;
     gap: $space-3;
     padding: $space-3 $space-4;
+    border: none;
     border-bottom: 1px solid $color-border;
+    background: none;
+    font: inherit;
+    text-align: left;
+    width: 100%;
+    color: inherit;
+    cursor: pointer;
 
     &:last-child {
         border-bottom: none;
+    }
+
+    &:hover {
+        background: $color-bg;
     }
 }
 
@@ -339,15 +350,24 @@
 .cornerDo,
 .cornerXanh {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    gap: $space-2;
+    gap: $space-3;
     padding: $space-4;
     border-radius: 12px;
     color: white;
     transition:
         opacity 0.25s ease,
         filter 0.25s ease;
+}
+
+.cornerMain {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $space-2;
+    flex: 1;
+    min-width: 0;
 }
 
 .cornerDo {
@@ -834,6 +854,40 @@
     margin-top: 2px;
 }
 
+.quyenJudgeList {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.quyenJudgeRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-2;
+    padding: 6px 10px;
+    border-radius: 6px;
+    background: $color-bg;
+    font-size: 13px;
+}
+
+.quyenJudgeLabel {
+    text-align: left;
+    color: $color-text;
+}
+
+.quyenJudgeScore {
+    font-weight: 700;
+    font-family: $font-mono;
+    color: $color-text;
+}
+
+.quyenJudgeScorePending {
+    font-weight: 700;
+    font-family: $font-mono;
+    color: $color-text-muted;
+}
+
 .quyenScoreRow {
     display: flex;
     flex-direction: column;
@@ -874,6 +928,83 @@
     }
 }
 
+.trongTaiTab {
+    display: flex;
+    flex-direction: column;
+    gap: $space-5;
+    max-width: 640px;
+}
+
+.trongTaiAddForm {
+    display: flex;
+    gap: $space-2;
+
+    input {
+        flex: 1;
+        padding: $space-3;
+        border: 1px solid $color-border;
+        border-radius: 8px;
+        font: inherit;
+    }
+
+    select {
+        padding: $space-3;
+        border: 1px solid $color-border;
+        border-radius: 8px;
+        font: inherit;
+    }
+}
+
+.trongTaiCourtGroup {
+    display: flex;
+    flex-direction: column;
+    gap: $space-2;
+}
+
+.trongTaiCourtName {
+    font-size: 14px;
+    font-weight: 700;
+    color: $color-text-muted;
+    text-transform: uppercase;
+}
+
+.trongTaiRow {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    padding: $space-3;
+    border: 1px solid $color-border;
+    border-radius: 8px;
+    background: $color-surface;
+
+    select {
+        padding: $space-2;
+        border: 1px solid $color-border;
+        border-radius: 6px;
+        font: inherit;
+        font-size: 13px;
+    }
+}
+
+.trongTaiName {
+    flex: 1;
+    font-weight: 600;
+}
+
+.trongTaiDelete {
+    border: none;
+    background: none;
+    color: $color-text-muted;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: $space-2;
+
+    &:hover {
+        color: $color-danger;
+    }
+}
+
 .btnPrimaryBig {
     display: inline-flex;
     align-items: center;
@@ -904,12 +1035,98 @@
     text-align: center;
     margin: 0;
 }
+
 .stopwatchBox {
-    display: flex; align-items: center; justify-content: space-between; gap: $space-3;
-    background: $color-bg; border-radius: 10px; padding: $space-4; flex-wrap: wrap;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-3;
+    background: $color-bg;
+    border-radius: 10px;
+    padding: $space-4;
+    flex-wrap: wrap;
 }
-.stopwatchInfo { display: flex; flex-direction: column; gap: 2px; }
-.stopwatchTime { font-size: 32px; font-weight: 700; font-family: $font-mono; }
-.stopwatchOver { color: $color-warning; }
-.stopwatchRef { font-size: 12px; color: $color-text-muted; }
-.stopwatchBtns { display: flex; gap: $space-2; }
+
+.stopwatchInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.stopwatchTime {
+    font-size: 32px;
+    font-weight: 700;
+    font-family: $font-mono;
+}
+
+.stopwatchOver {
+    color: $color-warning;
+}
+
+.stopwatchRef {
+    font-size: 12px;
+    color: $color-text-muted;
+}
+
+.stopwatchBtns {
+    display: flex;
+    gap: $space-2;
+}
+
+.recoveryBox {
+    max-width: 480px;
+    margin: 24px auto;
+    padding: 20px;
+    border: 2px solid $color-warning;
+    border-radius: 12px;
+    background: rgba($color-warning, 0.06);
+}
+
+.recoveryTitle {
+    margin: 0 0 8px;
+    font-size: 16px;
+    color: #8a6416;
+}
+
+.recoveryDesc {
+    font-size: 13px;
+    color: $color-text;
+    line-height: 1.6;
+    margin: 0 0 16px;
+}
+
+.judgeScoreList {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.judgeScoreRow,
+.judgeScoreDropped {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: $color-surface;
+    border: 1px solid $color-border;
+    font-size: 13px;
+}
+
+.judgeScoreDropped {
+    opacity: 0.5;
+    text-decoration: line-through;
+}
+
+.droppedTag {
+    font-size: 11px;
+    text-decoration: none;
+    color: $color-text-muted;
+}
+
+.progressNote {
+    font-size: 13px;
+    color: $color-text-muted;
+    text-align: center;
+    margin: 0;
+}

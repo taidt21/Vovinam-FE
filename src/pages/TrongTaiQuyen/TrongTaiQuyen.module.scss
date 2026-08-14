@@ -1,0 +1,396 @@
+@use '../../styles/variables'as *;
+
+.setupPage {
+    max-width: 380px;
+    margin: 0 auto;
+    padding: $space-6 $space-4;
+    display: flex;
+    flex-direction: column;
+    gap: $space-4;
+}
+
+.setupTitle {
+    font-size: 22px;
+    font-weight: 800;
+    text-align: center;
+    margin: 0;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: $space-1;
+    font-size: 14px;
+    font-weight: 600;
+
+    input {
+        font: inherit;
+        padding: $space-3;
+        border: 1px solid $color-border;
+        border-radius: 8px;
+    }
+}
+
+.pickerList {
+    display: flex;
+    flex-direction: column;
+    gap: $space-2;
+}
+
+.pickerBtn {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    padding: $space-3 $space-4;
+    border: 1px solid $color-border;
+    border-radius: 10px;
+    background: $color-surface;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover {
+        background: $color-bg;
+    }
+}
+
+.pickerName {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.pickerSub {
+    font-size: 12px;
+    color: $color-text-muted;
+}
+
+.btnPrimary {
+    padding: $space-4;
+    border: none;
+    border-radius: 10px;
+    background: $color-do;
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+}
+
+.page {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: $space-3;
+    display: flex;
+    flex-direction: column;
+    gap: $space-3;
+}
+
+.hint {
+    padding: $space-4;
+    text-align: center;
+    color: $color-text-muted;
+    font-size: 14px;
+}
+
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tenGiamKhao {
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.changeBtn {
+    font-size: 12px;
+    padding: 4px 10px;
+    border: 1px solid $color-border;
+    border-radius: 6px;
+    background: $color-surface;
+    cursor: pointer;
+}
+
+.listWrap {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.listTitle {
+    font-size: 12px;
+    font-weight: 700;
+    color: $color-text-muted;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.listRow {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    padding: $space-3;
+    border: 1px solid $color-border;
+    border-radius: 10px;
+    background: $color-surface;
+    cursor: pointer;
+    text-align: left;
+
+    &:hover {
+        background: $color-bg;
+    }
+}
+
+.listNo {
+    font-family: $font-mono;
+    font-weight: 700;
+    color: $color-text-muted;
+    flex-shrink: 0;
+}
+
+.listInfo {
+    flex: 1;
+    min-width: 0;
+}
+
+.listEvent {
+    font-size: 11px;
+    color: $color-text-muted;
+}
+
+.listName {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.doneTag,
+.pendingTag {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 999px;
+    flex-shrink: 0;
+}
+
+.doneTag {
+    background: rgba($color-success, 0.15);
+    color: $color-success;
+}
+
+.pendingTag {
+    background: $color-bg;
+    color: $color-text-muted;
+}
+
+.scoreWrap {
+    display: flex;
+    flex-direction: column;
+    gap: $space-3;
+}
+
+.backBtn {
+    align-self: flex-start;
+    background: none;
+    border: none;
+    color: $color-text-muted;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 0;
+}
+
+.matchMeta {
+    font-size: 12px;
+    color: $color-text-muted;
+    text-align: center;
+}
+
+.performerName {
+    font-size: 20px;
+    font-weight: 800;
+    text-align: center;
+}
+
+.progressNote {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    font-size: 12px;
+    color: $color-text-muted;
+}
+
+.scoreField {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: center;
+
+    span {
+        font-size: 12px;
+        font-weight: 600;
+        color: $color-text-muted;
+    }
+
+    input {
+        width: 160px;
+        text-align: center;
+        font-size: 32px;
+        font-weight: 800;
+        font-family: $font-mono;
+        padding: $space-3;
+        border: 2px solid $color-border;
+        border-radius: 12px;
+    }
+}
+
+.btnPrimaryBig {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: $space-2;
+    padding: $space-4;
+    border: none;
+    border-radius: 12px;
+    background: $color-do;
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+}
+
+.savedNote {
+    text-align: center;
+    font-size: 12px;
+    color: $color-text-muted;
+}
+
+.scoreDisplay {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: $space-4;
+    background: $color-surface;
+    border: 2px solid $color-border;
+    border-radius: 16px;
+}
+
+.scoreDisplayLabel {
+    font-size: 12px;
+    color: $color-text-muted;
+    font-weight: 600;
+}
+
+.scoreDisplayNum {
+    font-size: 40px;
+    font-weight: 800;
+    font-family: $font-mono;
+    color: $color-do;
+}
+
+.keypadGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+}
+
+.keypadBtn {
+    padding: $space-4 0;
+    border: 1px solid $color-border;
+    border-radius: 12px;
+    background: $color-surface;
+    font-size: 22px;
+    font-weight: 700;
+    font-family: $font-mono;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+        background: $color-bg;
+    }
+
+    &:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+    }
+}
+
+.keypadBtnXoa {
+    padding: $space-4 0;
+    border: 1px solid $color-border;
+    border-radius: 12px;
+    background: rgba($color-danger, 0.06);
+    color: $color-danger;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+        background: rgba($color-danger, 0.12);
+    }
+
+    &:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+    }
+}
+
+.courtLabel {
+    font-size: 12px;
+    color: $color-text-muted;
+}
+
+.modeTabs {
+    display: flex;
+    gap: 8px;
+}
+
+.modeTab,
+.modeTabActive {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid $color-border;
+    background: $color-surface;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    color: $color-text-muted;
+}
+
+.modeTabActive {
+    background: rgba($color-do, 0.08);
+    border-color: $color-do;
+    color: $color-do;
+}
+
+.performerCard {
+    display: flex;
+    align-items: center;
+    gap: $space-3;
+    padding: $space-3;
+    background: $color-surface;
+    border: 1px solid $color-border;
+    border-radius: 12px;
+}
+
+.performerSub {
+    font-size: 12px;
+    color: $color-text-muted;
+}

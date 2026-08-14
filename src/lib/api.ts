@@ -1,3 +1,5 @@
+import { getAdminToken } from './adminAuth';
+
 const BASE = '/api';
 
 async function handle<T>(res: Response): Promise<T> {
@@ -16,14 +18,19 @@ async function handle<T>(res: Response): Promise<T> {
   return res.json();
 }
 
+function authHeaders(): Record<string, string> {
+  const token = getAdminToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 export function apiGet<T>(path: string): Promise<T> {
-  return fetch(`${BASE}${path}`).then((r) => handle<T>(r));
+  return fetch(`${BASE}${path}`, { headers: authHeaders() }).then((r) => handle<T>(r));
 }
 
 export function apiPost<T>(path: string, body: unknown): Promise<T> {
   return fetch(`${BASE}${path}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: JSON.stringify(body),
   }).then((r) => handle<T>(r));
 }
@@ -31,11 +38,11 @@ export function apiPost<T>(path: string, body: unknown): Promise<T> {
 export function apiPut<T>(path: string, body: unknown): Promise<T> {
   return fetch(`${BASE}${path}`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: JSON.stringify(body),
   }).then((r) => handle<T>(r));
 }
 
 export function apiDelete(path: string): Promise<void> {
-  return fetch(`${BASE}${path}`, { method: 'DELETE' }).then((r) => handle<void>(r));
+  return fetch(`${BASE}${path}`, { method: 'DELETE', headers: authHeaders() }).then((r) => handle<void>(r));
 }

@@ -7,7 +7,11 @@ import DoanVaVDV from "./pages/DoanVaVDV/DoanVaVDV";
 import NoiDungBocTham from "./pages/NoiDungBocTham/NoiDungBocTham";
 import BanThuKy from "./pages/BanThuKy/BanThuKy";
 import KetQua from "./pages/KetQua/KetQua";
-import TrongTaiChamDiem from "./pages/TrongTaiChamDiem/TrongTaiChamDiem";
+import TrongTaiDoiKhang from "./pages/TrongTaiDoiKhang/TrongTaiDoiKhang";
+import TrongTaiQuyen from "./pages/TrongTaiQuyen/TrongTaiQuyen";
+import AdminLogin from "./pages/AdminLogin/AdminLogin";
+import RequireAdmin from "./components/RequireAdmin/RequireAdmin";
+import ManHinhCongKhai from "./pages/ManHinhCongKhai/ManHinhCongKhai";
 import DangNhap from "./pages/Portal/DangNhap";
 import DangKy from "./pages/Portal/DangKy";
 import PortalLayout from "./pages/Portal/PortalLayout";
@@ -17,7 +21,14 @@ import VdvCuaDoan from "./pages/Portal/VdvCuaDoan";
 export default function App() {
   return (
     <Routes>
-      <Route path="/dashboard" element={<DashboardLayout />}>
+      <Route path="/admin-dang-nhap" element={<AdminLogin />} />
+      <Route
+        path="/dashboard"
+        element={
+          <RequireAdmin>
+            <DashboardLayout />
+          </RequireAdmin>
+        }>
         <Route index element={<Navigate to="thiet-lap-giai" replace />} />
         <Route path="thiet-lap-giai" element={<ThietLapGiai />} />
         <Route path="doan-vdv" element={<DoanVaVDV />} />
@@ -25,11 +36,9 @@ export default function App() {
         <Route path="ban-thu-ky" element={<BanThuKy />} />
         <Route path="ket-qua" element={<KetQua />} />
       </Route>
-      <Route path="/trong-tai" element={<TrongTaiChamDiem />} />
-      <Route
-        path="/man-hinh-cong-khai"
-        element={<h1>Màn hình công khai (làm sau)</h1>}
-      />
+      <Route path="/trong-tai-doi-khang" element={<TrongTaiDoiKhang />} />
+      <Route path="/trong-tai-quyen" element={<TrongTaiQuyen />} />
+      <Route path="/man-hinh-cong-khai" element={<ManHinhCongKhai />} />
 
       <Route path="/dang-ky" element={<DangNhap />} />
       <Route path="/dang-ky/tao-tai-khoan" element={<DangKy />} />

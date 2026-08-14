@@ -126,3 +126,8 @@
     font-weight: 700;
     color: $color-text-muted;
 }
+
+.slotNameEliminated {
+    text-decoration: line-through;
+    opacity: 0.5;
+}

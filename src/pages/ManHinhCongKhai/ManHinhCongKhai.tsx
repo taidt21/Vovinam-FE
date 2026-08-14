@@ -3,44 +3,61 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { Swords, Award } from "lucide-react";
-import { COURTS, type CourtBasic } from "../../lib/courts";
+import { useCourts } from "../../lib/useCourts";
+import type { CourtBasic } from "../../lib/courts";
+import { usePressedLights } from "../../lib/usePressedLights";
 import {
   formatMmSs,
   getMatchSnapshot,
   subscribeMatchState,
   tinhThoiGianConLai,
 } from "../../lib/liveMatchStore";
+import { ensureJoinedCourt } from "../../lib/matchHubConnection";
+import {
+  getQuyenSnapshot,
+  subscribeQuyenState,
+} from "../../lib/liveQuyenStore";
+import type { LiveQuyenState } from "../../types/liveQuyen";
 import type { LiveMatchState } from "../../types";
 import AthleteAvatar from "../../components/AthleteAvatar/AthleteAvatar";
+import LightBoxes from "../../components/LightBoxes/LightBoxes";
 import styles from "./ManHinhCongKhai.module.scss";
 
-// Màn hình công khai — chỉ ĐỌC, không có nút bấm nào tác động tới trận
-// đấu. Ăn chung đúng 1 nguồn dữ liệu "sống" (liveMatchStore) mà Bàn thư ký
-// ghi, nên tự động khớp 100% với những gì thư ký đang làm.
-//
-// Mỗi sân có màn hình/máy chiếu RIÊNG (không phải 1 màn hình chung cho cả
-// giải), nên trang này chỉ hiện ĐÚNG 1 trận theo sân được chọn qua query
-// string ?san=<id> — ví dụ /man-hinh-cong-khai?san=c1 cho màn hình ở Sân 1,
-// bên thư ký Sân 2 thì mở /man-hinh-cong-khai?san=c2 trên máy/màn hình của
-// sân đó. Không có ?san hoặc sai id thì hiện màn hình chọn sân.
 export default function ManHinhCongKhai() {
+  const { courts, loadingCourts } = useCourts();
   const [searchParams] = useSearchParams();
-  const court = COURTS.find((c) => c.id === searchParams.get("san"));
 
-  if (!court) return <CourtChooser />;
+  if (loadingCourts) {
+    return (
+      <div className={styles.screen}>
+        <header className={styles.header}>
+          <span className={styles.brand}>VECTOR SPORT</span>
+        </header>
+      </div>
+    );
+  }
+
+  const court = courts.find((c) => c.id === searchParams.get("san"));
+  if (!court) return <CourtChooser courts={courts} />;
   return <CourtScreen court={court} />;
 }
 
-function CourtChooser() {
+function CourtChooser({ courts }: { courts: CourtBasic[] }) {
   return (
     <div className={styles.screen}>
       <header className={styles.header}>
-        <span className={styles.brand}>VECTOR SPORT</span>
+        <span className={styles.brand}>
+          <img
+            src="/src/assets/VECTOR-SPORT-_5_.svg"
+            alt="VECTOR SPORT"
+            width="200"
+          />
+        </span>
       </header>
       <div className={styles.chooser}>
         <p className={styles.chooserHint}>Màn hình này chiếu cho sân nào?</p>
         <div className={styles.chooserGrid}>
-          {COURTS.map((c) => (
+          {courts.map((c) => (
             <Link
               key={c.id}
               className={styles.chooserCard}
@@ -58,20 +75,48 @@ function CourtScreen({ court }: { court: CourtBasic }) {
   const [live, setLive] = useState<LiveMatchState | null>(() =>
     getMatchSnapshot(court.id),
   );
-  // Chỉ để ép re-render mỗi giây cho đồng hồ đếm ngược + giờ tường tự chạy —
-  // bản thân state không được đọc ở đâu khác.
   const [, setTick] = useState(0);
 
   useEffect(() => {
     setLive(getMatchSnapshot(court.id));
-    return subscribeMatchState(court.id, setLive);
+    const unsub = subscribeMatchState(court.id, setLive);
+    const watchdog = setInterval(() => {
+      if (!getMatchSnapshot(court.id)) {
+        ensureJoinedCourt(court.id).catch(() => {});
+      }
+    }, 3000);
+    return () => {
+      unsub();
+      clearInterval(watchdog);
+    };
   }, [court.id]);
-
+  const [liveQuyen, setLiveQuyen] = useState<LiveQuyenState | null>(() =>
+    getQuyenSnapshot(court.id),
+  );
+  useEffect(() => {
+    setLiveQuyen(getQuyenSnapshot(court.id));
+    return subscribeQuyenState(court.id, setLiveQuyen);
+  }, [court.id]);
   useEffect(() => {
     const id = setInterval(() => setTick((n) => n + 1), 1000);
     return () => clearInterval(id);
   }, []);
+  useEffect(() => {
+    const toggleFullscreen = () => {
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+      } else {
+        document.documentElement.requestFullscreen().catch(() => {});
+      }
+    };
+    document.addEventListener("dblclick", toggleFullscreen);
+    return () => document.removeEventListener("dblclick", toggleFullscreen);
+  }, []);
 
+  useEffect(() => {
+    document.documentElement.requestFullscreen().catch(() => {});
+  }, []);
+  const pressed = usePressedLights(court.id);
   const header = (
     <header className={styles.header}>
       <span className={styles.brand}>VECTOR SPORT</span>
@@ -85,11 +130,11 @@ function CourtScreen({ court }: { court: CourtBasic }) {
     </header>
   );
 
-  // Trận vừa được mở vào sân (VD do effect tự-setup ở Bàn thư ký đẩy vào)
-  // nhưng thư ký CHƯA bấm "Bắt đầu hiệp 1" lần nào thì vẫn coi như CHƯA CÓ
-  // TRẬN trên màn hình công khai — không lộ trận sắp đấu ra cho khán giả,
-  // giữ nguyên màn hình chờ tới khi trận thật sự bắt đầu.
-  if (!live || live.trangThai === "cho_bat_dau") {
+  if (!live && liveQuyen) {
+    return <QuyenScreen header={header} live={liveQuyen} />;
+  }
+
+  if (!live) {
     return (
       <div className={styles.screen}>
         {header}
@@ -101,6 +146,48 @@ function CourtScreen({ court }: { court: CourtBasic }) {
     );
   }
 
+  if (live.trangThai === "cho_bat_dau") {
+    return (
+      <div className={styles.screen}>
+        {header}
+        <div className={styles.matchMeta}>
+          <span className={styles.eventInfo}>
+            {live.tenNoiDung} · {live.vong}
+          </span>
+          <span className={styles.upcomingBadge}>SẮP THI ĐẤU</span>
+        </div>
+        <div className={styles.matchup}>
+          <div className={styles.sideDo}>
+            <LightBoxes presses={[]} className={styles.lightBoxesArena} />
+            <div className={styles.sideMain}>
+              <AthleteAvatar
+                name={live.tenDo}
+                photoUrl={live.anhDo}
+                size={180}
+              />
+              <div className={styles.athName}>{live.tenDo}</div>
+              <div className={styles.athUnit}>{live.donViDo}</div>
+            </div>
+          </div>
+          <div className={styles.centerCol}>
+            <span className={styles.vsBadge}>VS</span>
+          </div>
+          <div className={styles.sideXanh}>
+            <div className={styles.sideMain}>
+              <AthleteAvatar
+                name={live.tenXanh}
+                photoUrl={live.anhXanh}
+                size={180}
+              />
+              <div className={styles.athName}>{live.tenXanh}</div>
+              <div className={styles.athUnit}>{live.donViXanh}</div>
+            </div>
+            <LightBoxes presses={[]} className={styles.lightBoxesArena} />
+          </div>
+        </div>
+      </div>
+    );
+  }
   const remaining = tinhThoiGianConLai(live);
   const dangChay = live.trangThai === "dang_thi";
   const dangNghi = live.trangThai === "nghi_giua_hiep";
@@ -114,7 +201,6 @@ function CourtScreen({ court }: { court: CourtBasic }) {
       : live.nguoiThang === nguoiThang
         ? styles.sideWinner
         : styles.sideLoser;
-
   return (
     <div className={styles.screen}>
       {header}
@@ -133,15 +219,21 @@ function CourtScreen({ court }: { court: CourtBasic }) {
 
       <div className={styles.matchup}>
         <div className={`${styles.sideDo} ${sideClass("do")}`}>
-          <AthleteAvatar name={live.tenDo} photoUrl={live.anhDo} size={180} />
-          <div className={styles.athName}>{live.tenDo}</div>
-          <div className={styles.athUnit}>{live.donViDo}</div>
-          <div className={styles.scoreNum}>{live.diemChinhThucDo}</div>
-          {daKetThuc && live.nguoiThang === "do" && (
-            <div className={styles.winnerTag}>
-              <Award size={22} /> THẮNG
-            </div>
-          )}
+          <LightBoxes
+            presses={pressed.do.map((p) => p.diem)}
+            className={styles.lightBoxesArena}
+          />
+          <div className={styles.sideMain}>
+            <AthleteAvatar name={live.tenDo} photoUrl={live.anhDo} size={180} />
+            <div className={styles.athName}>{live.tenDo}</div>
+            <div className={styles.athUnit}>{live.donViDo}</div>
+            <div className={styles.scoreNum}>{live.diemChinhThucDo}</div>
+            {daKetThuc && live.nguoiThang === "do" && (
+              <div className={styles.winnerTag}>
+                <Award size={22} /> THẮNG
+              </div>
+            )}
+          </div>
         </div>
 
         <div className={styles.centerCol}>
@@ -161,20 +253,80 @@ function CourtScreen({ court }: { court: CourtBasic }) {
         </div>
 
         <div className={`${styles.sideXanh} ${sideClass("xanh")}`}>
-          <AthleteAvatar
-            name={live.tenXanh}
-            photoUrl={live.anhXanh}
-            size={180}
+          <div className={styles.sideMain}>
+            <AthleteAvatar
+              name={live.tenXanh}
+              photoUrl={live.anhXanh}
+              size={180}
+            />
+            <div className={styles.athName}>{live.tenXanh}</div>
+            <div className={styles.athUnit}>{live.donViXanh}</div>
+            <div className={styles.scoreNum}>{live.diemChinhThucXanh}</div>
+            {daKetThuc && live.nguoiThang === "xanh" && (
+              <div className={styles.winnerTag}>
+                <Award size={22} /> THẮNG
+              </div>
+            )}
+          </div>
+          <LightBoxes
+            presses={pressed.xanh.map((p) => p.diem)}
+            className={styles.lightBoxesArena}
           />
-          <div className={styles.athName}>{live.tenXanh}</div>
-          <div className={styles.athUnit}>{live.donViXanh}</div>
-          <div className={styles.scoreNum}>{live.diemChinhThucXanh}</div>
-          {daKetThuc && live.nguoiThang === "xanh" && (
-            <div className={styles.winnerTag}>
-              <Award size={22} /> THẮNG
-            </div>
-          )}
         </div>
+      </div>
+    </div>
+  );
+}
+function QuyenScreen({
+  header,
+  live,
+}: {
+  header: React.ReactNode;
+  live: LiveQuyenState;
+}) {
+  const daTroi =
+    live.trangThai === "dang_thi"
+      ? live.thoiGianDaTroiGiay + (Date.now() - live.capNhatDongHoLuc) / 1000
+      : live.thoiGianDaTroiGiay;
+  const hienThi = live.coGioiHan
+    ? Math.max(0, (live.thoiGianGioiHanGiay ?? 0) - daTroi)
+    : daTroi;
+  const mm = Math.floor(hienThi / 60);
+  const ss = Math.floor(hienThi % 60);
+  const timeLabel = `${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`;
+  const daKetThuc = live.trangThai === "da_ket_thuc";
+  const dangThi = live.trangThai === "dang_thi";
+
+  return (
+    <div className={styles.screen}>
+      {header}
+      <div className={styles.matchMeta}>
+        <span className={styles.eventInfo}>{live.eventTen}</span>
+        {dangThi && (
+          <span className={styles.liveBadge}>
+            <span className={styles.liveDot} /> TRỰC TIẾP
+          </span>
+        )}
+        {live.trangThai === "tam_dung" && (
+          <span className={styles.pausedBadge}>TẠM DỪNG</span>
+        )}
+        {live.trangThai === "cho_bat_dau" && (
+          <span className={styles.upcomingBadge}>SẮP THI ĐẤU</span>
+        )}
+        {daKetThuc && <span className={styles.endedLabel}>KẾT THÚC</span>}
+      </div>
+
+      <div className={styles.quyenPerformerBig}>
+        <AthleteAvatar
+          name={live.performerLabel}
+          photoUrl={live.photoUrl}
+          size={220}
+        />
+        <div className={styles.athName}>{live.performerLabel}</div>
+        <div className={styles.athUnit}>{live.performerSub}</div>
+        {!daKetThuc && live.trangThai !== "cho_bat_dau" && (
+          <span className={styles.clock}>{timeLabel}</span>
+        )}
       </div>
     </div>
   );

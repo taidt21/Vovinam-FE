@@ -9,6 +9,7 @@ export default defineConfig({
         emptyOutDir: true
     },
     server: {
+        host:true,
         proxy: {
             "/api": {
                 // Đổi đúng cổng HTTP (không phải HTTPS) backend đang chạy khi bạn
@@ -16,6 +17,12 @@ export default defineConfig({
                 target: "http://localhost:5267",
                 changeOrigin: true,
             },
+            "/hubs": {
+                target: "http://localhost:5267",
+                changeOrigin: true,
+                ws: true,
+            },
         },
     },
+    
 });

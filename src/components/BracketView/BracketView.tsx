@@ -162,55 +162,80 @@ export default function BracketView({
             <path key={c.key} d={c.d} fill="none" />
           ))}
         </svg>
-        {layout.positioned.map(({ match, x, y }) => (
-          <div
-            key={match.id}
-            className={styles.card}
-            style={{
-              left: x,
-              top: y - CARD_H / 2,
-              width: CARD_W,
-              height: CARD_H,
-            }}>
-            {soByMatchId.get(match.id) && (
-              <span className={styles.matchBadge}>
-                Trận {soByMatchId.get(match.id)}
-              </span>
-            )}
-            <div className={`${styles.slotRow} ${styles.slotDo}`}>
-              {match.athleteRedId ? (
-                <>
-                  <span className={styles.slotName}>
-                    {athleteName(match.athleteRedId)}
-                  </span>
-                  {athleteTeam(match.athleteRedId) && (
-                    <span className={styles.slotTeam}>
-                      {athleteTeam(match.athleteRedId)}
-                    </span>
-                  )}
-                </>
-              ) : (
-                winnerLabel(matches, soByMatchId, match.id, "do")
+        {layout.positioned.map(({ match, x, y }) => {
+          // Chỉ tính "thua" riêng cho ĐÚNG trận này — 1 người thắng vòng
+          // trước rồi mới thua vòng sau vẫn hiện bình thường ở ô đã
+          // thắng, chỉ gạch tên ở đúng ô họ thua, để nhìn vào biết ngay
+          // họ dừng lại ở vòng nào.
+          const doThua =
+            match.trangThai === "da_hoan_thanh" &&
+            !!match.nguoiThangId &&
+            match.nguoiThangId === match.athleteBlueId;
+          const xanhThua =
+            match.trangThai === "da_hoan_thanh" &&
+            !!match.nguoiThangId &&
+            match.nguoiThangId === match.athleteRedId;
+
+          return (
+            <div
+              key={match.id}
+              className={styles.card}
+              style={{
+                left: x,
+                top: y - CARD_H / 2,
+                width: CARD_W,
+                height: CARD_H,
+              }}>
+              {soByMatchId.get(match.id) && (
+                <span className={styles.matchBadge}>
+                  Trận {soByMatchId.get(match.id)}
+                </span>
               )}
-            </div>
-            <div className={`${styles.slotRow} ${styles.slotXanh}`}>
-              {match.athleteBlueId ? (
-                <>
-                  <span className={styles.slotName}>
-                    {athleteName(match.athleteBlueId)}
-                  </span>
-                  {athleteTeam(match.athleteBlueId) && (
-                    <span className={styles.slotTeam}>
-                      {athleteTeam(match.athleteBlueId)}
+              <div className={`${styles.slotRow} ${styles.slotDo}`}>
+                {match.athleteRedId ? (
+                  <>
+                    <span
+                      className={
+                        doThua
+                          ? `${styles.slotName} ${styles.slotNameEliminated}`
+                          : styles.slotName
+                      }>
+                      {athleteName(match.athleteRedId)}
                     </span>
-                  )}
-                </>
-              ) : (
-                winnerLabel(matches, soByMatchId, match.id, "xanh")
-              )}
+                    {athleteTeam(match.athleteRedId) && (
+                      <span className={styles.slotTeam}>
+                        {athleteTeam(match.athleteRedId)}
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  winnerLabel(matches, soByMatchId, match.id, "do")
+                )}
+              </div>
+              <div className={`${styles.slotRow} ${styles.slotXanh}`}>
+                {match.athleteBlueId ? (
+                  <>
+                    <span
+                      className={
+                        xanhThua
+                          ? `${styles.slotName} ${styles.slotNameEliminated}`
+                          : styles.slotName
+                      }>
+                      {athleteName(match.athleteBlueId)}
+                    </span>
+                    {athleteTeam(match.athleteBlueId) && (
+                      <span className={styles.slotTeam}>
+                        {athleteTeam(match.athleteBlueId)}
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  winnerLabel(matches, soByMatchId, match.id, "xanh")
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
         {championName && layout.championPos && (
           <div
             className={styles.champion}

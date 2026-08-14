@@ -3,47 +3,24 @@
 .page {
     display: flex;
     flex-direction: column;
-    gap: $space-4;
-}
-
-.topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
 }
 
 .title {
-    font-size: 22px;
+    font-size: 20px;
     font-weight: 700;
-    margin: 0;
+    margin: 0 0 $space-4;
 }
 
-.exportBtns {
-    display: flex;
-    gap: $space-2;
-}
-
-.btnGhost {
-    display: inline-flex;
-    align-items: center;
-    gap: $space-1;
+.hint {
     font-size: 13px;
-    font-weight: 600;
-    padding: $space-2 $space-3;
-    border: 1px solid $color-border;
-    background: $color-surface;
-    border-radius: 6px;
-    cursor: pointer;
-
-    &:hover {
-        background: $color-bg;
-    }
+    color: $color-text-muted;
 }
 
-.tabs {
+.tabsBar {
     display: flex;
     gap: $space-1;
     border-bottom: 1px solid $color-border;
+    margin-bottom: $space-5;
 }
 
 .tab,
@@ -55,22 +32,32 @@
     background: none;
     cursor: pointer;
     color: $color-text-muted;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+
+    &:hover {
+        color: $color-text;
+    }
 }
 
 .tabActive {
     color: $color-do;
-    border-bottom: 2px solid $color-do;
-    margin-bottom: -1px;
+    border-bottom-color: $color-do;
+
+    &:hover {
+        color: $color-do;
+    }
 }
 
-.resultLayout {
-    display: grid;
-    grid-template-columns: 260px 1fr;
-    gap: $space-4;
-    align-items: start;
+.body {
+    display: flex;
+    gap: $space-5;
+    align-items: flex-start;
 }
 
-.eventPicker {
+.sidebar {
+    width: 260px;
+    flex-shrink: 0;
     background: $color-surface;
     border: 1px solid $color-border;
     border-radius: 10px;
@@ -83,9 +70,8 @@
 .eventItem,
 .eventItemActive {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: $space-2;
+    flex-direction: column;
+    gap: 2px;
     text-align: left;
     padding: $space-2 $space-3;
     border-radius: 6px;
@@ -106,39 +92,130 @@
     font-weight: 600;
 }
 
-.doneTag {
+.eventMeta {
     font-size: 11px;
-    color: $color-success;
-    font-weight: 600;
+    color: $color-text-muted;
+    font-weight: 400;
 }
 
-.pendingTag {
-    font-size: 11px;
+.emptySidebar {
+    padding: $space-3;
+    font-size: 12px;
     color: $color-text-muted;
 }
 
-.resultMain {
+.main {
+    flex: 1;
     background: $color-surface;
     border: 1px solid $color-border;
     border-radius: 10px;
     padding: $space-5;
+    min-width: 0;
 }
 
-.resultTitle {
-    font-size: 18px;
+.eventTitle {
+    font-size: 16px;
     font-weight: 700;
     margin: 0 0 $space-4;
 }
 
-.notDone {
-    font-size: 14px;
-    color: $color-text-muted;
-    background: $color-bg;
-    border-radius: 8px;
-    padding: $space-5;
+.medalBox {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: $space-5;
+    padding: $space-4;
+    border-radius: 12px;
+    background: rgba($color-vang, 0.06);
+    border: 1px solid rgba($color-vang, 0.25);
 }
 
-.rankTable,
+.medalRowVang,
+.medalRowBac,
+.medalRowDong {
+    display: flex;
+    align-items: center;
+    gap: $space-3;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: $color-surface;
+}
+
+.medalTag {
+    font-size: 13px;
+    font-weight: 700;
+    width: 70px;
+    flex-shrink: 0;
+}
+
+.medalName {
+    font-size: 14px;
+    font-weight: 600;
+    flex: 1;
+}
+
+.medalSub {
+    font-size: 12px;
+    color: $color-text-muted;
+}
+
+.quyenList {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.quyenRow {
+    display: flex;
+    align-items: center;
+    gap: $space-3;
+    padding: $space-3;
+    border: 1px solid $color-border;
+    border-radius: 10px;
+}
+
+.quyenNo {
+    font-family: $font-mono;
+    font-weight: 700;
+    color: $color-text-muted;
+    flex-shrink: 0;
+}
+
+.quyenInfo {
+    flex: 1;
+    min-width: 0;
+}
+
+.quyenName {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.quyenSub {
+    font-size: 12px;
+    color: $color-text-muted;
+}
+
+.quyenDone {
+    font-size: 13px;
+    font-weight: 700;
+    color: $color-success;
+    flex-shrink: 0;
+}
+
+.quyenPending {
+    font-size: 12px;
+    color: $color-text-muted;
+    flex-shrink: 0;
+}
+
+.card {
+    background: $color-surface;
+    border: 1px solid $color-border;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
 .medalTable {
     width: 100%;
     border-collapse: collapse;
@@ -171,53 +248,6 @@
     font-weight: 700;
     font-size: 15px;
     width: 60px;
-}
-
-.athName {
-    font-weight: 600;
-}
-
-.athCode {
-    font-size: 11px;
-    color: $color-text-muted;
-}
-
-.medalTag {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 2px $space-2;
-    border-radius: 999px;
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.vang {
-    background: rgba($color-vang, 0.15);
-    color: #8a6416;
-}
-
-.bac {
-    background: rgba(#9ca3af, 0.2);
-    color: #4b5563;
-}
-
-.dong {
-    background: rgba(#b45309, 0.12);
-    color: #92400e;
-}
-
-.note {
-    font-size: 12px;
-    color: $color-text-muted;
-    margin-top: $space-3;
-}
-
-.card {
-    background: $color-surface;
-    border: 1px solid $color-border;
-    border-radius: 10px;
-    overflow: hidden;
 }
 
 .gold {

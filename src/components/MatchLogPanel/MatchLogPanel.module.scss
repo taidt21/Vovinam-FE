@@ -1,0 +1,51 @@
+@use '../../styles/variables'as *;
+
+.panel {
+    border: 1px solid $color-border;
+    border-radius: 10px;
+    background: $color-surface;
+    overflow: hidden;
+}
+
+.title {
+    padding: $space-2 $space-3;
+    font-size: 12px;
+    font-weight: 700;
+    color: $color-text-muted;
+    text-transform: uppercase;
+    border-bottom: 1px solid $color-border;
+    background: $color-bg;
+}
+
+.list {
+    max-height: 220px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.line,
+.scoreLine {
+    display: flex;
+    gap: $space-2;
+    padding: 6px $space-3;
+    font-size: 12px;
+    border-bottom: 1px solid $color-border;
+}
+
+.scoreLine {
+    background: rgba($color-success, 0.08);
+    font-weight: 700;
+}
+
+.time {
+    color: $color-text-muted;
+    font-family: $font-mono;
+    flex-shrink: 0;
+}
+
+.empty {
+    padding: $space-3;
+    font-size: 12px;
+    color: $color-text-muted;
+}

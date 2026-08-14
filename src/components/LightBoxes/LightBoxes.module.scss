@@ -1,0 +1,40 @@
+.lightBoxesRow {
+    --lb-w: 85px;
+    --lb-h: 35px;
+    --lb-gap-inner: 12px;
+    --lb-gap-row: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--lb-gap-row);
+}
+
+.lightBox {
+    width: var(--lb-w);
+    height: var(--lb-h);
+    overflow: hidden;
+    display: flex;
+    flex-direction: row;
+    gap: var(--lb-gap-inner);
+
+    span {
+        border-radius: 4px;
+    }
+}
+
+.lightHalfOff {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.35);
+}
+
+.lightHalfOn1 {
+    flex: 1;
+    background: #ffd23f;
+    box-shadow: inset 0 0 14px rgba(255, 210, 63, 0.6);
+}
+
+.lightHalfOn2 {
+    flex: 1;
+    background: #3ecf6e;
+    box-shadow: inset 0 0 14px rgba(62, 207, 110, 0.6);
+}
