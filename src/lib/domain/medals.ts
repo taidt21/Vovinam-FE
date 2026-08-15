@@ -1,5 +1,5 @@
-import type { Match } from '../types';
-import type { QuyenJudgeScoreWire } from './quyenJudgeScoreApi';
+import type { Match } from '../../types';
+import type { QuyenJudgeScoreWire } from '../api/quyenJudgeScoreApi';
 import { tinhDiemQuyenTongHop } from './quyenScoring';
 
 /* ============ Đối kháng ============ */

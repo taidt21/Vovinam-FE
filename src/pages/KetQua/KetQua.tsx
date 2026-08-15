@@ -7,21 +7,21 @@ import type {
   CompetitionEvent,
   Match,
 } from "../../types";
-import { fetchEvents } from "../../lib/eventsApi";
-import { apiGet } from "../../lib/api";
-import { fetchMatches } from "../../lib/matchesApi";
+import { fetchEvents } from "../../lib/api/eventsApi";
+import { apiGet } from "../../lib/api/api";
+import { fetchMatches } from "../../lib/api/matchesApi";
 import {
   fetchQuyenJudgeScores,
   type QuyenJudgeScoreWire,
-} from "../../lib/quyenJudgeScoreApi";
-import { numberDoiKhangMatches } from "../../lib/bracket";
-import { compareNhomTuoi, formatEventNhomTuoi } from "../../lib/nhomTuoi";
+} from "../../lib/api/quyenJudgeScoreApi";
+import { numberDoiKhangMatches } from "../../lib/domain/bracket";
+import { compareNhomTuoi, formatEventNhomTuoi } from "../../lib/utils/nhomTuoi";
 import {
   computeDoiKhangMedals,
   computeQuyenRanking,
   computeMedalTally,
   type MedalTally,
-} from "../../lib/medals";
+} from "../../lib/domain/medals";
 import BracketView from "../../components/BracketView/BracketView";
 import styles from "./KetQua.module.scss";
 

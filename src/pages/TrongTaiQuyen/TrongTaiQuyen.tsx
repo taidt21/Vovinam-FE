@@ -2,22 +2,22 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Check, RefreshCw, List, Radio } from "lucide-react";
-import { fetchEvents } from "../../lib/eventsApi";
-import { apiGet } from "../../lib/api";
-import { useCourts } from "../../lib/useCourts";
-import type { CourtBasic } from "../../lib/courts";
+import { fetchEvents } from "../../lib/api/eventsApi";
+import { apiGet } from "../../lib/api/api";
+import { useCourts } from "../../lib/utils/useCourts";
+import type { CourtBasic } from "../../lib/utils/courts";
 import {
   fetchQuyenJudgeScores,
   upsertQuyenJudgeScore,
   type QuyenJudgeScoreWire,
-} from "../../lib/quyenJudgeScoreApi";
+} from "../../lib/api/quyenJudgeScoreApi";
 import {
   getQuyenSnapshot,
   subscribeQuyenState,
-} from "../../lib/liveQuyenStore";
+} from "../../lib/realtime/liveQuyenStore";
 import type { LiveQuyenState } from "../../types/liveQuyen";
-import { formatEventNhomTuoi } from "../../lib/nhomTuoi";
-import { fetchTrongTai, type TrongTaiWire } from "../../lib/trongTaiApi";
+import { formatEventNhomTuoi } from "../../lib/utils/nhomTuoi";
+import { fetchTrongTai, type TrongTaiWire } from "../../lib/api/trongTaiApi";
 import AthleteAvatar from "../../components/AthleteAvatar/AthleteAvatar";
 import type { AthleteRecord, CompetitionEvent } from "../../types";
 import styles from "./TrongTaiQuyen.module.scss";

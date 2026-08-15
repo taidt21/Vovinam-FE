@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { Navigate } from "react-router";
 import { LogOut } from "lucide-react";
-import { isAdminLoggedIn, adminLogout } from "../../lib/adminAuth";
+import { isAdminLoggedIn, adminLogout } from "../../lib/api/adminAuth";
 import styles from "./RequireAdmin.module.scss";
 
 export default function RequireAdmin({ children }: { children: ReactNode }) {

@@ -4,19 +4,19 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useOutletContext } from "react-router";
 import { Plus } from "lucide-react";
 import type { CompetitionEvent } from "../../types";
-import type { DoanAccount } from "../../lib/portalAuth";
+import type { DoanAccount } from "./lib/portalAuth";
 import {
   loadAthletes,
   saveAthletes,
   type PortalAthlete,
-} from "../../lib/portalAthletes";
+} from "./lib/portalAthletes";
 import Modal from "../../components/Modal/Modal";
 import styles from "./VdvCuaDoan.module.scss";
-import { loadEvents, subscribeEvents } from "../../lib/eventsStore";
+import { loadEvents, subscribeEvents } from "./lib/eventsStore";
 import { FileSpreadsheet } from "lucide-react";
-import { saveSquads, type PortalSquad } from "../../lib/portalSquads";
+import { saveSquads, type PortalSquad } from "./lib/portalSquads";
 import PortalImportExcelModal from "./PortalImportExcelModal";
-import type { ImportRow } from "../../lib/portalExcelImport";
+import type { ImportRow } from "./lib/portalExcelImport";
 const CURRENT_YEAR = new Date().getFullYear();
 const NHOM_TUOI_OPTIONS = [1, 2, 3];
 const formatNhomTuoi = (n: number) => `Nhóm tuổi ${n}`;

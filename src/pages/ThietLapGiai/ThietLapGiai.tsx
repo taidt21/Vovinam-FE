@@ -9,15 +9,15 @@ import type {
   Tournament,
 } from "../../types";
 import Modal from "../../components/Modal/Modal";
-import { apiGet, apiPut, apiDelete } from "../../lib/api";
-import { fetchEvents, createEvent, updateEvent } from "../../lib/eventsApi";
+import { apiGet, apiPut, apiDelete } from "../../lib/api/api";
+import { fetchEvents, createEvent, updateEvent } from "../../lib/api/eventsApi";
 import {
   EVENT_NHOM_TUOI_OPTIONS,
   formatEventNhomTuoi,
   compareNhomTuoi,
-} from "../../lib/nhomTuoi";
+} from "../../lib/utils/nhomTuoi";
 import ImportEventsExcelModal from "../../components/ImportEventsExcelModal/ImportEventsExcelModal";
-import type { EventImportRow } from "../../lib/eventExcelImport";
+import type { EventImportRow } from "../../lib/excel/eventExcelImport";
 import styles from "./ThietLapGiai.module.scss";
 
 type EventFormState = Omit<CompetitionEvent, "id" | "tournamentId">;

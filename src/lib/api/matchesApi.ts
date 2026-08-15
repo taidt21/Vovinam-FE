@@ -1,4 +1,4 @@
-import type { Match } from '../types';
+import type { Match } from '../../types';
 import { apiGet, apiPut } from './api';
 
 export function fetchMatches(): Promise<Match[]> {

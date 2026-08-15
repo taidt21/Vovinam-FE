@@ -3,20 +3,20 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { Swords, Award } from "lucide-react";
-import { useCourts } from "../../lib/useCourts";
-import type { CourtBasic } from "../../lib/courts";
-import { usePressedLights } from "../../lib/usePressedLights";
+import { useCourts } from "../../lib/utils/useCourts";
+import type { CourtBasic } from "../../lib/utils/courts";
+import { usePressedLights } from "../../lib/realtime/usePressedLights";
 import {
   formatMmSs,
   getMatchSnapshot,
   subscribeMatchState,
   tinhThoiGianConLai,
-} from "../../lib/liveMatchStore";
-import { ensureJoinedCourt } from "../../lib/matchHubConnection";
+} from "../../lib/realtime/liveMatchStore";
+import { ensureJoinedCourt } from "../../lib/realtime/matchHubConnection";
 import {
   getQuyenSnapshot,
   subscribeQuyenState,
-} from "../../lib/liveQuyenStore";
+} from "../../lib/realtime/liveQuyenStore";
 import type { LiveQuyenState } from "../../types/liveQuyen";
 import type { LiveMatchState } from "../../types";
 import AthleteAvatar from "../../components/AthleteAvatar/AthleteAvatar";

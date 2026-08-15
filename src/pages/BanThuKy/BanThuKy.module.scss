@@ -833,10 +833,34 @@
     border: 1px solid $color-border;
     border-radius: 10px;
     padding: $space-5;
-    max-width: 480px;
+    max-width: 900px;
+}
+
+.quyenLayout {
+    display: flex;
+    gap: $space-5;
+    align-items: flex-start;
+}
+
+.quyenJudgePanel {
+    flex: 1;
+    min-width: 280px;
+    display: flex;
+    flex-direction: column;
+    gap: $space-3;
+}
+
+.quyenMainCol {
+    width: 360px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $space-5;
 }
 
 .quyenPerformer {
+    width: 100%;
     text-align: center;
     padding: $space-4;
     background: $color-bg;
@@ -856,35 +880,57 @@
 
 .quyenJudgeList {
     display: flex;
+    gap: $space-2;
     flex-direction: column;
-    gap: 4px;
 }
 
-.quyenJudgeRow {
+.quyenJudgeCell {
+    flex: 1;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: $space-2;
-    padding: 6px 10px;
-    border-radius: 6px;
+    gap: 6px;
+    padding: $space-3 $space-2;
+    border-radius: 8px;
     background: $color-bg;
-    font-size: 13px;
+}
+
+.quyenJudgeInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    text-align: left;
+    min-width: 0;
 }
 
 .quyenJudgeLabel {
-    text-align: left;
+    font-size: 11px;
+    color: $color-text-muted;
+}
+
+.quyenJudgeName {
+    font-size: 13px;
+    font-weight: 600;
     color: $color-text;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .quyenJudgeScore {
+    flex-shrink: 0;
     font-weight: 700;
     font-family: $font-mono;
+    font-size: 15px;
     color: $color-text;
 }
 
 .quyenJudgeScorePending {
+    flex-shrink: 0;
+    text-align: right;
     font-weight: 700;
     font-family: $font-mono;
+    font-size: 12px;
     color: $color-text-muted;
 }
 

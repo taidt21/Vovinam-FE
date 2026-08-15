@@ -1,6 +1,6 @@
-import type { Athlete, CompetitionEvent, Match } from '../types';
-import { compareNhomTuoi } from './nhomTuoi';
-import { generateGuid } from './deviceId';// Đặt tên vòng theo khoảng cách THẬT tới chung kết — không theo số trận
+import type { Athlete, CompetitionEvent, Match } from '../../types';
+import { compareNhomTuoi } from '../utils/nhomTuoi';
+import { generateGuid } from '../utils/guid';// Đặt tên vòng theo khoảng cách THẬT tới chung kết — không theo số trận
 // trong vòng nữa. 0 bước = Chung kết, 1 = Bán kết, 2 = Tứ kết, xa hơn
 // thì theo số người thi đấu ở vòng đó (2^(khoảng cách + 1)).
 function tenVong(distance: number): string {

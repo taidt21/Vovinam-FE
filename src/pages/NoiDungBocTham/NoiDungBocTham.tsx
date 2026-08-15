@@ -9,12 +9,12 @@ import type {
   Match,
   Squad,
 } from "../../types";
-import { generateBracket, numberDoiKhangMatches } from "../../lib/bracket";
-import { apiGet, apiPut } from "../../lib/api";
+import { generateBracket, numberDoiKhangMatches } from "../../lib/domain/bracket";
+import { apiGet, apiPut } from "../../lib/api/api";
 import BracketView from "../../components/BracketView/BracketView";
 import LichThiDau from "../../components/LichThiDau/LichThiDau";
-import { fetchEvents } from "../../lib/eventsApi";
-import { formatEventNhomTuoi, compareNhomTuoi } from "../../lib/nhomTuoi";
+import { fetchEvents } from "../../lib/api/eventsApi";
+import { formatEventNhomTuoi, compareNhomTuoi } from "../../lib/utils/nhomTuoi";
 import styles from "./NoiDungBocTham.module.scss";
 
 interface PerformanceOrder {

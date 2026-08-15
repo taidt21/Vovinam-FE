@@ -1,4 +1,4 @@
-import type { LiveQuyenState } from '../types/liveQuyen';
+import type { LiveQuyenState } from '../../types/liveQuyen';
 import { ensureStarted, ensureJoinedCourt, getConnection } from './matchHubConnection';
 import { serverNow } from './serverClock';
 

@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useOutletContext } from "react-router";
-import type { DoanAccount } from "../../lib/portalAuth";
-import { loadAthletes } from "../../lib/portalAthletes";
+import type { DoanAccount } from "./lib/portalAuth";
+import { loadAthletes } from "./lib/portalAthletes";
 import styles from "./TongQuan.module.scss";
 
 export default function TongQuan() {

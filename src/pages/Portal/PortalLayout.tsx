@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router";
 import { LayoutGrid, Users, LogOut } from "lucide-react";
-import { getSession, logout, type DoanAccount } from "../../lib/portalAuth";
+import { getSession, logout, type DoanAccount } from "./lib/portalAuth";
 import styles from "./PortalLayout.module.scss";
 
 const NAV_ITEMS = [

@@ -1,7 +1,7 @@
 import * as XLSX from 'xlsx';
-import type { CompetitionEvent } from '../types';
-import { normalizeVi as normalize } from './text';
-import { NHOM_TUOI_OPTIONS } from './nhomTuoi';
+import type { CompetitionEvent } from '../../types';
+import { normalizeVi as normalize } from '../utils/text';
+import { NHOM_TUOI_OPTIONS } from '../utils/nhomTuoi';
 
 const HEADER_ALIASES: Record<string, string[]> = {
   ten: ['ten', 'ten noi dung'],

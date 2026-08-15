@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import {
   subscribeLightPressed,
   subscribeConsensus,
-} from "../../lib/pressLightClient";
+} from "../../lib/realtime/pressLightClient";
 import styles from "./LiveLightsPanel.module.scss";
 
 interface ActivePress {

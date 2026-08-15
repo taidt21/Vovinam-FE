@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useNavigate, Link } from "react-router";
-import { signUp } from "../../lib/portalAuth";
+import { signUp } from "./lib/portalAuth";
 import styles from "./PortalAuth.module.scss";
 
 export default function DangKy() {

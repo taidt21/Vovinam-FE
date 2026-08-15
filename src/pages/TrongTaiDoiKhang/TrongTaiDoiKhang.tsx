@@ -2,28 +2,28 @@
 
 import { useEffect, useState } from "react";
 import { Wifi, WifiOff } from "lucide-react";
-import { useCourts } from "../../lib/useCourts";
-import type { CourtBasic } from "../../lib/courts";
+import { useCourts } from "../../lib/utils/useCourts";
+import type { CourtBasic } from "../../lib/utils/courts";
 import {
   getMatchSnapshot,
   subscribeMatchState,
   tinhThoiGianConLai,
   formatMmSs,
-} from "../../lib/liveMatchStore";
+} from "../../lib/realtime/liveMatchStore";
 import {
   pressLight,
   subscribeConsensus,
   subscribeRejected,
   type ConsensusEvent,
-} from "../../lib/pressLightClient";
+} from "../../lib/realtime/pressLightClient";
 import {
   subscribeConnectionState,
   ensureJoinedCourt,
-} from "../../lib/matchHubConnection";
+} from "../../lib/realtime/matchHubConnection";
 import MatchLogPanel from "../../components/MatchLogPanel/MatchLogPanel";
 import type { LiveMatchState } from "../../types/live";
 import styles from "./TrongTaiDoiKhang.module.scss";
-import { fetchTrongTai, type TrongTaiWire } from "../../lib/trongTaiApi";
+import { fetchTrongTai, type TrongTaiWire } from "../../lib/api/trongTaiApi";
 const IDENTITY_KEY = "vovinam:trong-tai-doi-khang:identity";
 
 interface Identity {

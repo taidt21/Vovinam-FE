@@ -5,7 +5,7 @@ import {
   getMatchLog,
   subscribeMatchLog,
   type MatchLogEntry,
-} from "../../lib/pressLightClient";
+} from "../../lib/realtime/pressLightClient";
 import styles from "./MatchLogPanel.module.scss";
 
 export default function MatchLogPanel({ courtId }: { courtId: string }) {

@@ -10,7 +10,7 @@ import {
   buildTemplateFile,
   validateTeamConsistency,
   type ImportRow,
-} from "../../lib/portalExcelImport";
+} from "./lib/portalExcelImport";
 import styles from "./PortalImportExcelModal.module.scss";
 
 interface PortalImportExcelModalProps {

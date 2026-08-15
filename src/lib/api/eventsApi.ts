@@ -1,6 +1,6 @@
-import type { CompetitionEvent } from '../types';
+import type { CompetitionEvent } from '../../types';
 import { apiGet, apiPost, apiPut } from './api';
-import { nhomTuoiFromWire, nhomTuoiToWire } from './nhomTuoi';
+import { nhomTuoiFromWire, nhomTuoiToWire } from '../utils/nhomTuoi';
 
 export async function fetchEvents(): Promise<CompetitionEvent[]> {
   const raw = await apiGet<CompetitionEvent[]>('/events');

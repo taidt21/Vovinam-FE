@@ -3,13 +3,13 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Plus, FileSpreadsheet, Search, Pencil, Trash2 } from "lucide-react";
 import type { CompetitionEvent, GioiTinh } from "../../types";
-import { apiGet, apiPost, apiPut, apiDelete } from "../../lib/api";
-import { NHOM_TUOI_OPTIONS } from "../../lib/nhomTuoi";
+import { apiGet, apiPost, apiPut, apiDelete } from "../../lib/api/api";
+import { NHOM_TUOI_OPTIONS } from "../../lib/utils/nhomTuoi";
 import Modal from "../../components/Modal/Modal";
 import ImportExcelModal from "../../components/ImportExcelModal/ImportExcelModal";
-import type { ImportRow } from "../../lib/excelImport";
-import { fetchEvents } from "../../lib/eventsApi";
-import { formatEventNhomTuoi } from "../../lib/nhomTuoi";
+import type { ImportRow } from "../../lib/excel/excelImport";
+import { fetchEvents } from "../../lib/api/eventsApi";
+import { formatEventNhomTuoi } from "../../lib/utils/nhomTuoi";
 import styles from "./DoanVaVDV.module.scss";
 
 const CURRENT_YEAR = new Date().getFullYear();

@@ -1,4 +1,4 @@
-import { apiGet } from './api';
+import { apiGet } from '../api/api';
 
 let offsetMs = 0;
 

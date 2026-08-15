@@ -7,8 +7,7 @@ import DoanVaVDV from "./pages/DoanVaVDV/DoanVaVDV";
 import NoiDungBocTham from "./pages/NoiDungBocTham/NoiDungBocTham";
 import BanThuKy from "./pages/BanThuKy/BanThuKy";
 import KetQua from "./pages/KetQua/KetQua";
-import TrongTaiDoiKhang from "./pages/TrongTaiDoiKhang/TrongTaiDoiKhang";
-import TrongTaiQuyen from "./pages/TrongTaiQuyen/TrongTaiQuyen";
+import TrongTai from "./pages/TrongTai/TrongTai";
 import AdminLogin from "./pages/AdminLogin/AdminLogin";
 import RequireAdmin from "./components/RequireAdmin/RequireAdmin";
 import ManHinhCongKhai from "./pages/ManHinhCongKhai/ManHinhCongKhai";
@@ -36,8 +35,15 @@ export default function App() {
         <Route path="ban-thu-ky" element={<BanThuKy />} />
         <Route path="ket-qua" element={<KetQua />} />
       </Route>
-      <Route path="/trong-tai-doi-khang" element={<TrongTaiDoiKhang />} />
-      <Route path="/trong-tai-quyen" element={<TrongTaiQuyen />} />
+      <Route path="/trong-tai" element={<TrongTai />} />
+      <Route
+        path="/trong-tai-doi-khang"
+        element={<Navigate to="/trong-tai" replace />}
+      />
+      <Route
+        path="/trong-tai-quyen"
+        element={<Navigate to="/trong-tai" replace />}
+      />
       <Route path="/man-hinh-cong-khai" element={<ManHinhCongKhai />} />
 
       <Route path="/dang-ky" element={<DangNhap />} />

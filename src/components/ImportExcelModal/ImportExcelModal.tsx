@@ -8,7 +8,7 @@ import {
   parseWorkbook,
   buildTemplateFile,
   type ImportRow,
-} from "../../lib/excelImport";
+} from "../../lib/excel/excelImport";
 import styles from "./ImportExcelModal.module.scss";
 
 interface ImportExcelModalProps {

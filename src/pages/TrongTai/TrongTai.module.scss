@@ -1,0 +1,476 @@
+@use '../../styles/variables'as *;
+
+.setupPage {
+    max-width: 380px;
+    margin: 0 auto;
+    padding: $space-6 $space-4;
+    display: flex;
+    flex-direction: column;
+    gap: $space-4;
+}
+
+.setupTitle {
+    font-size: 22px;
+    font-weight: 800;
+    text-align: center;
+    margin: 0;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: $space-1;
+    font-size: 14px;
+    font-weight: 600;
+
+    input,
+    select {
+        font: inherit;
+        padding: $space-3;
+        border: 1px solid $color-border;
+        border-radius: 8px;
+    }
+}
+
+.hint {
+    font-size: 13px;
+    color: $color-text-muted;
+}
+
+.pickerList {
+    display: flex;
+    flex-direction: column;
+    gap: $space-2;
+}
+
+.pickerBtn {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    padding: $space-3 $space-4;
+    border: 1px solid $color-border;
+    border-radius: 10px;
+    background: $color-surface;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover {
+        background: $color-bg;
+    }
+}
+
+.pickerName {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.pickerSub {
+    font-size: 12px;
+    color: $color-text-muted;
+}
+
+.btnPrimary {
+    padding: $space-4;
+    border: none;
+    border-radius: 10px;
+    background: $color-do;
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+}
+
+.page {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: $space-3;
+    display: flex;
+    flex-direction: column;
+    gap: $space-3;
+    position: relative;
+}
+
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tenTrongTai {
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.courtLabel {
+    font-size: 12px;
+    color: $color-text-muted;
+}
+
+.topbarRight {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+}
+
+.connOk,
+.connBad {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 999px;
+}
+
+.connOk {
+    background: rgba($color-success, 0.12);
+    color: $color-success;
+}
+
+.connBad {
+    background: rgba($color-danger, 0.12);
+    color: $color-danger;
+}
+
+.changeBtn {
+    font-size: 12px;
+    padding: 4px 10px;
+    border: 1px solid $color-border;
+    border-radius: 6px;
+    background: $color-surface;
+    cursor: pointer;
+}
+
+.connBanner {
+    background: rgba($color-danger, 0.1);
+    color: $color-danger;
+    padding: $space-2 $space-3;
+    border-radius: 8px;
+    font-size: 12px;
+    text-align: center;
+}
+
+.noMatch {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $space-3;
+    padding: $space-6 $space-3;
+    text-align: center;
+    color: $color-text-muted;
+    font-size: 14px;
+}
+
+.retryBtn {
+    padding: $space-2 $space-4;
+    border: 1px solid $color-border;
+    border-radius: 8px;
+    background: $color-surface;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+/* ===== Đối kháng ===== */
+.matchInfo {
+    background: $color-surface;
+    border: 1px solid $color-border;
+    border-radius: 10px;
+    padding: $space-3;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    text-align: center;
+}
+
+.eventName {
+    font-size: 12px;
+    color: $color-text-muted;
+}
+
+.namesRow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: $space-2;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.nameDo {
+    color: $color-do;
+}
+
+.nameXanh {
+    color: $color-xanh;
+}
+
+.vs {
+    color: $color-text-muted;
+    font-size: 12px;
+    font-weight: 400;
+}
+
+.clockRow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: $space-3;
+    margin-top: 4px;
+}
+
+.clock {
+    font-family: $font-mono;
+    font-size: 24px;
+    font-weight: 800;
+}
+
+.notPlayingNote {
+    margin-top: $space-2;
+    font-size: 12px;
+    color: $color-warning;
+    background: rgba($color-warning, 0.1);
+    padding: 6px $space-2;
+    border-radius: 6px;
+}
+
+.buttonGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: $space-3;
+}
+
+.btnDo,
+.btnXanh {
+    padding: $space-6 $space-2;
+    border: none;
+    border-radius: 14px;
+    color: white;
+    font-size: 22px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform 0.1s;
+
+    &:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+    }
+
+    &:active:not(:disabled) {
+        transform: scale(0.96);
+    }
+}
+
+.btnDo {
+    background: $color-do;
+}
+
+.btnXanh {
+    background: $color-xanh;
+}
+
+.pressing {
+    outline: 3px solid rgba(255, 255, 255, 0.6);
+    outline-offset: -3px;
+}
+
+.flashDo,
+.flashXanh {
+    position: fixed;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: $space-3 $space-5;
+    border-radius: 999px;
+    color: white;
+    font-weight: 800;
+    font-size: 14px;
+    z-index: 1000;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    animation: flashIn 0.2s ease-out;
+}
+
+.flashDo {
+    background: $color-do;
+}
+
+.flashXanh {
+    background: $color-xanh;
+}
+
+@keyframes flashIn {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+.rejectToast {
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: $color-text;
+    color: white;
+    padding: $space-2 $space-4;
+    border-radius: 8px;
+    font-size: 13px;
+    z-index: 1000;
+}
+
+.flashSuccess {
+    position: fixed;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: $space-3 $space-5;
+    border-radius: 999px;
+    background: $color-success;
+    color: white;
+    font-weight: 800;
+    font-size: 14px;
+    z-index: 1000;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    animation: flashIn 0.2s ease-out;
+}
+
+/* ===== Quyền ===== */
+.scoreWrap {
+    display: flex;
+    flex-direction: column;
+    gap: $space-3;
+}
+
+.matchMeta {
+    font-size: 12px;
+    color: $color-text-muted;
+    text-align: center;
+}
+
+.performerCard {
+    display: flex;
+    align-items: center;
+    gap: $space-3;
+    padding: $space-3;
+    background: $color-surface;
+    border: 1px solid $color-border;
+    border-radius: 12px;
+}
+
+.performerName {
+    font-size: 20px;
+    font-weight: 800;
+    text-align: center;
+}
+
+.performerSub {
+    font-size: 12px;
+    color: $color-text-muted;
+}
+
+.btnPrimaryBig {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: $space-2;
+    padding: $space-4;
+    border: none;
+    border-radius: 12px;
+    background: $color-do;
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+}
+
+.savedNote {
+    text-align: center;
+    font-size: 12px;
+    color: $color-text-muted;
+}
+
+.scoreDisplay {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: $space-4;
+    background: $color-surface;
+    border: 2px solid $color-border;
+    border-radius: 16px;
+}
+
+.scoreDisplayLabel {
+    font-size: 12px;
+    color: $color-text-muted;
+    font-weight: 600;
+}
+
+.scoreDisplayNum {
+    font-size: 40px;
+    font-weight: 800;
+    font-family: $font-mono;
+    color: $color-do;
+}
+
+.keypadGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+}
+
+.keypadBtn {
+    padding: $space-4 0;
+    border: 1px solid $color-border;
+    border-radius: 12px;
+    background: $color-surface;
+    font-size: 22px;
+    font-weight: 700;
+    font-family: $font-mono;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+        background: $color-bg;
+    }
+
+    &:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+    }
+}
+
+.keypadBtnXoa {
+    padding: $space-4 0;
+    border: 1px solid $color-border;
+    border-radius: 12px;
+    background: rgba($color-danger, 0.06);
+    color: $color-danger;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+        background: rgba($color-danger, 0.12);
+    }
+
+    &:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+    }
+}

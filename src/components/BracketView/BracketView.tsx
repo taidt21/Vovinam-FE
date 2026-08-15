@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { Trophy } from "lucide-react";
 import type { Athlete, Match } from "../../types";
-import { groupByRound, winnerLabel } from "../../lib/bracket";
+import { groupByRound, winnerLabel } from "../../lib/domain/bracket";
 import styles from "./BracketView.module.scss";
 
 const CARD_W = 240; // nới từ 208 để chứa thêm tên đơn vị, CARD_H giữ nguyên
@@ -138,7 +138,7 @@ export default function BracketView({
     );
 
   const championName = layout.isDecided
-    ? athleteName(layout.finalMatch!.athleteRedId)
+    ? athleteName(layout.finalMatch!.nguoiThangId ?? null)
     : null;
 
   return (

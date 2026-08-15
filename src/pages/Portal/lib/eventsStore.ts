@@ -1,4 +1,4 @@
-import type { CompetitionEvent } from '../types';
+import type { CompetitionEvent } from '../../../types';
 
 const KEY = 'vovinam:events';
 const CHANNEL_NAME = 'vovinam-live';

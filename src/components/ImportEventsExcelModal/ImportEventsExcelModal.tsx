@@ -8,7 +8,7 @@ import {
   parseEventsWorkbook,
   buildEventsTemplateFile,
   type EventImportRow,
-} from "../../lib/eventExcelImport";
+} from "../../lib/excel/eventExcelImport";
 import styles from "./ImportEventsExcelModal.module.scss";
 
 interface ImportEventsExcelModalProps {

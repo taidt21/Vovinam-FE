@@ -1,4 +1,4 @@
-import type { LiveMatchState } from '../types/live';
+import type { LiveMatchState } from '../../types/live';
 import { ensureStarted, ensureJoinedCourt, getConnection } from './matchHubConnection';
 import { serverNow } from './serverClock';
 const cache = new Map<string, LiveMatchState | null>();

@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import type { Athlete, CompetitionEvent, Match, Squad } from "../../types";
-import { numberDoiKhangMatches, winnerLabel } from "../../lib/bracket";
-import { compareNhomTuoi, formatEventNhomTuoi } from "../../lib/nhomTuoi";
+import { numberDoiKhangMatches, winnerLabel } from "../../lib/domain/bracket";
+import { compareNhomTuoi, formatEventNhomTuoi } from "../../lib/utils/nhomTuoi";
 import styles from "./LichThiDau.module.scss";
 
 interface AthleteBasic {

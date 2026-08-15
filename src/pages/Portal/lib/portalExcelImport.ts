@@ -1,6 +1,6 @@
 import * as XLSX from 'xlsx';
-import type { CompetitionEvent, GioiTinh } from '../types';
-import { normalizeVi } from './text';
+import type { CompetitionEvent, GioiTinh } from '../../../types';
+import { normalizeVi } from '../../../lib/utils/text';
 
 const CURRENT_YEAR = new Date().getFullYear();
 

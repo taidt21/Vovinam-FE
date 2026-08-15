@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate, Link } from "react-router";
-import { getSession, login } from "../../lib/portalAuth";
+import { getSession, login } from "./lib/portalAuth";
 import styles from "./PortalAuth.module.scss";
 
 export default function DangNhap() {

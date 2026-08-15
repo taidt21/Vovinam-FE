@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router";
-import { adminLogin } from "../../lib/adminAuth";
+import { adminLogin } from "../../lib/api/adminAuth";
 import styles from "./AdminLogin.module.scss";
 
 export default function AdminLogin() {
