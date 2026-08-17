@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { Play, Pause, Flag, Award, Check } from "lucide-react";
-import type { LiveQuyenState, LyDoKetThucQuyen } from "../../../types/liveQuyen";
+import type {
+  LiveQuyenState,
+  LyDoKetThucQuyen,
+} from "../../../types/liveQuyen";
 import {
   clearQuyenState,
   getQuyenSnapshot,
@@ -11,21 +14,38 @@ import {
   tinhThoiGianDaTroi,
 } from "../../../lib/realtime/liveQuyenStore";
 import { serverNow } from "../../../lib/realtime/serverClock";
+import {
+  markQuyenLuotHoanThanh,
+  unmarkQuyenLuotHoanThanh,
+} from "../../../lib/api/quyenLuotApi";
 import { tinhDiemQuyenTongHop } from "../../../lib/domain/quyenScoring";
-import type { QuyenJudgeScoreWire } from "../../../lib/api/quyenJudgeScoreApi";
+import {
+  deleteQuyenJudgeScores,
+  type QuyenJudgeScoreWire,
+} from "../../../lib/api/quyenJudgeScoreApi";
 import type { TrongTaiWire } from "../../../lib/api/trongTaiApi";
 import AthleteAvatar from "../../../components/AthleteAvatar/AthleteAvatar";
-import { LY_DO_KET_THUC_QUYEN_OPTIONS, LY_DO_KET_THUC_QUYEN_LABEL } from "../helpers";
+import {
+  LY_DO_KET_THUC_QUYEN_OPTIONS,
+  LY_DO_KET_THUC_QUYEN_LABEL,
+} from "../helpers";
 import styles from "../BanThuKy.module.scss";
 
 export default function DieuHanhQuyenTab({
   courtId,
   quyenJudgeScores,
   trongTaiList,
+  onLuotXong,
 }: {
   courtId: string;
   quyenJudgeScores: QuyenJudgeScoreWire[];
   trongTaiList: TrongTaiWire[];
+  onLuotXong: (marked: {
+    eventId: string;
+    athleteId: string | null;
+    teamId: string | null;
+    lyDo: string;
+  }) => void;
 }) {
   const [live, setLive] = useState<LiveQuyenState | null>(() =>
     getQuyenSnapshot(courtId),
@@ -85,16 +105,46 @@ export default function DieuHanhQuyenTab({
     setShowEndFlow(false);
   };
 
-  const xongHan = () => clearQuyenState(courtId);
+  // Đánh dấu ĐÃ XONG lưu lâu dài trước khi xoá state sống — để biết đúng
+  // lượt nào đã kết thúc dù không đủ 5 điểm (bị loại giữa chừng), tránh bị
+  // tự động đưa lại vào sân.
+  // Báo cho Bàn thư ký biết NGAY, cùng lúc với việc xoá state sống — không
+  // đợi mạng xác nhận đã lưu. Effect tự động qua lượt tiếp theo (ở
+  // BanThuKy) chạy gần như ngay khi state sống bị xoá — nếu phải đợi
+  // đúng lần gọi mạng này xong mới cập nhật, effect đó sẽ chạy TRƯỚC,
+  // nhìn thấy lượt vừa xong "chưa được đánh dấu xong" (nhất là khi chưa
+  // hề có điểm nào, kiểu Quên bài) rồi tự đưa lại chính lượt đó vào sân.
+  const xongHan = () => {
+    const marked = {
+      eventId: live.eventId,
+      athleteId: live.athleteId,
+      teamId: live.teamId,
+      lyDo: live.lyDoKetThuc ?? "hoan_thanh",
+    };
+    onLuotXong(marked);
+    markQuyenLuotHoanThanh(marked).catch(() => {});
+    clearQuyenState(courtId);
+  };
 
-  const choThiLai = () => {
+  const choThiLai = async () => {
     if (
       !window.confirm(
-        "Cho thi lại từ đầu? Đồng hồ sẽ về 0 — các điểm giám khảo đã gửi cho " +
-          "lượt này VẪN CÒN, cần tự nhắc giám khảo gửi lại nếu cần chấm lại.",
+        "Cho thi lại từ đầu? Đồng hồ sẽ về 0 — điểm giám định đã gửi cho " +
+          "lượt này sẽ bị XOÁ SẠCH, chấm lại từ đầu.",
       )
     )
       return;
+    try {
+      await Promise.all([
+        deleteQuyenJudgeScores(live.eventId, live.athleteId, live.teamId),
+        unmarkQuyenLuotHoanThanh(live.eventId, live.athleteId, live.teamId),
+      ]);
+    } catch {
+      window.alert(
+        "Xoá điểm cũ thất bại — kiểm tra mạng rồi thử lại, chưa cho thi lại.",
+      );
+      return;
+    }
     patch({
       trangThai: "cho_bat_dau",
       thoiGianDaTroiGiay: 0,
@@ -172,9 +222,12 @@ export default function DieuHanhQuyenTab({
             <div className={styles.quyenPerformerName}>
               {live.performerLabel}
             </div>
-            <div className={styles.quyenPerformerSub}>
-              {live.performerSub}
-            </div>
+            <div className={styles.quyenPerformerSub}>{live.performerSub}</div>
+            {live.thanhVien && live.thanhVien.length > 0 && (
+              <div className={styles.quyenThanhVien}>
+                {live.thanhVien.join(" - ")}
+              </div>
+            )}
           </div>
 
           {daKetThuc ? (

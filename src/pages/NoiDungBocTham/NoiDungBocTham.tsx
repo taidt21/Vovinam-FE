@@ -1,7 +1,7 @@
 /** @format */
 
 import { useEffect, useMemo, useState } from "react";
-import { Shuffle, CheckCircle2 } from "lucide-react";
+import { Shuffle, CheckCircle2, FileDown } from "lucide-react";
 import type {
   Athlete,
   AthleteRecord,
@@ -9,8 +9,12 @@ import type {
   Match,
   Squad,
 } from "../../types";
-import { generateBracket, numberDoiKhangMatches } from "../../lib/domain/bracket";
+import {
+  generateBracket,
+  numberDoiKhangMatches,
+} from "../../lib/domain/bracket";
 import { apiGet, apiPut } from "../../lib/api/api";
+import { laAdmin } from "../../lib/api/adminAuth";
 import BracketView from "../../components/BracketView/BracketView";
 import LichThiDau from "../../components/LichThiDau/LichThiDau";
 import { fetchEvents } from "../../lib/api/eventsApi";
@@ -103,6 +107,9 @@ function BocThamButton({
   hasResult: boolean;
   itemLabel: string;
 }) {
+  // Chỉ Admin mới được bốc thăm — backend cũng đã tự chặn nếu ai đó cố
+  // gọi thẳng API, đây chỉ để giao diện không hiện nút vô dụng.
+  if (!laAdmin()) return null;
   const disabled = count < 2;
   return (
     <div className={styles.actions}>
@@ -129,7 +136,7 @@ export default function NoiDungBocTham() {
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const [tab, setTab] = useState<"quyen" | "doi_khang" | "lich_thi_dau">(
-    "doi_khang",
+    "quyen",
   );
   const [selectedId, setSelectedId] = useState("e1");
   const [bracketsByEvent, setBracketsByEvent] = useState<
@@ -320,6 +327,26 @@ export default function NoiDungBocTham() {
         ))}
       </div>
 
+      <div className={styles.exportBar}>
+        <button
+          className={styles.exportBtn}
+          onClick={() => window.open("/dashboard/in-lich-thi-dau-quyen", "_blank")}>
+          <FileDown size={14} /> Xuất lịch thi đấu quyền (PDF)
+        </button>
+        <button
+          className={styles.exportBtn}
+          onClick={() =>
+            window.open("/dashboard/in-lich-thi-dau-doi-khang", "_blank")
+          }>
+          <FileDown size={14} /> Xuất lịch thi đấu đối kháng (PDF)
+        </button>
+        <button
+          className={styles.exportBtn}
+          onClick={() => window.open("/dashboard/in-so-do-doi-khang", "_blank")}>
+          <FileDown size={14} /> Xuất sơ đồ đối kháng (PDF)
+        </button>
+      </div>
+
       <div className={styles.body}>
         {tab !== "lich_thi_dau" && (
           <aside className={styles.sidebar}>
@@ -410,7 +437,7 @@ export default function NoiDungBocTham() {
                       <li key={a.id}>
                         {a.hoTen}{" "}
                         <span className={styles.teamTag}>
-                          ({a.namSinh} · {teamName(a.teamId, teams)})
+                          ({a.namSinh} - {teamName(a.teamId, teams)})
                         </span>
                       </li>
                     ))}

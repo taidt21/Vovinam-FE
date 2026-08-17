@@ -10,11 +10,11 @@ export function formatEventNhomTuoi(nt: number | 'hon_hop'): string {
   return nt === 'hon_hop' ? 'Hỗn hợp' : `Nhóm tuổi ${nt}`;
 }
 
-// "hon_hop" luôn xếp cuối cùng khi sắp xếp, không tham gia phép trừ số.
+// "hon_hop" luôn xếp ĐẦU TIÊN khi sắp xếp, không tham gia phép trừ số.
 export function compareNhomTuoi(a: number | 'hon_hop', b: number | 'hon_hop'): number {
   if (a === b) return 0;
-  if (a === 'hon_hop') return 1;
-  if (b === 'hon_hop') return -1;
+  if (a === 'hon_hop') return -1;
+  if (b === 'hon_hop') return 1;
   return a - b;
 }
 

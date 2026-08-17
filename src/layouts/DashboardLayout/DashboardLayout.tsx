@@ -1,7 +1,7 @@
 /** @format */
 
 import { useState } from "react";
-import { NavLink, Outlet } from "react-router";
+import { NavLink, Outlet, useNavigate } from "react-router";
 import {
   LayoutGrid,
   Users,
@@ -10,7 +10,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Shuffle,
+  LogOut,
 } from "lucide-react";
+import { adminLogout, getVaiTro } from "../../lib/api/adminAuth";
 import styles from "./DashboardLayout.module.scss";
 
 const NAV_ITEMS = [
@@ -22,8 +24,15 @@ const NAV_ITEMS = [
 ];
 
 export default function DashboardLayout() {
-  const currentRole = "Ban tổ chức"; // TODO: lấy từ auth thật khi có login
+  const navigate = useNavigate();
+  const vaiTro = getVaiTro();
+  const currentRole = vaiTro === "Admin" ? "Ban tổ chức" : "Bàn thư ký";
   const [collapsed, setCollapsed] = useState(false);
+
+  const dangXuat = () => {
+    adminLogout();
+    navigate("/admin-dang-nhap", { replace: true });
+  };
 
   return (
     <div className={styles.shell}>
@@ -51,6 +60,14 @@ export default function DashboardLayout() {
             </NavLink>
           ))}
         </nav>
+        <button
+          type="button"
+          className={styles.logoutBtn}
+          onClick={dangXuat}
+          title={collapsed ? "Đăng xuất" : undefined}>
+          <LogOut size={18} strokeWidth={1.75} />
+          {!collapsed && <span>Đăng xuất</span>}
+        </button>
         <button
           type="button"
           className={styles.collapseBtn}

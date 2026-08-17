@@ -21,6 +21,10 @@ interface BracketViewProps {
   // lib/bracket) — dùng để hiện "Thắng trận N" cho ô chưa biết VĐV, khớp
   // đúng với số hiện ở tab "Lịch thi đấu".
   soByMatchId: Map<string, number>;
+  // true = không giới hạn khung cuộn, hiện trọn vẹn sơ đồ dù rộng bao
+  // nhiêu — dùng khi cần CHỤP LẠI toàn bộ để xuất PDF (html2canvas chỉ
+  // chụp đúng phần đang hiển thị trong khung, không tự "cuộn" được).
+  khongCuon?: boolean;
 }
 
 export default function BracketView({
@@ -28,6 +32,7 @@ export default function BracketView({
   athletes,
   teams,
   soByMatchId,
+  khongCuon,
 }: BracketViewProps) {
   const rounds = useMemo(() => groupByRound(matches), [matches]);
 
@@ -142,7 +147,7 @@ export default function BracketView({
     : null;
 
   return (
-    <div className={styles.scrollArea}>
+    <div className={khongCuon ? styles.scrollAreaKhongCuon : styles.scrollArea}>
       <div
         className={styles.canvas}
         style={{ width: layout.width, height: layout.height }}>

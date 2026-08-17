@@ -59,7 +59,11 @@ export default function TrongTaiTab({
     try {
       // Đổi sân thì reset về dự bị luôn — số Giám định cũ gắn với sân cũ,
       // mang qua sân mới dễ đụng người khác đang giữ đúng số đó.
-      await updateTrongTai(t.id, { hoTen: t.hoTen, courtId, thuTuGiamDinh: null });
+      await updateTrongTai(t.id, {
+        hoTen: t.hoTen,
+        courtId,
+        thuTuGiamDinh: null,
+      });
       onRefresh();
     } catch {
       window.alert("Đổi sân thất bại.");
@@ -104,7 +108,7 @@ export default function TrongTaiTab({
         return (
           <div key={court.id} className={styles.trongTaiCourtGroup}>
             <div className={styles.trongTaiCourtName}>
-              {court.ten} · {nguoiOSan.length} trọng tài
+              {court.ten} - {nguoiOSan.length} trọng tài
             </div>
             {nguoiOSan.length === 0 && (
               <p className={styles.hint}>Chưa có trọng tài nào ở sân này.</p>

@@ -8,4 +8,5 @@ export interface QuyenItem {
   sub: string;
   isTeam: boolean;
   so: number;
+  thanhVien?: string[];
 }

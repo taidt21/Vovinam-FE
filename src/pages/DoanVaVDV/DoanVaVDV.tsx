@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Plus, FileSpreadsheet, Search, Pencil, Trash2 } from "lucide-react";
 import type { CompetitionEvent, GioiTinh } from "../../types";
 import { apiGet, apiPost, apiPut, apiDelete } from "../../lib/api/api";
+import { laAdmin } from "../../lib/api/adminAuth";
 import { NHOM_TUOI_OPTIONS } from "../../lib/utils/nhomTuoi";
 import Modal from "../../components/Modal/Modal";
 import ImportExcelModal from "../../components/ImportExcelModal/ImportExcelModal";
@@ -45,6 +46,10 @@ const EMPTY_ATHLETE_FORM: AthleteFormState = {
 const PAGE_SIZE = 8;
 
 export default function DoanVaVDV() {
+  // Chỉ Admin được thêm/sửa/xoá — Bàn thư ký chỉ xem/tìm kiếm. Backend
+  // cũng đã tự chặn (POST/PUT/DELETE các API đoàn & VĐV đều Admin-only),
+  // đây chỉ để giao diện không hiện nút vô dụng.
+  const coQuyenSua = laAdmin();
   const [events, setEvents] = useState<CompetitionEvent[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
   const [athletes, setAthletes] = useState<Athlete[]>([]);
@@ -312,14 +317,18 @@ export default function DoanVaVDV() {
       <div className={styles.headerRow}>
         <h1 className={styles.title}>Đoàn & vận động viên</h1>
         <div className={styles.headerActions}>
-          <button
-            className={styles.btnGhost}
-            onClick={() => setShowImportModal(true)}>
-            <FileSpreadsheet size={16} /> Import Excel
-          </button>
-          <button className={styles.btnPrimary} onClick={openAddAthlete}>
-            <Plus size={16} /> Thêm VĐV
-          </button>
+          {coQuyenSua && (
+            <>
+              <button
+                className={styles.btnGhost}
+                onClick={() => setShowImportModal(true)}>
+                <FileSpreadsheet size={16} /> Import Excel
+              </button>
+              <button className={styles.btnPrimary} onClick={openAddAthlete}>
+                <Plus size={16} /> Thêm VĐV
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -329,9 +338,11 @@ export default function DoanVaVDV() {
             Đoàn tham dự
             <span className={styles.teamsCount}>{teams.length} đoàn</span>
           </h2>
-          <button className={styles.btnGhost} onClick={openAddTeam}>
-            <Plus size={16} /> Thêm đoàn
-          </button>
+          {coQuyenSua && (
+            <button className={styles.btnGhost} onClick={openAddTeam}>
+              <Plus size={16} /> Thêm đoàn
+            </button>
+          )}
         </div>
         <div className={styles.teamsList}>
           {teams.map((t) => (
@@ -346,22 +357,26 @@ export default function DoanVaVDV() {
                 <span className={styles.teamChipName}>{t.ten}</span>
                 <span className={styles.teamChipCount}>{t.soVdv} VĐV</span>
               </button>
-              <button
-                type="button"
-                className={styles.teamChipEdit}
-                onClick={() => openEditTeam(t)}
-                aria-label={`Sửa tên đoàn ${t.ten}`}
-                title="Sửa tên đoàn">
-                <Pencil size={12} />
-              </button>
-              <button
-                type="button"
-                className={styles.teamChipDelete}
-                onClick={() => deleteTeam(t)}
-                aria-label={`Xóa đoàn ${t.ten}`}
-                title="Xóa đoàn">
-                <Trash2 size={12} />
-              </button>
+              {coQuyenSua && (
+                <>
+                  <button
+                    type="button"
+                    className={styles.teamChipEdit}
+                    onClick={() => openEditTeam(t)}
+                    aria-label={`Sửa tên đoàn ${t.ten}`}
+                    title="Sửa tên đoàn">
+                    <Pencil size={12} />
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.teamChipDelete}
+                    onClick={() => deleteTeam(t)}
+                    aria-label={`Xóa đoàn ${t.ten}`}
+                    title="Xóa đoàn">
+                    <Trash2 size={12} />
+                  </button>
+                </>
+              )}
             </div>
           ))}
           {teams.length === 0 && (
@@ -432,12 +447,18 @@ export default function DoanVaVDV() {
                   )}
                 </td>
                 <td className={styles.rowActions}>
-                  <button onClick={() => openEditAthlete(a)}>Sửa</button>
-                  <button
-                    onClick={() => deleteAthlete(a)}
-                    className={styles.dangerLink}>
-                    Xóa
-                  </button>
+                  {coQuyenSua ? (
+                    <>
+                      <button onClick={() => openEditAthlete(a)}>Sửa</button>
+                      <button
+                        onClick={() => deleteAthlete(a)}
+                        className={styles.dangerLink}>
+                        Xóa
+                      </button>
+                    </>
+                  ) : (
+                    "—"
+                  )}
                 </td>
               </tr>
             ))}

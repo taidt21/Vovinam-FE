@@ -30,7 +30,7 @@ export default function LichThiDau({
   orderByEvent,
   squadOrderByEvent,
 }: LichThiDauProps) {
-  const [subTab, setSubTab] = useState<"quyen" | "doi_khang">("doi_khang");
+  const [subTab, setSubTab] = useState<"quyen" | "doi_khang">("quyen");
 
   const teamName = (teamId: string) =>
     teams.find((t) => t.id === teamId)?.ten ?? "—";
@@ -43,6 +43,10 @@ export default function LichThiDau({
     const first = athletes.find((a) => s.athleteIds.includes(a.id));
     return first ? teamName(first.teamId) : "—";
   };
+  const squadMemberNames = (s: Squad) =>
+    s.athleteIds
+      .map((id) => athletes.find((a) => a.id === id)?.hoTen)
+      .join(", ");
 
   const doiKhangEvents = events.filter((e) => e.loai === "doi_khang");
   const quyenEvents = events.filter((e) => e.loai === "quyen");
@@ -71,7 +75,7 @@ export default function LichThiDau({
         ? squadOrderByEvent[e.id]!.map((s) => ({
             event: e,
             key: s.id,
-            label: `${s.ten} (${squadTeam(s)})`,
+            label: `${s.ten} (${squadTeam(s)}) — ${squadMemberNames(s)}`,
           }))
         : orderByEvent[e.id]!.map((a) => ({
             event: e,
@@ -98,16 +102,16 @@ export default function LichThiDau({
 
       <div className={styles.subTabsBar}>
         <button
+          className={subTab === "quyen" ? styles.subTabActive : styles.subTab}
+          onClick={() => setSubTab("quyen")}>
+          Quyền
+        </button>
+        <button
           className={
             subTab === "doi_khang" ? styles.subTabActive : styles.subTab
           }
           onClick={() => setSubTab("doi_khang")}>
           Đối kháng
-        </button>
-        <button
-          className={subTab === "quyen" ? styles.subTabActive : styles.subTab}
-          onClick={() => setSubTab("quyen")}>
-          Quyền
         </button>
       </div>
 

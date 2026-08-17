@@ -27,9 +27,9 @@ export const LY_DO_KET_THUC_QUYEN_LABEL: Record<LyDoKetThucQuyen, string> =
     LY_DO_KET_THUC_QUYEN_OPTIONS.map((o) => [o.value, o.label]),
   ) as Record<LyDoKetThucQuyen, string>;
 
-const DEFAULT_TONG_SO_HIEP = 2;
-const DEFAULT_THOI_GIAN_HIEP = 60;
-const DEFAULT_THOI_GIAN_NGHI = 30;
+export const DEFAULT_TONG_SO_HIEP = 2;
+export const DEFAULT_THOI_GIAN_HIEP = 60;
+export const DEFAULT_THOI_GIAN_NGHI = 30;
 const DEFAULT_SO_TRONG_TAI = 5;
 
 export function quyenKeyOf(

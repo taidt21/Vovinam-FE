@@ -1,0 +1,66 @@
+@use '../../styles/variables' as *;
+
+.page {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: $space-5;
+}
+
+.hint {
+    color: $color-text-muted;
+    font-size: 14px;
+}
+
+.toolbar {
+    display: flex;
+    align-items: center;
+    gap: $space-4;
+    margin-bottom: $space-5;
+}
+
+.exportBtn {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    padding: $space-3 $space-5;
+    border: none;
+    border-radius: 8px;
+    background: $color-do;
+    color: white;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+}
+
+.exportLoi {
+    font-size: 13px;
+    color: $color-danger;
+}
+
+.bracketPage {
+    padding-bottom: $space-6;
+    border-bottom: 1px dashed $color-border;
+    margin-bottom: $space-6;
+
+    &:last-child {
+        border-bottom: none;
+    }
+}
+
+.eventTitle {
+    font-size: 20px;
+    font-weight: 800;
+    margin: 0 0 $space-4;
+}
+
+// Nền trắng rõ ràng cho đúng khung được chụp lại — tránh vùng chụp bị
+// trong suốt hoặc dính màu nền trang khi ghép vào PDF.
+.captureArea {
+    background: #ffffff;
+    display: inline-block;
+}

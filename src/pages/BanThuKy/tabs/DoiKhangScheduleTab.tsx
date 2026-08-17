@@ -2,12 +2,21 @@
 
 import { useEffect, useState } from "react";
 import { Pencil, RotateCcw } from "lucide-react";
-import type { CompetitionEvent, LiveMatchState, LyDoKetThuc, Match } from "../../../types";
+import type {
+  CompetitionEvent,
+  LiveMatchState,
+  LyDoKetThuc,
+  Match,
+} from "../../../types";
 import type { CourtBasic } from "../../../lib/utils/courts";
 import type { NumberedMatch } from "../../../lib/domain/bracket";
-import { getMatchSnapshot, subscribeMatchState } from "../../../lib/realtime/liveMatchStore";
+import {
+  getMatchSnapshot,
+  subscribeMatchState,
+} from "../../../lib/realtime/liveMatchStore";
 import Modal from "../../../components/Modal/Modal";
 import { LY_DO_OPTIONS } from "../helpers";
+import { formatEventNhomTuoi } from "../../../lib/utils/nhomTuoi";
 import styles from "../BanThuKy.module.scss";
 
 export default function DoiKhangScheduleTab({
@@ -105,7 +114,9 @@ export default function DoiKhangScheduleTab({
               <span className={styles.listNo}>#{so}</span>
               <div className={styles.listInfo}>
                 <div className={styles.listEvent}>
-                  {eventOf(event.id)?.ten} · {match.vong}
+                  {eventOf(event.id)?.ten} -{" "}
+                  {formatEventNhomTuoi(eventOf(event.id)?.nhomTuoi ?? 1)} -{" "}
+                  {match.vong}
                 </div>
                 <div className={styles.listNames}>
                   <span className={styles.dotDo} />{" "}

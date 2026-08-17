@@ -108,11 +108,28 @@
     }
 }
 
-.collapseBtn {
+.logoutBtn {
     display: flex;
     align-items: center;
     gap: $space-2;
     margin-top: auto;
+    padding: $space-3 $space-4;
+    border: none;
+    border-top: 1px solid $color-border;
+    background: none;
+    color: $color-text-muted;
+    font-size: 13px;
+    cursor: pointer;
+
+    &:hover {
+        color: $color-danger;
+    }
+}
+
+.collapseBtn {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
     padding: $space-3 $space-4;
     border: none;
     border-top: 1px solid $color-border;

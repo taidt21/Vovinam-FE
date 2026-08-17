@@ -4,14 +4,23 @@ import { useEffect, useState } from "react";
 import { Wifi, WifiOff } from "lucide-react";
 import { useCourts } from "../../lib/utils/useCourts";
 import type { CourtBasic } from "../../lib/utils/courts";
-import { getMatchSnapshot, subscribeMatchState } from "../../lib/realtime/liveMatchStore";
-import { getQuyenSnapshot, subscribeQuyenState } from "../../lib/realtime/liveQuyenStore";
+import {
+  getMatchSnapshot,
+  subscribeMatchState,
+} from "../../lib/realtime/liveMatchStore";
+import {
+  getQuyenSnapshot,
+  subscribeQuyenState,
+} from "../../lib/realtime/liveQuyenStore";
 import {
   getActiveMode,
   subscribeActiveMode,
   type ActiveMode,
 } from "../../lib/realtime/activeModeStore";
-import { subscribeConnectionState, ensureJoinedCourt } from "../../lib/realtime/matchHubConnection";
+import {
+  subscribeConnectionState,
+  ensureJoinedCourt,
+} from "../../lib/realtime/matchHubConnection";
 import { fetchTrongTai, type TrongTaiWire } from "../../lib/api/trongTaiApi";
 import type { LiveMatchState } from "../../types/live";
 import type { LiveQuyenState } from "../../types/liveQuyen";
@@ -123,7 +132,7 @@ function SetupScreen({
             onClick={() => pick(t)}>
             <span className={styles.pickerName}>{t.hoTen}</span>
             <span className={styles.pickerSub}>
-              Giám định {t.thuTuGiamDinh} · {tenSan(t.courtId)}
+              Giám định {t.thuTuGiamDinh} - {tenSan(t.courtId)}
             </span>
           </button>
         ))}
@@ -154,7 +163,8 @@ function MainScreen({
     setLiveMatch(getMatchSnapshot(courtId));
     const unsub = subscribeMatchState(courtId, setLiveMatch);
     const watchdog = setInterval(() => {
-      if (!getMatchSnapshot(courtId)) ensureJoinedCourt(courtId).catch(() => {});
+      if (!getMatchSnapshot(courtId))
+        ensureJoinedCourt(courtId).catch(() => {});
     }, 3000);
     return () => {
       unsub();
@@ -207,27 +217,9 @@ function MainScreen({
       )}
 
       {activeMode === "doi_khang" ? (
-        liveMatch ? (
-          <DoiKhangView identity={identity} live={liveMatch} />
-        ) : (
-          <div className={styles.noMatch}>
-            <p>
-              Bàn thư ký đang ở màn đối kháng cho {courtName}, nhưng chưa gán
-              trận nào — chờ...
-            </p>
-          </div>
-        )
+        <DoiKhangView identity={identity} live={liveMatch} />
       ) : activeMode === "quyen" ? (
-        liveQuyen ? (
-          <QuyenView identity={identity} live={liveQuyen} />
-        ) : (
-          <div className={styles.noMatch}>
-            <p>
-              Bàn thư ký đang ở màn quyền cho {courtName}, nhưng chưa đưa ai
-              vào — chờ...
-            </p>
-          </div>
-        )
+        <QuyenView identity={identity} live={liveQuyen} />
       ) : (
         <div className={styles.noMatch}>
           <p>{courtName} chưa có gì đang diễn ra.</p>

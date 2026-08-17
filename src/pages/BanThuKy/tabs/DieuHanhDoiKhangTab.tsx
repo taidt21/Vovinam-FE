@@ -1,7 +1,18 @@
 /** @format */
 
 import { useEffect, useState } from "react";
-import { Minus, Plus, Flag, Play, Pause, SkipForward, Settings, RotateCcw, Award, Check } from "lucide-react";
+import {
+  Minus,
+  Plus,
+  Flag,
+  Play,
+  Pause,
+  SkipForward,
+  Settings,
+  RotateCcw,
+  Award,
+  Check,
+} from "lucide-react";
 import type { LiveMatchState, LyDoKetThuc, Match } from "../../../types";
 import {
   getMatchSnapshot,
@@ -167,7 +178,7 @@ export default function DieuHanhDoiKhangTab({
   return (
     <div className={styles.dieuHanh}>
       <div className={styles.matchMeta}>
-        {so && <span className={styles.matchNoTag}>#{so}</span>} {eventTen} ·{" "}
+        {so && <span className={styles.matchNoTag}>#{so}</span>} {eventTen} -{" "}
         {match.vong}
       </div>
 
@@ -183,9 +194,7 @@ export default function DieuHanhDoiKhangTab({
           ]
             .filter(Boolean)
             .join(" ")}>
-          {!daKetThuc && (
-            <LightBoxes presses={pressed.do.map((p) => p.diem)} />
-          )}
+          {!daKetThuc && <LightBoxes presses={pressed.do.map((p) => p.diem)} />}
           <div className={styles.cornerMain}>
             <span className={styles.cornerLabelDo}>ĐỎ</span>
             <AthleteAvatar

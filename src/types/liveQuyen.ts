@@ -17,6 +17,10 @@ export interface LiveQuyenState {
   performerLabel: string;
   performerSub: string;
   photoUrl: string | null;
+  // Chỉ có giá trị (khác null) với nội dung đồng đội — tên từng VĐV trong
+  // đội hình đang thi, để cả Bàn thư ký lẫn trọng tài biết đang chấm cho
+  // đúng những ai, không chỉ tên đội chung chung.
+  thanhVien: string[] | null;
   trangThai: QuyenTrangThai;
   coGioiHan: boolean;
   thoiGianGioiHanGiay: number | null;

@@ -3,6 +3,19 @@
 .scrollArea {
     overflow-x: auto;
     padding: $space-2 0;
+
+    // Lúc in, KHÔNG cắt theo khung cuộn màn hình — để trang tự giãn theo
+    // đúng kích thước thật của sơ đồ, tránh mất phần bị cuộn khuất.
+    @media print {
+        overflow: visible;
+        width: max-content;
+    }
+}
+
+.scrollAreaKhongCuon {
+    overflow: visible;
+    width: max-content;
+    padding: $space-2 0;
 }
 
 .canvas {

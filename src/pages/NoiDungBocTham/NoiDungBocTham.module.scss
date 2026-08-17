@@ -12,6 +12,30 @@
     margin-bottom: $space-5;
 }
 
+.exportBar {
+    display: flex;
+    gap: $space-2;
+    margin-bottom: $space-5;
+}
+
+.exportBtn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: $space-2 $space-3;
+    border: 1px solid $color-border;
+    border-radius: 8px;
+    background: $color-surface;
+    font-size: 13px;
+    font-weight: 600;
+    color: $color-text;
+    cursor: pointer;
+
+    &:hover {
+        background: $color-bg;
+    }
+}
+
 .tab,
 .tabActive {
     padding: $space-3 $space-4;

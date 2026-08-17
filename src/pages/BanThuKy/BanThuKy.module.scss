@@ -823,6 +823,7 @@
 .subInline {
     color: $color-text-muted;
     font-weight: 400;
+    font-size: 13px;
 }
 
 .dieuHanhQuyen {
@@ -876,6 +877,13 @@
     font-size: 13px;
     color: $color-text-muted;
     margin-top: 2px;
+}
+
+.quyenThanhVien {
+    font-size: 13px;
+    color: $color-text;
+    margin-top: 6px;
+    max-width: 320px;
 }
 
 .quyenJudgeList {

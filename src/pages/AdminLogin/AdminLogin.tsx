@@ -17,8 +17,11 @@ export default function AdminLogin() {
     setError(null);
     setLoading(true);
     try {
-      await adminLogin(username, password);
-      navigate("/dashboard/thiet-lap-giai", { replace: true });
+      const vaiTro = await adminLogin(username, password);
+      navigate(
+        vaiTro === "Admin" ? "/dashboard/thiet-lap-giai" : "/dashboard/ban-thu-ky",
+        { replace: true },
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Đăng nhập thất bại");
     } finally {

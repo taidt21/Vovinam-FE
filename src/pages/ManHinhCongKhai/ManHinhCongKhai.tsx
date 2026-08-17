@@ -152,7 +152,7 @@ function CourtScreen({ court }: { court: CourtBasic }) {
         {header}
         <div className={styles.matchMeta}>
           <span className={styles.eventInfo}>
-            {live.tenNoiDung} · {live.vong}
+            {live.tenNoiDung} - {live.vong}
           </span>
           <span className={styles.upcomingBadge}>SẮP THI ĐẤU</span>
         </div>
@@ -207,7 +207,7 @@ function CourtScreen({ court }: { court: CourtBasic }) {
 
       <div className={styles.matchMeta}>
         <span className={styles.eventInfo}>
-          {live.tenNoiDung} · {live.vong}
+          {live.tenNoiDung} - {live.vong}
         </span>
         {dangTrucTiep && (
           <span className={styles.liveBadge}>

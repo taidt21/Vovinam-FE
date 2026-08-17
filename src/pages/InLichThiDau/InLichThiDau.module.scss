@@ -1,0 +1,120 @@
+@use '../../styles/variables' as *;
+
+.page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: $space-5;
+}
+
+.hint {
+    color: $color-text-muted;
+    font-size: 14px;
+}
+
+.exportBtn {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    padding: $space-3 $space-5;
+    border: none;
+    border-radius: 8px;
+    background: $color-do;
+    color: white;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    margin-bottom: $space-3;
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+}
+
+.exportLoi {
+    font-size: 13px;
+    color: $color-danger;
+    margin-bottom: $space-3;
+}
+
+.mainTitle {
+    font-size: 24px;
+    font-weight: 800;
+    margin: $space-4 0 $space-2;
+}
+
+.loaiSection {
+    margin-bottom: $space-6;
+}
+
+.loaiTitle {
+    font-size: 18px;
+    font-weight: 800;
+    border-bottom: 2px solid $color-text;
+    padding-bottom: $space-2;
+    margin-bottom: $space-4;
+}
+
+.ntBlock {
+    margin-bottom: $space-5;
+}
+
+.ntTitle {
+    font-size: 14px;
+    font-weight: 700;
+    color: $color-text-muted;
+    text-transform: uppercase;
+    margin: 0 0 $space-2;
+}
+
+.matchTable {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+
+    td {
+        padding: 6px 8px;
+        border-bottom: 1px solid $color-border;
+        vertical-align: top;
+    }
+}
+
+.colNo {
+    font-family: $font-mono;
+    font-weight: 700;
+    color: $color-text-muted;
+    width: 32px;
+}
+
+.colVong {
+    color: $color-text-muted;
+    width: 60px;
+}
+
+.colEvent {
+    color: $color-text-muted;
+    width: 160px;
+}
+
+.colDo {
+    text-align: right;
+    font-weight: 600;
+}
+
+.colXanh {
+    font-weight: 600;
+}
+
+.colVs {
+    color: $color-text-muted;
+    text-align: center;
+    width: 24px;
+}
+
+.colQuyenLabel {
+    font-weight: 600;
+}
+
+.colQuyenSub {
+    color: $color-text-muted;
+}

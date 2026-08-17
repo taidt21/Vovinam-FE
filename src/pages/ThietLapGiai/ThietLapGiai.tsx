@@ -484,15 +484,15 @@ function EventGroupList({
               <div className={styles.eventInfo}>
                 <span className={styles.eventName}>{ev.ten}</span>
                 <span className={styles.eventMeta}>
-                  {formatEventNhomTuoi(ev.nhomTuoi)} ·{" "}
+                  {formatEventNhomTuoi(ev.nhomTuoi)} -{" "}
                   {ev.gioiTinh === "nam"
                     ? "Nam"
                     : ev.gioiTinh === "nu"
                       ? "Nữ"
                       : "Hỗn hợp"}{" "}
-                  · {ev.hinhThucThi === "doi" ? "Đội" : "Cá nhân"}
-                  {ev.hangCan ? ` · ${ev.hangCan}kg` : ""}
-                  {ev.thoiGianBaiGiay ? ` · ${ev.thoiGianBaiGiay}s` : ""}
+                  - {ev.hinhThucThi === "doi" ? "Đội" : "Cá nhân"}
+                  {ev.hangCan ? ` - ${ev.hangCan}kg` : ""}
+                  {ev.thoiGianBaiGiay ? ` - ${ev.thoiGianBaiGiay}s` : ""}
                 </span>
               </div>
               <div className={styles.eventRowActions}>

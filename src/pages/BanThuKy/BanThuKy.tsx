@@ -22,6 +22,10 @@ import {
 } from "../../lib/api/quyenJudgeScoreApi";
 import { fetchTrongTai, type TrongTaiWire } from "../../lib/api/trongTaiApi";
 import {
+  fetchQuyenLuotHoanThanh,
+  type QuyenLuotHoanThanhWire,
+} from "../../lib/api/quyenLuotApi";
+import {
   clearMatchState,
   getMatchSnapshot,
   publishMatchState,
@@ -29,10 +33,19 @@ import {
 import {
   getQuyenSnapshot,
   publishQuyenState,
+  subscribeQuyenState,
 } from "../../lib/realtime/liveQuyenStore";
-import { publishActiveMode } from "../../lib/realtime/activeModeStore";
+import {
+  getActiveMode,
+  publishActiveMode,
+} from "../../lib/realtime/activeModeStore";
 
-import { TABS, type TabId, makeLiveState } from "./helpers";
+import {
+  TABS,
+  type TabId,
+  makeLiveState,
+  scoreMatchesQuyenItem,
+} from "./helpers";
 import type { QuyenItem } from "./types";
 import DoiKhangScheduleTab from "./tabs/DoiKhangScheduleTab";
 import QuyenScheduleTab from "./tabs/QuyenScheduleTab";
@@ -76,6 +89,12 @@ export default function BanThuKy() {
   const [quyenJudgeScores, setQuyenJudgeScores] = useState<
     QuyenJudgeScoreWire[]
   >([]);
+  // Lượt quyền nào đã kết thúc thật (kể cả bị loại, chưa đủ 5 điểm) — độc
+  // lập với việc đếm điểm, vì đếm điểm không nhận ra được lượt bị loại
+  // giữa chừng theo đúng luật thi đấu.
+  const [quyenLuotHoanThanh, setQuyenLuotHoanThanh] = useState<
+    QuyenLuotHoanThanhWire[]
+  >([]);
   const [trongTaiList, setTrongTaiList] = useState<TrongTaiWire[]>([]);
   const refreshTrongTai = () =>
     fetchTrongTai()
@@ -99,6 +118,7 @@ export default function BanThuKy() {
       apiGet<PerformanceOrderWire[]>("/performance-orders"),
       fetchQuyenJudgeScores(),
       fetchTrongTai(),
+      fetchQuyenLuotHoanThanh(),
     ])
       .then(
         ([
@@ -109,6 +129,7 @@ export default function BanThuKy() {
           ordersData,
           quyenJudgeScoresData,
           trongTaiData,
+          quyenLuotHoanThanhData,
         ]) => {
           setEvents(eventsData);
           setAthletes(athletesData);
@@ -171,6 +192,7 @@ export default function BanThuKy() {
           setSquadOrderByEvent(byEventSquadOrder);
           setQuyenJudgeScores(quyenJudgeScoresData);
           setTrongTaiList(trongTaiData);
+          setQuyenLuotHoanThanh(quyenLuotHoanThanhData);
         },
       )
       .catch(() =>
@@ -182,6 +204,9 @@ export default function BanThuKy() {
     const id = setInterval(() => {
       fetchQuyenJudgeScores()
         .then(setQuyenJudgeScores)
+        .catch(() => {});
+      fetchQuyenLuotHoanThanh()
+        .then(setQuyenLuotHoanThanh)
         .catch(() => {});
     }, 3000);
     return () => clearInterval(id);
@@ -202,12 +227,26 @@ export default function BanThuKy() {
     return first ? athleteTeam(first.id) : "—";
   };
 
+  // Theo dõi CỤC BỘ chế độ vừa xác nhận cho sân hiện tại — để lần gọi kế
+  // tiếp (VD: bấm tab rồi effect tự động gán trận/lượt chạy ngay sau đó)
+  // không hỏi lại cho ĐÚNG chế độ vừa mới xác nhận, tránh hỏi 2 lần cho
+  // cùng 1 hành động. Đồng bộ lại mỗi khi đổi sân đang thao tác.
+  const [activeModeLocal, setActiveModeLocal] = useState<
+    "doi_khang" | "quyen" | null
+  >(() => getActiveMode(currentCourtId));
+  useEffect(() => {
+    setActiveModeLocal(getActiveMode(currentCourtId));
+  }, [currentCourtId]);
+
   // Dùng chung cho mọi cách BTK có thể chuyển 1 sân sang đối kháng/quyền —
   // bấm tab, hoặc bấm Bắt đầu thẳng từ lịch thi đấu. Hỏi trước nếu sân
   // đang có lượt SỐNG của loại kia (chuyển lỡ tay không nên âm thầm cắt
   // ngang); trả về false nếu người dùng huỷ, để nơi gọi dừng lại giữa
   // chừng thay vì tiếp tục.
   const chuyenActiveMode = (courtId: string, mode: "doi_khang" | "quyen") => {
+    // Đã đúng chế độ này rồi (vừa xác nhận/không có gì cần hỏi ngay
+    // trước đó) — không hỏi lại.
+    if (activeModeLocal === mode) return true;
     const coLuotKiaDangSong =
       mode === "doi_khang"
         ? getQuyenSnapshot(courtId) !== null
@@ -224,7 +263,24 @@ export default function BanThuKy() {
         return false;
     }
     publishActiveMode(courtId, mode);
+    setActiveModeLocal(mode);
     return true;
+  };
+
+  // Bấm tab điều hành = xin xác nhận NGAY tại đây nếu có xung đột — Huỷ
+  // phải chặn được thật (không đổi tab, không báo tín hiệu gì), nên việc
+  // hỏi phải xảy ra TRƯỚC khi tab đổi, không phải sau.
+  const handleTabClick = (id: TabId) => {
+    if (id === "dieu_hanh_dk" || id === "dieu_hanh_quyen") {
+      if (
+        !chuyenActiveMode(
+          currentCourtId,
+          id === "dieu_hanh_dk" ? "doi_khang" : "quyen",
+        )
+      )
+        return;
+    }
+    setTab(id);
   };
 
   /* ---------- Đối kháng ---------- */
@@ -509,6 +565,7 @@ export default function BanThuKy() {
               label: s.ten,
               sub: squadTeam(s),
               isTeam: true,
+              thanhVien: s.athleteIds.map((id) => athleteName(id) ?? "—"),
             }),
           );
         }
@@ -518,7 +575,7 @@ export default function BanThuKy() {
             athleteId: a.id,
             teamId: null,
             label: a.hoTen,
-            sub: `${a.namSinh} · ${athleteTeam(a.id)}`,
+            sub: `${a.namSinh} - ${athleteTeam(a.id)}`,
             isTeam: false,
           }),
         );
@@ -543,6 +600,7 @@ export default function BanThuKy() {
       performerLabel: item.label,
       performerSub: item.sub,
       photoUrl,
+      thanhVien: item.thanhVien ?? null,
       trangThai: "cho_bat_dau",
       coGioiHan,
       thoiGianGioiHanGiay: item.event.thoiGianBaiGiay ?? null,
@@ -566,6 +624,47 @@ export default function BanThuKy() {
     if (next) openIntoCourt(next.event.id, next.match.id);
   }, [tab, activeOnMyCourt, numbered]);
 
+  // "Đã xong" giờ theo đúng dữ liệu lưu thật (quyenLuotHoanThanh) — không
+  // chỉ suy từ đủ 5/5 điểm nữa, vì luật cho phép 1 lượt kết thúc ngay mà
+  // KHÔNG cần đủ điểm (rớt vũ khí, té ngã, dừng bài rõ rệt). Vẫn giữ thêm
+  // điều kiện đủ 5 điểm làm dự phòng, phòng khi việc đánh dấu bị lỡ do
+  // mất mạng đúng lúc bấm Xong.
+  const daHoanThanhQuyen = (item: QuyenItem) =>
+    quyenLuotHoanThanh.some(
+      (x) =>
+        x.eventId === item.event.id &&
+        x.athleteId === item.athleteId &&
+        x.teamId === item.teamId,
+    ) ||
+    quyenJudgeScores.filter((s) => scoreMatchesQuyenItem(s, item)).length >= 5;
+
+  // Trước đây effect dưới chỉ chạy lại khi 1 trong các dependency liệt kê
+  // đổi — mà việc XOÁ state sống (bấm "Xong") tự nó không đổi cái nào
+  // trong đó, nên phải đợi tới lần thăm dò 3 giây kế tiếp mới tình cờ
+  // chạy lại. Theo dõi thẳng state sống của đúng sân này để chạy lại
+  // NGAY khi nó bị xoá, không cần đợi thăm dò.
+  const [quyenLiveTick, setQuyenLiveTick] = useState(0);
+  useEffect(() => {
+    if (!currentCourtId) return;
+    return subscribeQuyenState(currentCourtId, () =>
+      setQuyenLiveTick((n) => n + 1),
+    );
+  }, [currentCourtId]);
+
+  useEffect(() => {
+    if (tab !== "dieu_hanh_quyen" || !currentCourtId) return;
+    if (getQuyenSnapshot(currentCourtId)) return;
+    const next = quyenNumbered.find((item) => !daHoanThanhQuyen(item));
+    if (next) startQuyenPerformance(next);
+  }, [
+    tab,
+    currentCourtId,
+    quyenNumbered,
+    quyenJudgeScores,
+    quyenLuotHoanThanh,
+    quyenLiveTick,
+  ]);
+
   if (loading || loadingCourts)
     return (
       <div className={styles.page}>
@@ -581,20 +680,6 @@ export default function BanThuKy() {
 
   const courtName = courts.find((c) => c.id === currentCourtId)?.ten ?? "";
 
-  // Chuyển sang 1 trong 2 tab điều hành = báo cho màn hình trọng tài biết
-  // sân này giờ nên hiện gì.
-  const handleTabClick = (id: TabId) => {
-    if (id === "dieu_hanh_dk" || id === "dieu_hanh_quyen") {
-      if (
-        !chuyenActiveMode(
-          currentCourtId,
-          id === "dieu_hanh_dk" ? "doi_khang" : "quyen",
-        )
-      )
-        return;
-    }
-    setTab(id);
-  };
   // Mở màn hình công khai, tự đặt vị trí bắt đầu ngay tại mép phải màn
   // hình chính đang dùng — rơi đúng vào màn hình mở rộng liền kề (đúng
   // cách Windows sắp xếp mặc định khi cắm thêm màn hình, không cần biết
@@ -665,6 +750,7 @@ export default function BanThuKy() {
         <QuyenScheduleTab
           items={quyenNumbered}
           quyenJudgeScores={quyenJudgeScores}
+          quyenLuotHoanThanh={quyenLuotHoanThanh}
           courtName={courtName}
           onStart={startQuyenPerformance}
         />
@@ -697,6 +783,9 @@ export default function BanThuKy() {
           courtId={currentCourtId}
           quyenJudgeScores={quyenJudgeScores}
           trongTaiList={trongTaiList}
+          onLuotXong={(marked) =>
+            setQuyenLuotHoanThanh((prev) => [...prev, marked])
+          }
         />
       )}
 

@@ -152,10 +152,25 @@ export function groupByRound(matches: Match[]): Match[][] {
  * dùng chung 1 nguồn cho cả tab "Lịch thi đấu" lẫn sơ đồ nhánh đấu từng nội
  * dung, để số trận không bao giờ lệch nhau giữa 2 nơi.
  *
- * Sắp theo nhóm tuổi trước, rồi theo khoảng cách tới chung kết GIẢM DẦN
- * (vòng xa chung kết nhất trước) — nhờ vậy trận "nguồn" (nuôi người thắng
- * vào trận sau) LUÔN được đánh số trước trận nó nuôi vào, dù có xen kẽ
- * nhiều nội dung khác nhau ở giữa.
+ * TỪNG NHÓM TUỔI ĐI HẾT TRỌN VẸN rồi mới sang nhóm kế — đúng 4 tầng ưu
+ * tiên, theo thứ tự:
+ *   1. Nhóm tuổi nhỏ trước — hết SẠCH mọi trận của 1 nhóm tuổi (mọi vòng,
+ *      mọi hạng cân) rồi mới bắt đầu nhóm tuổi kế tiếp.
+ *   2. Cùng nhóm tuổi thì layer nhỏ trước (0 = vòng ngoài cùng của ĐÚNG
+ *      bracket đó — TÍNH RIÊNG theo từng bracket, không so
+ *      distanceFromFinal tuyệt đối giữa các bracket khác cỡ, để tứ kết
+ *      của 1 bracket 8 người vẫn được coi ngang vòng ngoài cùng như vòng
+ *      1/16 của bracket 32 người) — tức 32 → 16 → tứ kết → bán kết →
+ *      chung kết theo đúng thứ tự tự nhiên.
+ *   3. Cùng nhóm tuổi + cùng layer thì hạng cân nhỏ trước (so bằng số
+ *      hangCan, không phải thứ tự khai báo).
+ *   4. Cùng cả 3 tầng trên (nhiều trận trong đúng 1 hạng cân, cùng layer)
+ *      thì giữ nguyên đúng thứ tự trận đã có sẵn (sort ổn định, không
+ *      thêm khoá sắp xếp nào khác).
+ *
+ * Ràng buộc duy nhất khi chọn trận kế tiếp: 2 trận nuôi vào nó (nếu có)
+ * phải đã được xếp số trước — đảm bảo trận nguồn luôn có số nhỏ hơn trận
+ * nó nuôi vào. Không xét thời gian nghỉ ở bước này.
  */
 export interface NumberedMatch {
   event: CompetitionEvent;
@@ -167,21 +182,63 @@ export function numberDoiKhangMatches(
   events: CompetitionEvent[],
   bracketsByEvent: Record<string, Match[]>,
 ): NumberedMatch[] {
-  const items = events
+  interface Item {
+    event: CompetitionEvent;
+    match: Match;
+    layer: number;
+  }
+
+  const allItems: Item[] = events
     .filter((e) => e.loai === 'doi_khang')
     .flatMap((e) => {
       const matches = bracketsByEvent[e.id];
-      if (!matches) return [];
+      if (!matches || matches.length === 0) return [];
+      const maxDist = Math.max(...matches.map((m) => distanceFromFinal(m, matches)));
       return matches.map((m) => ({
         event: e,
         match: m,
-        distance: distanceFromFinal(m, matches),
+        layer: maxDist - distanceFromFinal(m, matches),
       }));
-    })
-    .sort((a, b) =>
-      a.event.nhomTuoi !== b.event.nhomTuoi ? compareNhomTuoi(a.event.nhomTuoi, b.event.nhomTuoi) : b.distance - a.distance,
-    );
-  return items.map((x, i) => ({ event: x.event, match: x.match, so: i + 1 }));
+    });
+
+  const byId = new Map(allItems.map((it) => [it.match.id, it]));
+  const feedersByTarget = new Map<string, Item[]>();
+  for (const it of allItems) {
+    if (!it.match.nextMatchId) continue;
+    if (!feedersByTarget.has(it.match.nextMatchId)) feedersByTarget.set(it.match.nextMatchId, []);
+    feedersByTarget.get(it.match.nextMatchId)!.push(it);
+  }
+
+  const scheduledIds = new Set<string>();
+  const remaining = new Set(allItems.map((it) => it.match.id));
+  const result: Item[] = [];
+
+  // Chỉ 1 điều kiện: cả 2 trận nuôi vào nó (nếu có) đã được xếp chưa —
+  // không xét gì thêm về thời gian.
+  const duDieuKienNuoi = (it: Item) =>
+    (feedersByTarget.get(it.match.id) ?? []).every((f) => scheduledIds.has(f.match.id));
+
+  const sapUuTien = (a: Item, b: Item) =>
+    compareNhomTuoi(a.event.nhomTuoi, b.event.nhomTuoi) ||
+    a.layer - b.layer ||
+    (a.event.hangCan ?? 0) - (b.event.hangCan ?? 0);
+  // Số thứ tự trận (khi 3 tầng trên bằng nhau hết) không cần so gì thêm ở
+  // đây — sort ổn định nên tự giữ nguyên đúng thứ tự trận đã có sẵn trong
+  // bracketsByEvent[eventId] (thứ tự backend trả về).
+
+  while (remaining.size > 0) {
+    // [...remaining] giữ nguyên thứ tự đưa vào ban đầu (thứ tự events ×
+    // thứ tự trận trong bracket) — sort ổn định nên khi layer+nhóm tuổi
+    // bằng nhau, thứ tự hạng cân hiện có không đổi.
+    const pool = [...remaining].map((id) => byId.get(id)!).filter(duDieuKienNuoi);
+    pool.sort(sapUuTien);
+    const best = pool[0];
+    scheduledIds.add(best.match.id);
+    result.push(best);
+    remaining.delete(best.match.id);
+  }
+
+  return result.map((it, i) => ({ event: it.event, match: it.match, so: i + 1 }));
 }
 
 /**

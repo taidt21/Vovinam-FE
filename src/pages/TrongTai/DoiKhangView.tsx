@@ -21,7 +21,7 @@ export default function DoiKhangView({
   live,
 }: {
   identity: Identity;
-  live: LiveMatchState;
+  live: LiveMatchState | null;
 }) {
   const { trongTaiId, tenTrongTai, courtId } = identity;
   const [, setTick] = useState(0);
@@ -49,8 +49,8 @@ export default function DoiKhangView({
     return () => clearInterval(id);
   }, []);
 
-  const dangThi = live.trangThai === "dang_thi";
-  const remaining = tinhThoiGianConLai(live);
+  const dangThi = live?.trangThai === "dang_thi";
+  const remaining = live ? tinhThoiGianConLai(live) : 0;
   const hetGio = dangThi && remaining <= 0;
   const coTheBamDen = dangThi && !hetGio;
 
@@ -65,29 +65,42 @@ export default function DoiKhangView({
     <>
       <div className={styles.matchInfo}>
         <div className={styles.eventName}>
-          {live.tenNoiDung} · {live.vong}
+          {live
+            ? `${live.tenNoiDung} - ${live.vong}`
+            : "Chờ Bàn thư ký gán trận"}
         </div>
         <div className={styles.namesRow}>
-          <span className={styles.nameDo}>{live.tenDo}</span>
+          <span className={styles.nameDo}>{live?.tenDo ?? "—"}</span>
           <span className={styles.vs}>vs</span>
-          <span className={styles.nameXanh}>{live.tenXanh}</span>
+          <span className={styles.nameXanh}>{live?.tenXanh ?? "—"}</span>
         </div>
         <div className={styles.clockRow}>
           <span>
-            Hiệp {live.hiepHienTai}/{live.tongSoHiep}
+            {live ? `Hiệp ${live.hiepHienTai}/${live.tongSoHiep}` : "—"}
           </span>
-          <span className={styles.clock}>{formatMmSs(remaining)}</span>
+          <span className={styles.clock}>
+            {live ? formatMmSs(remaining) : "00:00"}
+          </span>
         </div>
-        {!dangThi && (
+        {!live ? (
           <div className={styles.notPlayingNote}>
-            Trận chưa bắt đầu hoặc đang tạm dừng — chưa bấm đèn được lúc này.
+            Chưa có trận nào được gán vào sân này — chưa bấm đèn được lúc này.
           </div>
-        )}
-        {hetGio && (
-          <div className={styles.notPlayingNote}>
-            Đã hết giờ hiệp đấu — chờ thư ký xác nhận hiệp mới, chưa bấm đèn
-            được lúc này.
-          </div>
+        ) : (
+          <>
+            {!dangThi && (
+              <div className={styles.notPlayingNote}>
+                Trận chưa bắt đầu hoặc đang tạm dừng — chưa bấm đèn được lúc
+                này.
+              </div>
+            )}
+            {hetGio && (
+              <div className={styles.notPlayingNote}>
+                Đã hết giờ hiệp đấu — chờ thư ký xác nhận hiệp mới, chưa bấm đèn
+                được lúc này.
+              </div>
+            )}
+          </>
         )}
       </div>
 
