@@ -17,6 +17,7 @@ import {
   compareNhomTuoi,
 } from "../../lib/utils/nhomTuoi";
 import ImportEventsExcelModal from "../../components/ImportEventsExcelModal/ImportEventsExcelModal";
+import BanThuKyAccountsSection from "../../components/BanThuKyAccountsSection/BanThuKyAccountsSection";
 import type { EventImportRow } from "../../lib/excel/eventExcelImport";
 import styles from "./ThietLapGiai.module.scss";
 
@@ -33,7 +34,7 @@ const EMPTY_EVENT_FORM: EventFormState = {
 
 export default function ThietLapGiai() {
   const [tournament, setTournament] = useState<Tournament | null>(null);
-  const [form, setForm] = useState({ ten: "", soSan: 1 });
+  const [form, setForm] = useState({ ten: "", soSan: 1, choPhepHiepPhu: false });
   const [savingTournament, setSavingTournament] = useState(false);
 
   const [events, setEvents] = useState<CompetitionEvent[]>([]);
@@ -50,7 +51,7 @@ export default function ThietLapGiai() {
     apiGet<Tournament>("/tournament")
       .then((t) => {
         setTournament(t);
-        setForm({ ten: t.ten, soSan: t.soSan });
+        setForm({ ten: t.ten, soSan: t.soSan, choPhepHiepPhu: t.choPhepHiepPhu });
       })
       .catch(() =>
         setLoadError(
@@ -222,6 +223,25 @@ export default function ThietLapGiai() {
           </label>
         </div>
 
+        <label className={styles.field}>
+          <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <input
+              type="checkbox"
+              checked={form.choPhepHiepPhu}
+              onChange={(e) =>
+                setForm({ ...form, choPhepHiepPhu: e.target.checked })
+              }
+            />
+            Cho phép thi hiệp phụ (điểm vàng) khi hoà điểm
+          </span>
+          <span className={styles.hint}>
+            Tích: hoà lúc hết giờ hiệp cuối sẽ thi thêm 1 hiệp phụ, dài
+            bằng hiệp chính — ai ghi điểm trước thắng ngay. Không tích:
+            hoà thì Bàn thư ký tự chọn người thắng theo bốc thăm hoặc cân
+            hạng cân tại thời điểm thi đấu.
+          </span>
+        </label>
+
         <div className={styles.actions}>
           <button
             type="submit"
@@ -236,6 +256,8 @@ export default function ThietLapGiai() {
           </p>
         )}
       </form>
+
+      <BanThuKyAccountsSection soSan={form.soSan} />
 
       <section className={styles.card}>
         <div className={styles.eventsHead}>

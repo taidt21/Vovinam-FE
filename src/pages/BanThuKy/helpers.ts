@@ -7,7 +7,9 @@ import type { QuyenJudgeScoreWire } from "../../lib/api/quyenJudgeScoreApi";
 
 export const LY_DO_OPTIONS: { value: LyDoKetThuc; label: string }[] = [
   { value: "thang_diem", label: "Thắng điểm" },
+  { value: "diem_vang", label: "Điểm vàng" },
   { value: "boc_tham", label: "Bốc thăm" },
+  { value: "can_hang_can", label: "Cân hạng cân" },
   { value: "bo_cuoc", label: "Bỏ cuộc" },
 ];
 

@@ -1,103 +1,113 @@
 /** @format */
 
+import { Suspense, lazy } from "react";
 import { Routes, Route, Navigate } from "react-router";
 import DashboardLayout from "./layouts/DashboardLayout/DashboardLayout";
-import ThietLapGiai from "./pages/ThietLapGiai/ThietLapGiai";
-import DoanVaVDV from "./pages/DoanVaVDV/DoanVaVDV";
-import NoiDungBocTham from "./pages/NoiDungBocTham/NoiDungBocTham";
-import InSoDoDoiKhang from "./pages/InSoDoDoiKhang/InSoDoDoiKhang";
-import InLichThiDauDoiKhang from "./pages/InLichThiDauDoiKhang/InLichThiDauDoiKhang";
-import InLichThiDauQuyen from "./pages/InLichThiDauQuyen/InLichThiDauQuyen";
-import BanThuKy from "./pages/BanThuKy/BanThuKy";
-import KetQua from "./pages/KetQua/KetQua";
-import TrongTai from "./pages/TrongTai/TrongTai";
-import AdminLogin from "./pages/AdminLogin/AdminLogin";
 import RequireAdmin from "./components/RequireAdmin/RequireAdmin";
 import RequireRole from "./components/RequireRole/RequireRole";
 import { laAdmin } from "./lib/api/adminAuth";
-import ManHinhCongKhai from "./pages/ManHinhCongKhai/ManHinhCongKhai";
-import DangNhap from "./pages/Portal/DangNhap";
-import DangKy from "./pages/Portal/DangKy";
-import PortalLayout from "./pages/Portal/PortalLayout";
-import TongQuan from "./pages/Portal/TongQuan";
-import VdvCuaDoan from "./pages/Portal/VdvCuaDoan";
+
+// Lazy-load từng trang theo route — trước đây import thẳng nên
+// /trong-tai và /man-hinh-cong-khai (mở trên điện thoại trọng tài, máy
+// thường yếu hơn) phải tải + parse chung 1 bundle với toàn bộ trang
+// admin, kéo theo xlsx/jsPDF/html2canvas dù không bao giờ dùng tới.
+const ThietLapGiai = lazy(() => import("./pages/ThietLapGiai/ThietLapGiai"));
+const DoanVaVDV = lazy(() => import("./pages/DoanVaVDV/DoanVaVDV"));
+const NoiDungBocTham = lazy(
+  () => import("./pages/NoiDungBocTham/NoiDungBocTham"),
+);
+const InSoDoDoiKhang = lazy(
+  () => import("./pages/InSoDoDoiKhang/InSoDoDoiKhang"),
+);
+const InLichThiDauDoiKhang = lazy(
+  () => import("./pages/InLichThiDauDoiKhang/InLichThiDauDoiKhang"),
+);
+const InLichThiDauQuyen = lazy(
+  () => import("./pages/InLichThiDauQuyen/InLichThiDauQuyen"),
+);
+const BanThuKy = lazy(() => import("./pages/BanThuKy/BanThuKy"));
+const KetQua = lazy(() => import("./pages/KetQua/KetQua"));
+const TrongTai = lazy(() => import("./pages/TrongTai/TrongTai"));
+const AdminLogin = lazy(() => import("./pages/AdminLogin/AdminLogin"));
+const ManHinhCongKhai = lazy(
+  () => import("./pages/ManHinhCongKhai/ManHinhCongKhai"),
+);
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/admin-dang-nhap" element={<AdminLogin />} />
-      <Route
-        path="/dashboard"
-        element={
-          <RequireAdmin>
-            <DashboardLayout />
-          </RequireAdmin>
-        }>
-        {/* Về đúng trang chính theo vai trò — Admin vào Thiết lập giải như
-            trước, BanThuKy (không có quyền vào đó) về thẳng Bàn thư ký. */}
+    <Suspense fallback={<div style={{ padding: 24 }}>Đang tải...</div>}>
+      <Routes>
+        <Route path="/admin-dang-nhap" element={<AdminLogin />} />
         <Route
-          index
-          element={<Navigate to={laAdmin() ? "thiet-lap-giai" : "ban-thu-ky"} replace />}
-        />
-        <Route
-          path="thiet-lap-giai"
+          path="/dashboard"
           element={
-            <RequireRole role="Admin">
-              <ThietLapGiai />
-            </RequireRole>
+            <RequireAdmin>
+              <DashboardLayout />
+            </RequireAdmin>
+          }>
+          {/* Về đúng trang chính theo vai trò — Admin vào Thiết lập giải như
+            trước, BanThuKy (không có quyền vào đó) về thẳng Bàn thư ký. */}
+          <Route
+            index
+            element={
+              <Navigate
+                to={laAdmin() ? "thiet-lap-giai" : "ban-thu-ky"}
+                replace
+              />
+            }
+          />
+          <Route
+            path="thiet-lap-giai"
+            element={
+              <RequireRole role="Admin">
+                <ThietLapGiai />
+              </RequireRole>
+            }
+          />
+          <Route path="doan-vdv" element={<DoanVaVDV />} />
+          <Route path="noi-dung-boc-tham" element={<NoiDungBocTham />} />
+          <Route path="ban-thu-ky" element={<BanThuKy />} />
+          <Route path="ket-qua" element={<KetQua />} />
+        </Route>
+        {/* Trang in/xuất file — KHÔNG lồng trong DashboardLayout, để khi
+          window.print() chỉ in đúng nội dung, không dính sidebar/header. */}
+        <Route
+          path="/dashboard/in-so-do-doi-khang"
+          element={
+            <RequireAdmin>
+              <InSoDoDoiKhang />
+            </RequireAdmin>
           }
         />
-        <Route path="doan-vdv" element={<DoanVaVDV />} />
-        <Route path="noi-dung-boc-tham" element={<NoiDungBocTham />} />
-        <Route path="ban-thu-ky" element={<BanThuKy />} />
-        <Route path="ket-qua" element={<KetQua />} />
-      </Route>
-      {/* Trang in/xuất file — KHÔNG lồng trong DashboardLayout, để khi
-          window.print() chỉ in đúng nội dung, không dính sidebar/header. */}
-      <Route
-        path="/dashboard/in-so-do-doi-khang"
-        element={
-          <RequireAdmin>
-            <InSoDoDoiKhang />
-          </RequireAdmin>
-        }
-      />
-      <Route
-        path="/dashboard/in-lich-thi-dau-quyen"
-        element={
-          <RequireAdmin>
-            <InLichThiDauQuyen />
-          </RequireAdmin>
-        }
-      />
-      <Route
-        path="/dashboard/in-lich-thi-dau-doi-khang"
-        element={
-          <RequireAdmin>
-            <InLichThiDauDoiKhang />
-          </RequireAdmin>
-        }
-      />
-      <Route path="/trong-tai" element={<TrongTai />} />
-      <Route
-        path="/trong-tai-doi-khang"
-        element={<Navigate to="/trong-tai" replace />}
-      />
-      <Route
-        path="/trong-tai-quyen"
-        element={<Navigate to="/trong-tai" replace />}
-      />
-      <Route path="/man-hinh-cong-khai" element={<ManHinhCongKhai />} />
+        <Route
+          path="/dashboard/in-lich-thi-dau-quyen"
+          element={
+            <RequireAdmin>
+              <InLichThiDauQuyen />
+            </RequireAdmin>
+          }
+        />
+        <Route
+          path="/dashboard/in-lich-thi-dau-doi-khang"
+          element={
+            <RequireAdmin>
+              <InLichThiDauDoiKhang />
+            </RequireAdmin>
+          }
+        />
+        <Route path="/trong-tai" element={<TrongTai />} />
+        <Route
+          path="/trong-tai-doi-khang"
+          element={<Navigate to="/trong-tai" replace />}
+        />
+        <Route
+          path="/trong-tai-quyen"
+          element={<Navigate to="/trong-tai" replace />}
+        />
+        <Route path="/man-hinh-cong-khai" element={<ManHinhCongKhai />} />
 
-      <Route path="/dang-ky" element={<DangNhap />} />
-      <Route path="/dang-ky/tao-tai-khoan" element={<DangKy />} />
-      <Route path="/dang-ky/quan-ly" element={<PortalLayout />}>
-        <Route index element={<Navigate to="tong-quan" replace />} />
-        <Route path="tong-quan" element={<TongQuan />} />
-        <Route path="vdv" element={<VdvCuaDoan />} />
-      </Route>
-
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
-    </Routes>
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      </Routes>
+    </Suspense>
   );
 }

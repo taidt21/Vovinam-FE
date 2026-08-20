@@ -17,7 +17,7 @@ export default function AdminLogin() {
     setError(null);
     setLoading(true);
     try {
-      const vaiTro = await adminLogin(username, password);
+      const { vaiTro } = await adminLogin(username, password);
       navigate(
         vaiTro === "Admin" ? "/dashboard/thiet-lap-giai" : "/dashboard/ban-thu-ky",
         { replace: true },

@@ -13,6 +13,13 @@ const ROW_HEIGHT = 84;
 const CORNER_R = 12;
 const LABEL_H = 32;
 
+// Vòng 32 và Vòng 16 vẫn là hai vòng riêng trong dữ liệu/bracket,
+// chỉ gộp NHÃN HIỂN THỊ để người xem dễ hiểu hơn.
+function nhanVong(vong: string | undefined): string {
+  if (!vong) return "";
+  return vong === "Vòng 32" || vong === "Vòng 16" ? "Vòng loại" : vong;
+}
+
 interface BracketViewProps {
   matches: Match[];
   athletes: Athlete[];
@@ -156,7 +163,7 @@ export default function BracketView({
             key={roundMatches[0]?.vong ?? r}
             className={styles.roundLabel}
             style={{ left: r * (CARD_W + ROUND_GAP), width: CARD_W }}>
-            {roundMatches[0]?.vong}
+            {nhanVong(roundMatches[0]?.vong)}
           </div>
         ))}
         <svg

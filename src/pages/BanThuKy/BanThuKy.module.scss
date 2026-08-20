@@ -29,6 +29,17 @@
     cursor: pointer;
 }
 
+// Tài khoản đã được gán sân cố định — hiện y hệt kiểu dáng nhưng không
+// phải ô chọn, không cần con trỏ dạng bấm được.
+.courtLabel {
+    font-size: 13px;
+    font-weight: 600;
+    color: $color-do;
+    background: rgba($color-do, 0.08);
+    padding: $space-1 $space-3;
+    border-radius: 999px;
+}
+
 .topbarActions {
     display: flex;
     align-items: center;

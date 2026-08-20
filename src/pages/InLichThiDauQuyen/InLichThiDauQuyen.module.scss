@@ -1,7 +1,7 @@
-@use '../../styles/variables' as *;
+@use '../../styles/variables'as *;
 
 .page {
-    max-width: 900px;
+    max-width: 1120px;
     margin: 0 auto;
     padding: $space-5;
 }
@@ -9,6 +9,7 @@
 .hint {
     color: $color-text-muted;
     font-size: 14px;
+    line-height: 1.55;
 }
 
 .exportBtn {
@@ -17,13 +18,13 @@
     gap: $space-2;
     padding: $space-3 $space-5;
     border: none;
-    border-radius: 8px;
+    border-radius: 9px;
+    margin-bottom: $space-3;
     background: $color-do;
     color: white;
-    font-weight: 700;
     font-size: 14px;
+    font-weight: 700;
     cursor: pointer;
-    margin-bottom: $space-3;
 
     &:disabled {
         opacity: 0.6;
@@ -32,89 +33,272 @@
 }
 
 .exportLoi {
-    font-size: 13px;
-    color: $color-danger;
     margin-bottom: $space-3;
+    color: $color-danger;
+    font-size: 13px;
 }
 
 .mainTitle {
-    font-size: 24px;
-    font-weight: 800;
     margin: $space-4 0 $space-2;
-}
-
-.loaiSection {
-    margin-bottom: $space-6;
-}
-
-.loaiTitle {
-    font-size: 18px;
-    font-weight: 800;
-    border-bottom: 2px solid $color-text;
-    padding-bottom: $space-2;
-    margin-bottom: $space-4;
+    color: $color-text;
+    font-size: clamp(26px, 3vw, 34px);
+    font-weight: 900;
+    line-height: 1.2;
+    letter-spacing: -0.025em;
 }
 
 .ntBlock {
-    margin-bottom: $space-5;
+    margin: $space-5 0 $space-5;
 }
 
 .ntTitle {
+    padding: 11px 15px;
+    border: 1px solid rgba(181, 137, 25, 0.28);
+    border-radius: 11px;
+    margin: 0 0 $space-4;
+    background: rgba(212, 167, 44, 0.12);
+    color: #665019;
     font-size: 14px;
-    font-weight: 700;
-    color: $color-text-muted;
+    font-weight: 900;
+    line-height: 1.3;
     text-transform: uppercase;
-    margin: 0 0 $space-2;
+    letter-spacing: 0.045em;
 }
 
-.matchTable {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
+.eventList {
+    display: grid;
+    gap: 18px;
+}
 
-    td {
-        padding: 6px 8px;
-        border-bottom: 1px solid $color-border;
-        vertical-align: top;
+.eventCard {
+    overflow: hidden;
+    border: 1px solid #ddd7ea;
+    border-radius: 15px;
+    background: #fff;
+    box-shadow: 0 5px 20px rgba(31, 25, 48, 0.07);
+}
+
+.individualCard {
+    border-color: #d9cdec;
+
+    .eventHeader {
+        background: linear-gradient(135deg, #f6f2fc 0%, #eee8f8 100%);
+        border-bottom-color: #dacced;
     }
 }
 
-.colNo {
+.teamCard {
+    border-color: #c8dff0;
+
+    .eventHeader {
+        background: linear-gradient(135deg, #f0f8fe 0%, #e6f2fb 100%);
+        border-bottom-color: #c7deef;
+    }
+
+    .peopleTable {
+        border-color: #abc9dc;
+
+        td {
+            border-right-color: #bdd1df;
+            border-bottom-color: #bdd1df;
+        }
+    }
+
+    .peopleTable thead th {
+        background: #e8f4fc;
+        color: #245f89;
+        border-color: #aac9dc;
+        border-bottom: 1.5px solid #8fb8d0;
+    }
+}
+
+.eventHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-4;
+    padding: 14px 16px;
+    border-bottom: 1px solid;
+}
+
+.eventTitle {
+    margin: 0;
+    color: #413554;
+    font-size: 16px;
+    font-weight: 900;
+    line-height: 1.35;
+}
+
+.eventBadges {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 7px;
+}
+
+.genderBadge,
+.individualBadge,
+.teamBadge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 26px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.genderBadge {
+    border: 1px solid #e5cf84;
+    background: #fff9e7;
+    color: #765d12;
+}
+
+.individualBadge {
+    border: 1px solid #cbb9e4;
+    background: #eee7f8;
+    color: #62448b;
+}
+
+.teamBadge {
+    border: 1px solid #acd0e8;
+    background: #e5f3fc;
+    color: #25658f;
+}
+
+.tableWrap {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.peopleTable {
+    width: 100%;
+    min-width: 680px;
+    border: 1px solid #c8c0d3;
+    border-spacing: 0;
+    border-collapse: separate;
+    color: $color-text;
+    font-size: 14px;
+    line-height: 1.4;
+
+    th,
+    td {
+        padding: 12px 14px;
+        border-right: 1px solid #cbc4d5;
+        border-bottom: 1px solid #cbc4d5;
+        vertical-align: middle;
+    }
+
+    // Không dùng td:last-child vì ở các dòng con của đội,
+    // ô HỌ VÀ TÊN có thể là last-child do STT/ĐƠN VỊ đang rowSpan.
+    th:last-child {
+        border-right: 0;
+    }
+
+    tbody tr:last-child td:not([rowspan]),
+    tbody tr:last-child td[rowspan] {
+        border-bottom: 0;
+    }
+
+    thead th {
+        background: #f0ebf8;
+        color: #574274;
+        border-bottom: 1.5px solid #aea3bc;
+        font-size: 12px;
+        font-weight: 900;
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 0.055em;
+    }
+
+    tbody tr {
+        background: #fff;
+        transition: background 0.14s ease;
+    }
+
+    tbody tr:nth-child(even) {
+        background: #fcfbfe;
+    }
+
+    tbody tr:hover {
+        background: #f8f5fc;
+    }
+}
+
+.colOrder {
+    width: 64px;
+}
+
+.colName {
+    width: 58%;
+}
+
+.colTeam {
+    width: 42%;
+}
+
+.orderCell {
+    width: 64px;
+    color: #655778;
     font-family: $font-mono;
-    font-weight: 700;
-    color: $color-text-muted;
-    width: 32px;
-}
-
-.colVong {
-    color: $color-text-muted;
-    width: 60px;
-}
-
-.colEvent {
-    color: $color-text-muted;
-    width: 160px;
-}
-
-.colDo {
-    text-align: right;
-    font-weight: 600;
-}
-
-.colXanh {
-    font-weight: 600;
-}
-
-.colVs {
-    color: $color-text-muted;
+    font-size: 14px;
+    font-weight: 900;
     text-align: center;
-    width: 24px;
 }
 
-.colQuyenLabel {
-    font-weight: 600;
+.nameCell {
+    color: #292532;
+    font-size: 15px;
+    font-weight: 700;
 }
 
-.colQuyenSub {
-    color: $color-text-muted;
+.teamCell {
+    // ĐƠN VỊ mới là cột cuối thật sự của tbody.
+    border-right: 0 !important;
+    color: #51485f;
+    font-size: 14px;
+    font-weight: 650;
+    text-align: center;
+}
+
+.groupOrderCell {
+    background: #f0f7fc;
+    color: #2b658c;
+    vertical-align: middle !important;
+}
+
+.mergedTeamCell {
+    background: linear-gradient(135deg, #f5faff 0%, #ebf5fc 100%);
+    color: #315d7b;
+    font-size: 15px;
+    font-weight: 800;
+    line-height: 1.45;
+    vertical-align: middle !important;
+}
+
+@media (max-width: 760px) {
+    .page {
+        padding: $space-4;
+    }
+
+    .eventHeader {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 9px;
+    }
+
+    .eventBadges {
+        flex-wrap: wrap;
+    }
+
+    .peopleTable {
+        min-width: 620px;
+
+        th,
+        td {
+            padding: 10px 12px;
+        }
+    }
 }

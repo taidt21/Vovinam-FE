@@ -1,6 +1,8 @@
 export type MatchStatus = 'cho_thi' | 'dang_thi' | 'da_hoan_thanh';
 export type LyDoKetThuc =
   | 'thang_diem'
+  | 'diem_vang'
+  | 'can_hang_can'
   | 'bo_cuoc'
   | 'dung_vi_y_te'
   | 'boc_tham';

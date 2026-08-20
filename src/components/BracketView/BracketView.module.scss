@@ -40,15 +40,19 @@
     pointer-events: none;
 
     path {
-        stroke: $color-border;
-        stroke-width: 2;
+        // Đường nối cần đủ đậm để đọc tốt cả trên màn hình lẫn khi
+        // html2canvas thu nhỏ sơ đồ vào PDF.
+        stroke: #64748b;
+        stroke-width: 2.75;
+        stroke-linecap: round;
+        stroke-linejoin: round;
     }
 }
 
 .card {
     position: absolute;
     background: $color-surface;
-    border: 1px solid $color-border;
+    border: 1.5px solid #94a3b8;
     border-radius: 8px;
     display: flex;
     flex-direction: column;
@@ -66,13 +70,13 @@
     gap: 6px;
     padding: 0 $space-3;
     font-size: 13px;
-    font-weight: 500;
-    color: $color-text;
-    border-left: 3px solid transparent;
+    font-weight: 700;
+    color: #fff;
     overflow: hidden;
 
     &+& {
-        border-top: 1px solid $color-border;
+        // Hai giáp đều là nền đậm, dùng đường trắng mờ để phân cách rõ.
+        border-top: 1px solid rgba(255, 255, 255, 0.55);
     }
 }
 
@@ -90,19 +94,23 @@
     // dưới sẽ không hoạt động, vì flex item mặc định không co
     // nhỏ hơn nội dung bên trong nó
     font-size: 11px;
-    font-weight: 400;
-    color: $color-text-muted;
+    font-weight: 600;
+    color: #fff;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
 .slotDo {
-    border-left-color: $color-do;
+    border-radius: 6px 6px 0 0;
+    background: $color-do;
+    color: #fff;
 }
 
 .slotXanh {
-    border-left-color: $color-xanh;
+    border-radius: 0 0 6px 6px;
+    background: $color-xanh;
+    color: #fff;
 }
 
 .champion {
@@ -142,5 +150,5 @@
 
 .slotNameEliminated {
     text-decoration: line-through;
-    opacity: 0.5;
+    opacity: 0.72;
 }

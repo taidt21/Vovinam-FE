@@ -2,6 +2,7 @@ export interface Tournament {
   id: string;
   ten: string;
   soSan: number;
+  choPhepHiepPhu: boolean;
 }
 
 export interface Team {

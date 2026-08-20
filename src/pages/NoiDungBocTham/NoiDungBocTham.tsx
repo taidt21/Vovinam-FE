@@ -111,11 +111,21 @@ function BocThamButton({
   // gọi thẳng API, đây chỉ để giao diện không hiện nút vô dụng.
   if (!laAdmin()) return null;
   const disabled = count < 2;
+  const handleClick = () => {
+    if (
+      hasResult &&
+      !window.confirm(
+        `Đã có kết quả bốc thăm cho ${itemLabel} này rồi. Bốc thăm lại sẽ XOÁ HẾT toàn bộ trận/thứ tự hiện tại (kể cả kết quả đã thi đấu, nếu có) và tạo lại từ đầu — không hoàn tác được. Chắc chắn muốn bốc thăm lại?`,
+      )
+    )
+      return;
+    onClick();
+  };
   return (
     <div className={styles.actions}>
       <button
         className={styles.btnPrimary}
-        onClick={onClick}
+        onClick={handleClick}
         disabled={disabled}>
         <Shuffle size={16} /> {hasResult ? "Bốc thăm lại" : "Bốc thăm"}
       </button>

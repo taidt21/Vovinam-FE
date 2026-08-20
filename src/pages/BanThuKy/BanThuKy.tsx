@@ -7,9 +7,11 @@ import type {
   CompetitionEvent,
   LyDoKetThuc,
   Match,
+  Tournament,
 } from "../../types";
 import type { LiveQuyenState } from "../../types/liveQuyen";
 import { useCourts } from "../../lib/utils/useCourts";
+import { getGanSan } from "../../lib/api/adminAuth";
 import { numberDoiKhangMatches } from "../../lib/domain/bracket";
 import { compareNhomTuoi } from "../../lib/utils/nhomTuoi";
 import { serverNow } from "../../lib/realtime/serverClock";
@@ -39,6 +41,7 @@ import {
   getActiveMode,
   publishActiveMode,
 } from "../../lib/realtime/activeModeStore";
+import { getConnection } from "../../lib/realtime/matchHubConnection";
 
 import {
   TABS,
@@ -103,11 +106,32 @@ export default function BanThuKy() {
 
   const { courts, loadingCourts } = useCourts();
   const [tab, setTab] = useState<TabId>("lich_dk");
-  const [currentCourtId, setCurrentCourtId] = useState("");
+  const ganSan = getGanSan();
+  const [currentCourtId, setCurrentCourtId] = useState(ganSan ?? "");
+  const [tournament, setTournament] = useState<Tournament | null>(null);
 
   useEffect(() => {
+    const refreshTournament = () =>
+      apiGet<Tournament>("/tournament")
+        .then(setTournament)
+        .catch(() => {});
+    refreshTournament();
+    const conn = getConnection();
+    conn.on("TournamentChanged", refreshTournament);
+    return () => {
+      conn.off("TournamentChanged", refreshTournament);
+    };
+  }, []);
+
+  useEffect(() => {
+    // Tài khoản đã được gán sân cụ thể — luôn khoá đúng sân đó, không rơi
+    // về sân đầu tiên như tài khoản chưa gán.
+    if (ganSan) {
+      if (currentCourtId !== ganSan) setCurrentCourtId(ganSan);
+      return;
+    }
     if (!currentCourtId && courts.length > 0) setCurrentCourtId(courts[0].id);
-  }, [courts, currentCourtId]);
+  }, [courts, currentCourtId, ganSan]);
 
   useEffect(() => {
     Promise.all([
@@ -200,6 +224,18 @@ export default function BanThuKy() {
       )
       .finally(() => setLoading(false));
   }, []);
+  const refreshMatches = () =>
+    fetchMatches()
+      .then((matchesData) => {
+        const byEventMatches: Record<string, Match[]> = {};
+        for (const m of matchesData) {
+          if (!byEventMatches[m.eventId]) byEventMatches[m.eventId] = [];
+          byEventMatches[m.eventId].push(m);
+        }
+        setBracketsByEvent(byEventMatches);
+      })
+      .catch(() => {});
+
   useEffect(() => {
     const id = setInterval(() => {
       fetchQuyenJudgeScores()
@@ -208,8 +244,23 @@ export default function BanThuKy() {
       fetchQuyenLuotHoanThanh()
         .then(setQuyenLuotHoanThanh)
         .catch(() => {});
+      // Lưới an toàn — bình thường "MatchesChanged" bên dưới đã lo phần
+      // này gần như ngay lập tức rồi, đây chỉ để phòng lúc lỡ mất tín
+      // hiệu đó (rớt kết nối đúng lúc, hoặc backend cũ chưa có bản vá).
+      refreshMatches();
     }, 3000);
     return () => clearInterval(id);
+  }, []);
+
+  // Bàn thư ký ở sân khác kết thúc trận -> nghe được NGAY, không đợi tới
+  // lượt thăm dò 3 giây kế tiếp mới biết. "MatchesChanged" không kèm dữ
+  // liệu, chỉ là tín hiệu "có gì đó vừa đổi, gọi lại GetAll đi".
+  useEffect(() => {
+    const conn = getConnection();
+    conn.on("MatchesChanged", refreshMatches);
+    return () => {
+      conn.off("MatchesChanged", refreshMatches);
+    };
   }, []);
   const athleteName = (id: string | null) =>
     id ? (athletes.find((a) => a.id === id)?.hoTen ?? "—") : null;
@@ -615,14 +666,25 @@ export default function BanThuKy() {
 
   useEffect(() => {
     if (tab !== "dieu_hanh_dk" || activeOnMyCourt) return;
+    // Trước đây tìm trận "cho_thi" kế tiếp trong TOÀN BỘ danh sách trận,
+    // không phân biệt sân — nên nếu sân này xong trận trước, mà trận kế
+    // tiếp trong danh sách lại đang định dành cho sân KHÁC (chưa kịp bắt
+    // đầu ở đó), sân này sẽ "cướp" mất trận đó. Giờ chỉ nhận trận có số
+    // thứ tự đúng "phần" của sân mình theo kiểu chia vòng tròn: sân thứ
+    // k (0-based) trong N sân chỉ nhận trận có (so - 1) % N === k — với
+    // đúng 2 sân thì ra chính xác lẻ/chẵn như quy ước đang dùng.
+    const courtIndex = courts.findIndex((c) => c.id === currentCourtId);
     const next = numbered.find(
-      ({ match }) =>
+      ({ match, so }) =>
         match.trangThai === "cho_thi" &&
         match.athleteRedId &&
-        match.athleteBlueId,
+        match.athleteBlueId &&
+        (courtIndex < 0 || courts.length === 0
+          ? true
+          : (so - 1) % courts.length === courtIndex),
     );
     if (next) openIntoCourt(next.event.id, next.match.id);
-  }, [tab, activeOnMyCourt, numbered]);
+  }, [tab, activeOnMyCourt, numbered, courts, currentCourtId]);
 
   // "Đã xong" giờ theo đúng dữ liệu lưu thật (quyenLuotHoanThanh) — không
   // chỉ suy từ đủ 5/5 điểm nữa, vì luật cho phép 1 lượt kết thúc ngay mà
@@ -654,7 +716,17 @@ export default function BanThuKy() {
   useEffect(() => {
     if (tab !== "dieu_hanh_quyen" || !currentCourtId) return;
     if (getQuyenSnapshot(currentCourtId)) return;
-    const next = quyenNumbered.find((item) => !daHoanThanhQuyen(item));
+    // Cùng lý do như bên đối kháng — trước đây không lọc theo sân, có
+    // thể cướp mất lượt thi đang định dành cho sân khác. Cùng cách chia
+    // vòng tròn theo N sân.
+    const courtIndex = courts.findIndex((c) => c.id === currentCourtId);
+    const next = quyenNumbered.find(
+      (item) =>
+        !daHoanThanhQuyen(item) &&
+        (courtIndex < 0 || courts.length === 0
+          ? true
+          : (item.so - 1) % courts.length === courtIndex),
+    );
     if (next) startQuyenPerformance(next);
   }, [
     tab,
@@ -663,6 +735,7 @@ export default function BanThuKy() {
     quyenJudgeScores,
     quyenLuotHoanThanh,
     quyenLiveTick,
+    courts,
   ]);
 
   if (loading || loadingCourts)
@@ -705,16 +778,22 @@ export default function BanThuKy() {
             onClick={openPublicScreenExtended}>
             Mở màn hình công khai ↗
           </button>
-          <select
-            className={styles.courtSelect}
-            value={currentCourtId}
-            onChange={(e) => setCurrentCourtId(e.target.value)}>
-            {courts.map((c) => (
-              <option key={c.id} value={c.id}>
-                Đang thao tác: {c.ten}
-              </option>
-            ))}
-          </select>
+          {ganSan ? (
+            <span className={styles.courtLabel}>
+              Đang thao tác: {courtName}
+            </span>
+          ) : (
+            <select
+              className={styles.courtSelect}
+              value={currentCourtId}
+              onChange={(e) => setCurrentCourtId(e.target.value)}>
+              {courts.map((c) => (
+                <option key={c.id} value={c.id}>
+                  Đang thao tác: {c.ten}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
       </div>
 
@@ -774,6 +853,7 @@ export default function BanThuKy() {
             onEndMatch={(lyDo, thang) =>
               finishMatch(activeOnMyCourt, activeEvent.id, lyDo, thang)
             }
+            choPhepHiepPhu={tournament?.choPhepHiepPhu ?? false}
           />
         ))}
 

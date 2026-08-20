@@ -40,7 +40,7 @@ export default function DashboardLayout() {
         className={`${styles.sidebar} ${collapsed ? styles.sidebarCollapsed : ""}`}>
         <div className={styles.brand}>
           <span className={styles.brandMark}>
-            <img src="/public/favicon.svg" alt="Vovinam" />
+            <img src="/favicon.svg" alt="Vovinam" />
           </span>
           {!collapsed && <span className={styles.brandName}>Vector Sport</span>}
         </div>

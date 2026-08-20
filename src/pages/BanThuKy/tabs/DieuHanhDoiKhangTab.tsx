@@ -1,6 +1,6 @@
 /** @format */
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Minus,
   Plus,
@@ -39,6 +39,7 @@ export default function DieuHanhDoiKhangTab({
   athleteName,
   athleteTeam,
   onEndMatch,
+  choPhepHiepPhu,
 }: {
   match: Match;
   eventTen: string;
@@ -46,6 +47,7 @@ export default function DieuHanhDoiKhangTab({
   athleteName: (id: string | null) => string | null;
   athleteTeam: (id: string | null) => string;
   onEndMatch: (lyDo: LyDoKetThuc, thang: "do" | "xanh") => void;
+  choPhepHiepPhu: boolean;
 }) {
   const courtId = match.courtId!;
   const [live, setLive] = useState<LiveMatchState | null>(() =>
@@ -53,6 +55,7 @@ export default function DieuHanhDoiKhangTab({
   );
   const pressed = usePressedLights(courtId);
   const [, setTick] = useState(0);
+  const diemVangBaseline = useRef<{ do: number; xanh: number } | null>(null);
 
   const [showEndFlow, setShowEndFlow] = useState(false);
   const [lyDo, setLyDo] = useState<LyDoKetThuc>("thang_diem");
@@ -91,6 +94,10 @@ export default function DieuHanhDoiKhangTab({
   const dangChay = live.trangThai === "dang_thi";
   const dangNghi = live.trangThai === "nghi_giua_hiep";
   const laHiepCuoi = live.hiepHienTai >= live.tongSoHiep;
+  // Hiệp phụ (điểm vàng) = hiepHienTai vượt qua tongSoHiep — đúng quy ước
+  // đã có sẵn trong comment của type LiveMatchState từ trước, không phải
+  // mình tự đặt ra.
+  const dangHiepPhu = live.hiepHienTai > live.tongSoHiep;
   const hetGio = remaining <= 0 && (dangChay || dangNghi);
 
   const patch = (p: Partial<LiveMatchState>) => {
@@ -110,9 +117,20 @@ export default function DieuHanhDoiKhangTab({
     patch({ trangThai: "tam_dung", thoiGianConLaiGiay: remaining });
   const tiepTuc = () =>
     patch({ trangThai: "dang_thi", capNhatDongHoLuc: serverNow() });
-  const ketThucHiep = () =>
+  const ketThucHiep = () => {
+    // Hoà đúng lúc hết giờ hiệp cuối, CHƯA từng vào hiệp phụ, và giải cho
+    // phép -> xử như hiệp thường (qua nghỉ giữa hiệp) thay vì dừng hẳn,
+    // để "Bắt đầu hiệp {n+1}" bên dưới tự nhiên trở thành hiệp phụ (đúng
+    // n+1 lúc này > tongSoHiep). Đã ở hiệp phụ rồi mà vẫn hoà thì KHÔNG
+    // lặp thêm hiệp phụ nữa — dừng hẳn như hiệp cuối bình thường, để BTK
+    // tự chọn theo bốc thăm/cân hạng cân.
+    const vaoHiepPhu =
+      laHiepCuoi &&
+      !dangHiepPhu &&
+      choPhepHiepPhu &&
+      live.diemChinhThucDo === live.diemChinhThucXanh;
     patch(
-      laHiepCuoi
+      laHiepCuoi && !vaoHiepPhu
         ? { trangThai: "tam_dung", thoiGianConLaiGiay: 0 }
         : {
             trangThai: "nghi_giua_hiep",
@@ -120,6 +138,7 @@ export default function DieuHanhDoiKhangTab({
             capNhatDongHoLuc: serverNow(),
           },
     );
+  };
 
   const adjustScore = (side: "do" | "xanh", delta: number) => {
     const key = side === "do" ? "diemChinhThucDo" : "diemChinhThucXanh";
@@ -164,6 +183,76 @@ export default function DieuHanhDoiKhangTab({
   };
 
   const daKetThuc = live.trangThai === "da_ket_thuc";
+
+  // Tự động lúc hết giờ, đỡ phải bấm tay:
+  // 1. Hết giờ 1 hiệp (chưa phải hiệp cuối) -> tự chuyển nghỉ/hiệp kế
+  //    tiếp, thuần cơ học, không đụng gì tới ai thắng ai thua.
+  // 2. Hết giờ hiệp CUỐI (kể cả hiệp phụ), điểm KHÔNG hoà -> chỉ tự chọn
+  //    màu thắng (đỡ bước bấm Đỏ/Xanh thắng) rồi DỪNG LẠI ở đúng màn
+  //    hình "Đã có người thắng" như lúc chọn tay — vẫn cần bấm "Xác
+  //    nhận, qua trận tiếp theo" mới thật sự qua trận khác.
+  // 3. Điểm hoà -> không tự chọn gì. Nếu giải cho phép hiệp phụ và CHƯA
+  //    từng vào hiệp phụ, ketThucHiep() ở trên tự chuyển sang nghỉ giữa
+  //    hiệp thay vì dừng hẳn (xem logic trong đó). Đã ở hiệp phụ mà vẫn
+  //    hoà, hoặc giải không cho phép hiệp phụ -> dừng hẳn, để BTK tự bấm
+  //    "Kết thúc trận" chọn tay (bốc thăm/cân hạng cân).
+  useEffect(() => {
+    if (!hetGio || !dangChay) return;
+    if (!laHiepCuoi) {
+      ketThucHiep();
+      return;
+    }
+    if (live.diemChinhThucDo === live.diemChinhThucXanh) {
+      ketThucHiep();
+      return;
+    }
+    const winner =
+      live.diemChinhThucDo > live.diemChinhThucXanh ? "do" : "xanh";
+    patch({
+      trangThai: "da_ket_thuc",
+      nguoiThang: winner,
+      lyDoKetThuc: dangHiepPhu ? "diem_vang" : "thang_diem",
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hetGio, dangChay, laHiepCuoi]);
+
+  // Điểm vàng — ghi nhớ điểm số NGAY LÚC hiệp phụ bắt đầu, để biết chính
+  // xác bên nào ghi điểm ĐẦU TIÊN trong hiệp phụ (không phải tổng điểm
+  // cả trận, chỉ tính từ đây trở đi).
+  useEffect(() => {
+    if (!dangHiepPhu) {
+      diemVangBaseline.current = null;
+      return;
+    }
+    if (diemVangBaseline.current === null) {
+      diemVangBaseline.current = {
+        do: live.diemChinhThucDo,
+        xanh: live.diemChinhThucXanh,
+      };
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dangHiepPhu]);
+
+  // Ai ghi điểm trước trong hiệp phụ thắng ngay — không đợi hết giờ hiệp
+  // phụ. Dừng ở màn hình "Đã có người thắng" như mọi trường hợp khác,
+  // vẫn cần bấm "Xác nhận, qua trận tiếp theo" mới thật sự qua trận sau.
+  useEffect(() => {
+    if (!dangHiepPhu || !dangChay || !diemVangBaseline.current) return;
+    if (live.diemChinhThucDo > diemVangBaseline.current.do) {
+      patch({
+        trangThai: "da_ket_thuc",
+        nguoiThang: "do",
+        lyDoKetThuc: "diem_vang",
+      });
+    } else if (live.diemChinhThucXanh > diemVangBaseline.current.xanh) {
+      patch({
+        trangThai: "da_ket_thuc",
+        nguoiThang: "xanh",
+        lyDoKetThuc: "diem_vang",
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dangHiepPhu, dangChay, live.diemChinhThucDo, live.diemChinhThucXanh]);
 
   const confirmWinner = (thang: "do" | "xanh") => {
     patch({ trangThai: "da_ket_thuc", nguoiThang: thang, lyDoKetThuc: lyDo });
@@ -271,7 +360,9 @@ export default function DieuHanhDoiKhangTab({
                     ? "Chưa bắt đầu"
                     : dangNghi
                       ? `Nghỉ giữa hiệp ${live.hiepHienTai}`
-                      : `Hiệp ${live.hiepHienTai}/${live.tongSoHiep}`}
+                      : dangHiepPhu
+                        ? "Hiệp phụ — Điểm vàng"
+                        : `Hiệp ${live.hiepHienTai}/${live.tongSoHiep}`}
                 </span>
                 {live.trangThai === "cho_bat_dau" && (
                   <button
@@ -309,7 +400,10 @@ export default function DieuHanhDoiKhangTab({
                 )}
               {dangNghi && (
                 <button className={styles.timerBtn} onClick={batDauHiep}>
-                  <Play size={15} /> Bắt đầu hiệp {live.hiepHienTai + 1}
+                  <Play size={15} />{" "}
+                  {live.hiepHienTai + 1 > live.tongSoHiep
+                    ? "Bắt đầu hiệp phụ (Điểm vàng)"
+                    : `Bắt đầu hiệp ${live.hiepHienTai + 1}`}
                 </button>
               )}
               {hetGio && dangChay && (
