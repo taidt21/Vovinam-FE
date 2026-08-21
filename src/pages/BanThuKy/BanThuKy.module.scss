@@ -1195,3 +1195,1868 @@
     text-align: center;
     margin: 0;
 }
+
+/* ========================================================================== */
+/* 2026 UI refresh — Bàn thư ký                                                */
+/* Giữ nguyên behavior, chỉ tăng hierarchy, scanability và responsive.        */
+/* ========================================================================== */
+
+.page {
+    gap: 18px;
+}
+
+.topbar {
+    align-items: flex-start;
+    gap: $space-5;
+    padding: 18px 20px;
+    border: 1px solid $color-border;
+    border-radius: 16px;
+    background:
+        linear-gradient(135deg, rgba($color-do, 0.045), transparent 42%),
+        $color-surface;
+}
+
+.topbarIdentity {
+    min-width: 0;
+}
+
+.pageEyebrow,
+.sectionEyebrow,
+.panelEyebrow {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: $color-text-muted;
+}
+
+.title {
+    font-size: 26px;
+    line-height: 1.15;
+    letter-spacing: -0.025em;
+}
+
+.pageSubtitle {
+    margin: 5px 0 0;
+    font-size: 13px;
+    color: $color-text-muted;
+}
+
+.topbarActions {
+    align-items: stretch;
+    gap: 10px;
+}
+
+.courtControl {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+    min-width: 170px;
+    padding: 8px 11px;
+    border: 1px solid $color-border;
+    border-radius: 10px;
+    background: $color-bg;
+}
+
+.courtControlLabel {
+    font-size: 10px;
+    font-weight: 700;
+    color: $color-text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.courtSelect,
+.courtLabel {
+    width: 100%;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: $color-text;
+    font-size: 14px;
+    font-weight: 750;
+}
+
+.courtSelect {
+    appearance: auto;
+}
+
+.publicScreenLink {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-height: 48px;
+    padding: 0 15px;
+    border-radius: 10px;
+    background: $color-surface;
+    font-size: 12px;
+}
+
+.tabsBar {
+    gap: 4px;
+    padding: 5px;
+    border: 1px solid $color-border;
+    border-radius: 12px;
+    background: $color-surface;
+    overflow-x: auto;
+    scrollbar-width: thin;
+}
+
+.tab,
+.tabActive {
+    flex: 0 0 auto;
+    gap: 7px;
+    min-height: 38px;
+    padding: 8px 12px;
+    margin: 0;
+    border: 0;
+    border-radius: 8px;
+    white-space: nowrap;
+    font-size: 13px;
+    transition:
+        color 0.16s ease,
+        background 0.16s ease,
+        box-shadow 0.16s ease;
+}
+
+.tab:hover {
+    background: $color-bg;
+}
+
+.tabActive {
+    color: $color-do;
+    background: rgba($color-do, 0.08);
+    box-shadow: inset 0 0 0 1px rgba($color-do, 0.12);
+}
+
+.tabDot {
+    position: relative;
+    width: 7px;
+    height: 7px;
+    margin-left: 1px;
+    box-shadow: 0 0 0 3px rgba($color-danger, 0.12);
+}
+
+/* ---- Lịch thi đấu chung ---- */
+.scheduleCard {
+    border-radius: 16px;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.035);
+}
+
+.scheduleHeader {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: $space-5;
+    align-items: center;
+    padding: 20px 22px 16px;
+    border-bottom: 1px solid $color-border;
+}
+
+.scheduleTitle {
+    margin: 0;
+    font-size: 20px;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+}
+
+.scheduleDescription {
+    max-width: 650px;
+    margin: 6px 0 0;
+    color: $color-text-muted;
+    font-size: 12px;
+    line-height: 1.55;
+}
+
+.scheduleStats {
+    display: flex;
+    gap: 8px;
+}
+
+.scheduleStat {
+    min-width: 82px;
+    padding: 9px 11px;
+    border: 1px solid $color-border;
+    border-radius: 10px;
+    background: $color-bg;
+    text-align: center;
+
+    strong {
+        display: block;
+        font-family: $font-mono;
+        font-size: 18px;
+        line-height: 1.15;
+        color: $color-text;
+    }
+
+    span {
+        display: block;
+        margin-top: 2px;
+        font-size: 10px;
+        font-weight: 600;
+        color: $color-text-muted;
+        white-space: nowrap;
+    }
+}
+
+.busyBanner {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 22px;
+    border-bottom: 1px solid rgba($color-warning, 0.2);
+    background: rgba($color-warning, 0.075);
+    color: $color-text;
+    font-size: 11px;
+
+    strong {
+        font-weight: 750;
+    }
+
+    >span:last-child {
+        color: $color-text-muted;
+    }
+}
+
+.busyDot {
+    width: 8px;
+    height: 8px;
+    flex: 0 0 auto;
+    border-radius: 999px;
+    background: $color-warning;
+    box-shadow: 0 0 0 3px rgba($color-warning, 0.13);
+}
+
+.scheduleToolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-3;
+    padding: 11px 14px;
+    border-bottom: 1px solid $color-border;
+    background: rgba($color-bg, 0.55);
+}
+
+.scheduleSearch {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: min(360px, 100%);
+    min-height: 36px;
+    padding: 0 11px;
+    border: 1px solid $color-border;
+    border-radius: 9px;
+    background: $color-surface;
+    color: $color-text-muted;
+
+    &:focus-within {
+        border-color: rgba($color-do, 0.55);
+        box-shadow: 0 0 0 3px rgba($color-do, 0.07);
+    }
+
+    input {
+        width: 100%;
+        min-width: 0;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: $color-text;
+        font: inherit;
+        font-size: 12px;
+
+        &::placeholder {
+            color: $color-text-muted;
+        }
+    }
+}
+
+.scheduleFilters {
+    display: flex;
+    gap: 5px;
+    overflow-x: auto;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+        display: none;
+    }
+}
+
+.filterBtn,
+.filterActive {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    flex: 0 0 auto;
+    min-height: 32px;
+    padding: 0 9px;
+    border: 1px solid $color-border;
+    border-radius: 8px;
+    background: $color-surface;
+    color: $color-text-muted;
+    font-size: 11px;
+    font-weight: 650;
+    cursor: pointer;
+
+    &:hover {
+        color: $color-text;
+        border-color: rgba($color-text-muted, 0.55);
+    }
+}
+
+.filterActive {
+    color: $color-do;
+    border-color: rgba($color-do, 0.25);
+    background: rgba($color-do, 0.075);
+}
+
+.filterCount {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    border-radius: 999px;
+    background: $color-bg;
+    font-family: $font-mono;
+    font-size: 9px;
+}
+
+.scheduleList {
+    max-height: min(68vh, 720px);
+}
+
+.scheduleRow {
+    display: grid;
+    grid-template-columns: 68px minmax(0, 1fr) minmax(190px, auto);
+    align-items: center;
+    gap: 14px;
+    min-height: 88px;
+    padding: 12px 15px;
+    cursor: default;
+    transition:
+        background 0.15s ease,
+        box-shadow 0.15s ease;
+
+    &:hover {
+        background: rgba($color-bg, 0.78);
+    }
+}
+
+.scheduleRowLive {
+    background: rgba($color-danger, 0.025);
+    box-shadow: inset 3px 0 0 rgba($color-danger, 0.75);
+}
+
+.scheduleRowDone {
+    background: rgba($color-success, 0.018);
+}
+
+.matchNumberBlock {
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding-right: 10px;
+    border-right: 1px solid $color-border;
+}
+
+.matchNumberBlock .listNo {
+    width: auto;
+    font-size: 14px;
+    color: $color-text;
+}
+
+.roundTag,
+.metaPill {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    border-radius: 999px;
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.roundTag {
+    padding: 4px 7px;
+    background: $color-bg;
+    color: $color-text-muted;
+}
+
+.eventMetaLine {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.eventNameStrong {
+    font-size: 12px;
+    font-weight: 750;
+    color: $color-text;
+}
+
+.metaPill {
+    padding: 4px 7px;
+    border: 1px solid $color-border;
+    color: $color-text-muted;
+    background: $color-surface;
+}
+
+.competitorPair {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 30px minmax(0, 1fr);
+    gap: 7px;
+    align-items: stretch;
+}
+
+.competitor {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    padding: 8px 10px;
+    border: 1px solid $color-border;
+    border-radius: 9px;
+    background: $color-surface;
+
+    strong {
+        overflow: hidden;
+        min-width: 0;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 12px;
+        font-weight: 700;
+    }
+}
+
+.competitorInfo {
+    display: flex;
+    flex: 1;
+    gap: 4px;
+    flex-wrap: wrap;
+    min-width: 0;
+}
+
+.competitorTeam {
+    overflow: hidden;
+    min-width: 0;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: $color-text-muted;
+    font-size: 10.5px;
+    font-weight: 500;
+}
+
+.competitorRed {
+    border-left: 3px solid $color-do;
+    background: rgba($color-do, 0.025);
+}
+
+.competitorBlue {
+    border-left: 3px solid $color-xanh;
+    background: rgba($color-xanh, 0.025);
+}
+
+.competitorSide {
+    flex: 0 0 auto;
+    font-size: 9px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: $color-text-muted;
+}
+
+.vsBadge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: $color-text-muted;
+    font-family: $font-mono;
+    font-size: 9px;
+    font-weight: 800;
+}
+
+.scheduleActionArea {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 7px;
+    min-width: 0;
+}
+
+.scheduleActionArea .startBtn {
+    min-width: 150px;
+    min-height: 34px;
+    padding: 7px 12px;
+    border-radius: 8px;
+    box-shadow: 0 3px 10px rgba($color-do, 0.13);
+}
+
+.quickResultActions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 5px;
+    flex-wrap: wrap;
+
+    >span {
+        margin-right: 2px;
+        color: $color-text-muted;
+        font-size: 9px;
+    }
+}
+
+.quickBtnDo,
+.quickBtnXanh,
+.editBtn,
+.replayBtn {
+    min-height: 28px;
+}
+
+.listActions {
+    justify-content: flex-end;
+}
+
+.waitTag,
+.playingTag,
+.pausedTag,
+.resultTag {
+    padding: 5px 9px;
+    font-size: 10px;
+}
+
+.playingTag {
+    box-shadow: 0 0 0 3px rgba($color-danger, 0.09);
+}
+
+/* ---- Lịch quyền ---- */
+.quyenSchedulePerformer {
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+    flex-wrap: wrap;
+
+    strong {
+        font-size: 14px;
+        font-weight: 750;
+    }
+
+    span {
+        color: $color-text-muted;
+        font-size: 11px;
+    }
+}
+
+.quyenMemberLine {
+    margin-top: 4px;
+    color: $color-text-muted;
+    font-size: 10px;
+    line-height: 1.45;
+}
+
+.quyenProgressArea {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    min-width: 235px;
+}
+
+.judgeProgress {
+    width: 95px;
+
+    >span,
+    >strong {
+        font-size: 9px;
+    }
+
+    >span {
+        color: $color-text-muted;
+    }
+
+    >strong {
+        float: right;
+        font-family: $font-mono;
+        color: $color-text;
+    }
+}
+
+.judgeProgressTrack {
+    position: relative;
+    width: 100%;
+    height: 5px;
+    margin-top: 5px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: $color-bg;
+
+    >span {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+        background: $color-success;
+        transition: width 0.2s ease;
+    }
+}
+
+.scoreResultBox {
+    min-width: 82px;
+    padding: 7px 10px;
+    border: 1px solid rgba($color-success, 0.17);
+    border-radius: 9px;
+    background: rgba($color-success, 0.065);
+    text-align: right;
+
+    span {
+        display: block;
+        color: $color-text-muted;
+        font-size: 9px;
+    }
+
+    strong {
+        display: block;
+        margin-top: 1px;
+        color: $color-success;
+        font-family: $font-mono;
+        font-size: 17px;
+    }
+}
+
+/* ---- Điều hành quyền ---- */
+.dieuHanhQuyen {
+    max-width: none;
+    gap: 0;
+    padding: 0;
+    overflow: hidden;
+    border-radius: 16px;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.035);
+}
+
+.operationHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-4;
+    padding: 18px 22px;
+    border-bottom: 1px solid $color-border;
+    background:
+        linear-gradient(135deg, rgba($color-do, 0.04), transparent 48%),
+        $color-surface;
+}
+
+.operationTitle {
+    margin: 0;
+    font-size: 20px;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+}
+
+.operationSubline {
+    max-width: 620px;
+    margin: 5px 0 0;
+    color: $color-text-muted;
+    font-size: 11px;
+}
+
+.operationStatus {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    flex: 0 0 auto;
+    padding: 7px 10px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 750;
+
+    >span {
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        background: currentColor;
+    }
+}
+
+.operationStatusLive {
+    color: $color-danger;
+    background: rgba($color-danger, 0.08);
+}
+
+.operationStatusPaused {
+    color: $color-warning;
+    background: rgba($color-warning, 0.1);
+}
+
+.operationStatusDone {
+    color: $color-success;
+    background: rgba($color-success, 0.09);
+}
+
+.operationStatusWaiting {
+    color: $color-text-muted;
+    background: $color-bg;
+}
+
+.quyenLayout {
+    display: grid;
+    grid-template-columns: minmax(340px, 0.9fr) minmax(360px, 1.1fr);
+    grid-template-areas: "main judges";
+    gap: 0;
+    align-items: stretch;
+}
+
+.quyenMainCol {
+    grid-area: main;
+    width: auto;
+    padding: 22px;
+    border-right: 1px solid $color-border;
+    background: rgba($color-bg, 0.33);
+}
+
+.quyenJudgePanel {
+    grid-area: judges;
+    min-width: 0;
+    padding: 22px;
+}
+
+.panelHeading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-3;
+
+    strong {
+        display: block;
+        font-size: 15px;
+    }
+}
+
+.judgeCountBadge {
+    padding: 5px 8px;
+    border-radius: 999px;
+    background: $color-bg;
+    color: $color-text-muted;
+    font-size: 9px;
+    font-weight: 700;
+}
+
+.quyenPerformer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    padding: 18px;
+    border: 1px solid $color-border;
+    border-radius: 12px;
+    background: $color-surface;
+}
+
+.quyenPerformer .panelEyebrow {
+    margin-bottom: 12px;
+}
+
+.quyenPerformerName {
+    margin-top: 9px;
+    font-size: 19px;
+    line-height: 1.25;
+}
+
+.quyenPerformerSub {
+    margin-top: 4px;
+}
+
+.quyenThanhVien {
+    margin-top: 8px;
+    padding: 7px 9px;
+    border-radius: 8px;
+    background: $color-bg;
+    font-size: 10px;
+    line-height: 1.5;
+}
+
+.quyenJudgeList {
+    gap: 7px;
+}
+
+.quyenJudgeCell {
+    justify-content: flex-start;
+    gap: 10px;
+    min-height: 54px;
+    padding: 8px 10px;
+    border: 1px solid $color-border;
+    border-radius: 10px;
+    background: $color-surface;
+    transition:
+        border-color 0.15s ease,
+        background 0.15s ease;
+}
+
+.quyenJudgeCellScored {
+    border-color: rgba($color-success, 0.2);
+    background: rgba($color-success, 0.035);
+}
+
+.judgeIndex {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    flex: 0 0 auto;
+    border-radius: 8px;
+    background: $color-bg;
+    color: $color-text-muted;
+    font-family: $font-mono;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.quyenJudgeInfo {
+    flex: 1;
+}
+
+.quyenJudgeLabel {
+    font-size: 9px;
+}
+
+.quyenJudgeName {
+    font-size: 12px;
+}
+
+.quyenJudgeScore {
+    min-width: 48px;
+    text-align: right;
+    color: $color-success;
+    font-size: 18px;
+}
+
+.quyenJudgeScorePending {
+    min-width: 58px;
+    text-align: right;
+    font-size: 10px;
+}
+
+.judgeProgressSummary {
+    display: grid;
+    grid-template-columns: minmax(90px, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    padding-top: 2px;
+
+    span:last-child {
+        color: $color-text-muted;
+        font-size: 9px;
+        white-space: nowrap;
+    }
+}
+
+.quyenResultBox {
+    padding: 10px 12px;
+    border: 1px solid rgba($color-success, 0.16);
+    border-radius: 10px;
+
+    >div {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+    }
+
+    span {
+        font-size: 11px;
+    }
+
+    small {
+        color: $color-text-muted;
+        font-size: 9px;
+        font-weight: 400;
+    }
+
+    strong {
+        font-size: 24px;
+    }
+}
+
+.quyenControlPanel {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: 10px;
+}
+
+.timerPanel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    padding: 17px;
+    border: 1px solid $color-border;
+    border-radius: 12px;
+    background: $color-surface;
+}
+
+.timerCaption {
+    color: $color-text-muted;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+}
+
+.timerPanel .timerBig {
+    margin: 5px 0 3px;
+    font-size: clamp(44px, 5vw, 64px);
+    line-height: 1;
+    letter-spacing: -0.04em;
+}
+
+.timerSupportText {
+    color: $color-text-muted;
+    font-size: 9px;
+    text-align: center;
+}
+
+.quyenTimerActions {
+    display: grid;
+    gap: 8px;
+}
+
+.quyenTimerActions .timerBtn {
+    justify-content: center;
+    width: 100%;
+    min-height: 40px;
+    border-radius: 9px;
+}
+
+.timerBtnPrimary {
+    border-color: $color-success;
+    background: $color-success;
+    color: white;
+
+    &:hover {
+        background: $color-success;
+        opacity: 0.92;
+    }
+}
+
+.quyenFinishBtn {
+    width: 100%;
+    min-height: 42px;
+    margin-top: 2px;
+    padding: 10px 14px;
+    border-radius: 9px;
+    font-size: 13px;
+}
+
+.endFlowCard {
+    width: 100%;
+    padding: 13px;
+    border: 1px solid rgba($color-danger, 0.18);
+    border-radius: 10px;
+    background: rgba($color-danger, 0.035);
+}
+
+.endFlowTitle {
+    font-size: 12px;
+    font-weight: 750;
+}
+
+.endFlowActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.quyenEndedBox {
+    width: 100%;
+    padding: 18px;
+    border: 1px solid rgba($color-success, 0.16);
+    border-radius: 12px;
+    background: rgba($color-success, 0.04);
+}
+
+.endedIcon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 999px;
+    background: rgba($color-success, 0.1);
+    color: $color-success;
+}
+
+.endedScore {
+    color: $color-success;
+    font-family: $font-mono;
+    font-size: 30px;
+}
+
+.quyenEndActions {
+    flex-direction: column;
+    width: 100%;
+
+    .btnPrimary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        width: 100%;
+    }
+}
+
+.noMatch {
+    padding: 28px;
+    border: 1px dashed $color-border;
+    border-radius: 14px;
+    background: rgba($color-bg, 0.7);
+    line-height: 1.6;
+}
+
+@media (max-width: 1050px) {
+    .scheduleHeader {
+        grid-template-columns: 1fr;
+    }
+
+    .scheduleStats {
+        justify-content: flex-start;
+    }
+
+    .scheduleRow {
+        grid-template-columns: 64px minmax(0, 1fr);
+    }
+
+    .scheduleActionArea,
+    .quyenProgressArea {
+        grid-column: 2;
+        align-items: flex-start;
+        justify-content: flex-start;
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .quickResultActions {
+        justify-content: flex-start;
+    }
+
+    .quyenLayout {
+        grid-template-columns: minmax(300px, 0.9fr) minmax(330px, 1.1fr);
+    }
+}
+
+@media (max-width: 800px) {
+    .topbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .topbarActions {
+        width: 100%;
+    }
+
+    .courtControl {
+        flex: 1;
+    }
+
+    .scheduleToolbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .scheduleSearch {
+        width: 100%;
+    }
+
+    .scheduleFilters {
+        width: 100%;
+    }
+
+    .quyenLayout {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "main"
+            "judges";
+    }
+
+    .quyenMainCol {
+        border-right: 0;
+        border-bottom: 1px solid $color-border;
+    }
+
+    .operationHeader {
+        align-items: flex-start;
+    }
+}
+
+@media (max-width: 620px) {
+    .topbar {
+        padding: 15px;
+        border-radius: 12px;
+    }
+
+    .title {
+        font-size: 23px;
+    }
+
+    .topbarActions {
+        flex-direction: column;
+    }
+
+    .publicScreenLink {
+        width: 100%;
+        min-height: 40px;
+    }
+
+    .tabsBar {
+        margin-inline: -2px;
+    }
+
+    .tab,
+    .tabActive {
+        padding-inline: 10px;
+        font-size: 12px;
+    }
+
+    .scheduleHeader {
+        padding: 16px;
+    }
+
+    .scheduleStats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        width: 100%;
+    }
+
+    .scheduleStat {
+        min-width: 0;
+        padding-inline: 6px;
+    }
+
+    .busyBanner {
+        align-items: flex-start;
+        flex-wrap: wrap;
+        padding-inline: 16px;
+    }
+
+    .scheduleToolbar {
+        padding: 10px;
+    }
+
+    .scheduleList {
+        max-height: none;
+    }
+
+    .scheduleRow {
+        grid-template-columns: 48px minmax(0, 1fr);
+        gap: 10px;
+        padding: 12px 10px;
+    }
+
+    .matchNumberBlock {
+        padding-right: 7px;
+    }
+
+    .roundTag {
+        max-width: 46px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .competitorPair {
+        grid-template-columns: 1fr;
+        gap: 5px;
+    }
+
+    .vsBadge {
+        display: none;
+    }
+
+    .competitor strong {
+        white-space: normal;
+    }
+
+    .competitorTeam {
+        white-space: normal;
+    }
+
+    .scheduleActionArea,
+    .quyenProgressArea {
+        grid-column: 1 / -1;
+        padding-left: 58px;
+    }
+
+    .scheduleActionArea .startBtn {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .quickResultActions {
+        width: 100%;
+    }
+
+    .quyenProgressArea {
+        align-items: stretch;
+    }
+
+    .judgeProgress {
+        flex: 1;
+        width: auto;
+        min-width: 110px;
+    }
+
+    .operationHeader {
+        flex-direction: column;
+        padding: 15px;
+    }
+
+    .quyenMainCol,
+    .quyenJudgePanel {
+        padding: 15px;
+    }
+
+    .judgeProgressSummary {
+        grid-template-columns: 1fr;
+        gap: 5px;
+    }
+
+    .judgeProgressSummary span:last-child {
+        white-space: normal;
+    }
+
+    .reasonRow {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .endFlowActions {
+        flex-direction: column-reverse;
+    }
+
+    .endFlowActions button {
+        width: 100%;
+    }
+}
+
+/* ========================================================================== */
+/* Trọng tài — optimized assignment UI                                        */
+/* ========================================================================== */
+
+.trongTaiTabV2 {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+}
+
+.trongTaiOverview {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 28px;
+    padding: 22px 24px;
+    border: 1px solid $color-border;
+    border-radius: 16px;
+    background: $color-surface;
+    box-shadow: 0 8px 28px rgba(17, 24, 39, 0.045);
+}
+
+.trongTaiEyebrow {
+    margin-bottom: 5px;
+    color: $color-do;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.trongTaiPageTitle {
+    margin: 0;
+    color: $color-text;
+    font-size: 20px;
+    line-height: 1.3;
+}
+
+.trongTaiPageDesc {
+    max-width: 660px;
+    margin: 7px 0 0;
+    color: $color-text-muted;
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+.trongTaiStats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(92px, 1fr));
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.trongTaiStat {
+    display: flex;
+    min-width: 96px;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 12px;
+    border: 1px solid $color-border;
+    border-radius: 11px;
+    background: $color-bg;
+
+    span {
+        color: $color-text-muted;
+        font-size: 10px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    strong {
+        color: $color-text;
+        font-family: $font-mono;
+        font-size: 20px;
+        line-height: 1.15;
+    }
+}
+
+.trongTaiToolbarCard {
+    overflow: hidden;
+    border: 1px solid $color-border;
+    border-radius: 14px;
+    background: $color-surface;
+}
+
+.trongTaiAddHeader {
+    padding: 14px 18px 11px;
+    border-bottom: 1px solid $color-border;
+
+    >div {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    strong {
+        color: $color-text;
+        font-size: 13px;
+    }
+
+    span {
+        color: $color-text-muted;
+        font-size: 11px;
+    }
+}
+
+.trongTaiAddFormV2 {
+    display: grid;
+    grid-template-columns: minmax(220px, 1fr) minmax(170px, .55fr) auto;
+    gap: 10px;
+    align-items: end;
+    padding: 14px 18px 18px;
+
+    >button {
+        min-height: 40px;
+        white-space: nowrap;
+    }
+}
+
+.trongTaiAddField {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+
+    >span {
+        color: $color-text-muted;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .045em;
+    }
+
+    input,
+    select {
+        width: 100%;
+        min-height: 40px;
+        box-sizing: border-box;
+        padding: 8px 11px;
+        border: 1px solid $color-border;
+        border-radius: 9px;
+        outline: none;
+        background: $color-surface;
+        color: $color-text;
+        font: inherit;
+        font-size: 13px;
+        transition: border-color .15s ease, box-shadow .15s ease;
+
+        &:focus {
+            border-color: rgba($color-do, .5);
+            box-shadow: 0 0 0 3px rgba($color-do, .08);
+        }
+    }
+}
+
+.trongTaiListToolbar {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 2px 2px 0;
+
+    >div:first-child {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+    }
+
+    strong {
+        color: $color-text;
+        font-size: 14px;
+    }
+
+    span {
+        color: $color-text-muted;
+        font-size: 11px;
+        line-height: 1.4;
+    }
+}
+
+.trongTaiSearch {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 245px;
+    min-height: 38px;
+    box-sizing: border-box;
+    padding: 0 9px 0 11px;
+    border: 1px solid $color-border;
+    border-radius: 10px;
+    background: $color-surface;
+    color: $color-text-muted;
+
+    &:focus-within {
+        border-color: rgba($color-do, .45);
+        box-shadow: 0 0 0 3px rgba($color-do, .06);
+    }
+
+    input {
+        min-width: 0;
+        flex: 1;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: $color-text;
+        font: inherit;
+        font-size: 12px;
+    }
+
+    button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px;
+        height: 26px;
+        padding: 0;
+        border: 0;
+        border-radius: 7px;
+        background: transparent;
+        color: $color-text-muted;
+        cursor: pointer;
+
+        &:hover {
+            background: $color-bg;
+            color: $color-text;
+        }
+    }
+}
+
+.trongTaiCourtGrid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    align-items: start;
+}
+
+.trongTaiCourtCard {
+    overflow: hidden;
+    border: 1px solid $color-border;
+    border-radius: 15px;
+    background: $color-surface;
+    box-shadow: 0 6px 22px rgba(17, 24, 39, 0.035);
+}
+
+.trongTaiCourtHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 15px 16px 12px;
+}
+
+.trongTaiCourtIdentity {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+
+    h3 {
+        margin: 0;
+        color: $color-text;
+        font-size: 14px;
+        line-height: 1.25;
+    }
+
+    span {
+        display: block;
+        margin-top: 2px;
+        color: $color-text-muted;
+        font-size: 10px;
+    }
+}
+
+.trongTaiCourtIcon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    border-radius: 10px;
+    background: rgba($color-do, .08);
+    color: $color-do;
+}
+
+.trongTaiCoverageBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 8px;
+    border: 1px solid $color-border;
+    border-radius: 999px;
+    background: $color-bg;
+    color: $color-text-muted;
+    font-size: 10px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.trongTaiCoverageComplete {
+    border-color: rgba($color-success, .25);
+    background: rgba($color-success, .07);
+    color: $color-success;
+}
+
+.trongTaiPositionStrip {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 5px;
+    padding: 0 16px 13px;
+    border-bottom: 1px solid $color-border;
+}
+
+.trongTaiPositionFilled,
+.trongTaiPositionEmpty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 25px;
+    border-radius: 7px;
+    font-family: $font-mono;
+    font-size: 9px;
+    font-weight: 800;
+}
+
+.trongTaiPositionFilled {
+    background: rgba($color-success, .1);
+    color: $color-success;
+}
+
+.trongTaiPositionEmpty {
+    border: 1px dashed $color-border;
+    color: $color-text-muted;
+}
+
+.trongTaiCourtBody {
+    display: flex;
+    flex-direction: column;
+}
+
+.trongTaiSection {
+    padding: 13px 16px 15px;
+
+    +.trongTaiSection {
+        border-top: 1px solid $color-border;
+        background: rgba($color-bg, .45);
+    }
+}
+
+.trongTaiSectionHead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 8px;
+
+    span {
+        color: $color-text-muted;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: .055em;
+        text-transform: uppercase;
+    }
+
+    small {
+        color: $color-text-muted;
+        font-size: 9px;
+        font-weight: 700;
+    }
+}
+
+.trongTaiAssignedList,
+.trongTaiReserveList {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.trongTaiPersonRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-width: 0;
+    padding: 9px 9px 9px 10px;
+    border: 1px solid $color-border;
+    border-radius: 10px;
+    background: $color-surface;
+    transition: border-color .15s ease, box-shadow .15s ease;
+
+    &:hover {
+        border-color: rgba($color-text-muted, .35);
+        box-shadow: 0 4px 14px rgba(17, 24, 39, .04);
+    }
+}
+
+.trongTaiPersonAssigned {
+    border-left: 3px solid rgba($color-success, .7);
+    padding-left: 8px;
+}
+
+.trongTaiPersonMain {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 130px;
+    flex: 1;
+}
+
+.trongTaiAvatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 31px;
+    height: 31px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: rgba($color-do, .08);
+    color: $color-do;
+    font-size: 10px;
+    font-weight: 800;
+}
+
+.trongTaiPersonInfo {
+    min-width: 0;
+
+    strong {
+        display: block;
+        overflow: hidden;
+        color: $color-text;
+        font-size: 12px;
+        line-height: 1.25;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    span {
+        display: block;
+        margin-top: 2px;
+        color: $color-text-muted;
+        font-size: 9px;
+    }
+}
+
+.trongTaiPersonControls {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    flex-shrink: 0;
+
+    label {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    label>span {
+        padding-left: 2px;
+        color: $color-text-muted;
+        font-size: 8px;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    select {
+        max-width: 115px;
+        min-height: 30px;
+        padding: 4px 23px 4px 7px;
+        border: 1px solid $color-border;
+        border-radius: 7px;
+        outline: none;
+        background: $color-surface;
+        color: $color-text;
+        font: inherit;
+        font-size: 10px;
+
+        &:focus {
+            border-color: rgba($color-do, .45);
+        }
+    }
+}
+
+.trongTaiDeleteV2 {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: $color-text-muted;
+    cursor: pointer;
+
+    &:hover {
+        background: rgba($color-danger, .08);
+        color: $color-danger;
+    }
+}
+
+.trongTaiSectionEmpty,
+.trongTaiCourtEmpty {
+    margin: 0;
+    color: $color-text-muted;
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+.trongTaiSectionEmpty {
+    padding: 7px 0 3px;
+}
+
+.trongTaiCourtEmpty {
+    padding: 22px 16px;
+    border-top: 1px solid $color-border;
+    text-align: center;
+}
+
+@media (max-width: 1100px) {
+    .trongTaiCourtGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 780px) {
+    .trongTaiOverview {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .trongTaiStats {
+        width: 100%;
+    }
+
+    .trongTaiAddFormV2 {
+        grid-template-columns: 1fr 1fr;
+
+        >button {
+            grid-column: 1 / -1;
+        }
+    }
+
+    .trongTaiListToolbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .trongTaiSearch {
+        width: 100%;
+        min-width: 0;
+    }
+}
+
+@media (max-width: 620px) {
+    .trongTaiOverview {
+        padding: 17px 15px;
+    }
+
+    .trongTaiStats {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .trongTaiStat {
+        min-width: 0;
+        padding: 9px 7px;
+    }
+
+    .trongTaiStat span {
+        white-space: normal;
+    }
+
+    .trongTaiAddFormV2 {
+        grid-template-columns: 1fr;
+        padding: 13px;
+    }
+
+    .trongTaiAddFormV2>button {
+        grid-column: auto;
+    }
+
+    .trongTaiCourtHeader {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .trongTaiPositionStrip {
+        padding-inline: 12px;
+    }
+
+    .trongTaiSection {
+        padding-inline: 12px;
+    }
+
+    .trongTaiPersonRow {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .trongTaiPersonControls {
+        display: grid;
+        grid-template-columns: 1fr 1fr auto;
+        width: 100%;
+    }
+
+    .trongTaiPersonControls select {
+        width: 100%;
+        max-width: none;
+    }
+}

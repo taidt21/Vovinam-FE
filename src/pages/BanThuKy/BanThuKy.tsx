@@ -273,10 +273,6 @@ export default function BanThuKy() {
   const athletePhoto = (id: string | null): string | null =>
     id ? (athletes.find((a) => a.id === id)?.anhDaiDien ?? null) : null;
   const eventOf = (eventId: string) => events.find((e) => e.id === eventId);
-  const squadTeam = (s: BanThuKySquad) => {
-    const first = athletes.find((a) => s.athleteIds.includes(a.id));
-    return first ? athleteTeam(first.id) : "—";
-  };
 
   // Theo dõi CỤC BỘ chế độ vừa xác nhận cho sân hiện tại — để lần gọi kế
   // tiếp (VD: bấm tab rồi effect tự động gán trận/lượt chạy ngay sau đó)
@@ -609,15 +605,20 @@ export default function BanThuKy() {
       .flatMap((e): Omit<QuyenItem, "so">[] => {
         if (e.hinhThucThi === "doi") {
           return (squadOrderByEvent[e.id] ?? []).map(
-            (s): Omit<QuyenItem, "so"> => ({
-              event: e,
-              athleteId: null,
-              teamId: s.teamId,
-              label: s.ten,
-              sub: squadTeam(s),
-              isTeam: true,
-              thanhVien: s.athleteIds.map((id) => athleteName(id) ?? "—"),
-            }),
+            (s): Omit<QuyenItem, "so"> => {
+              const tenThanhVien = s.athleteIds.map(
+                (id) => athleteName(id) ?? "—",
+              );
+              return {
+                event: e,
+                athleteId: null,
+                teamId: s.teamId,
+                label: tenThanhVien.join(", "),
+                sub: "",
+                isTeam: true,
+                thanhVien: tenThanhVien,
+              };
+            },
           );
         }
         return (orderByEvent[e.id] ?? []).map(
@@ -755,6 +756,7 @@ export default function BanThuKy() {
     );
 
   const courtName = courts.find((c) => c.id === currentCourtId)?.ten ?? "";
+  const currentTabLabel = TABS.find((item) => item.id === tab)?.label ?? "";
 
   // Mở màn hình công khai, tự đặt vị trí bắt đầu ngay tại mép phải màn
   // hình chính đang dùng — rơi đúng vào màn hình mở rộng liền kề (đúng
@@ -774,41 +776,53 @@ export default function BanThuKy() {
   return (
     <div className={styles.page}>
       <div className={styles.topbar}>
-        <h1 className={styles.title}>Bàn thư ký</h1>
+        <div className={styles.topbarIdentity}>
+          <span className={styles.pageEyebrow}>Điều hành thi đấu</span>
+          <h1 className={styles.title}>Bàn thư ký</h1>
+          <p className={styles.pageSubtitle}>
+            {courtName ? `${courtName} · ${currentTabLabel}` : currentTabLabel}
+          </p>
+        </div>
+
         <div className={styles.topbarActions}>
+          <div className={styles.courtControl}>
+            <span className={styles.courtControlLabel}>Sân đang thao tác</span>
+            {ganSan ? (
+              <span className={styles.courtLabel}>{courtName}</span>
+            ) : (
+              <select
+                className={styles.courtSelect}
+                value={currentCourtId}
+                aria-label="Chọn sân đang thao tác"
+                onChange={(e) => setCurrentCourtId(e.target.value)}>
+                {courts.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.ten}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
           <button
             className={styles.publicScreenLink}
             onClick={openPublicScreenExtended}>
-            Mở màn hình công khai ↗
+            Mở màn hình công khai <span aria-hidden="true">↗</span>
           </button>
-          {ganSan ? (
-            <span className={styles.courtLabel}>
-              Đang thao tác: {courtName}
-            </span>
-          ) : (
-            <select
-              className={styles.courtSelect}
-              value={currentCourtId}
-              onChange={(e) => setCurrentCourtId(e.target.value)}>
-              {courts.map((c) => (
-                <option key={c.id} value={c.id}>
-                  Đang thao tác: {c.ten}
-                </option>
-              ))}
-            </select>
-          )}
         </div>
       </div>
 
-      <div className={styles.tabsBar}>
+      <div className={styles.tabsBar} role="tablist" aria-label="Chức năng bàn thư ký">
         {TABS.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
+            type="button"
+            role="tab"
+            aria-selected={tab === id}
             className={tab === id ? styles.tabActive : styles.tab}
             onClick={() => handleTabClick(id)}>
-            <Icon size={15} /> {label}
+            <Icon size={16} /> <span>{label}</span>
             {id === "dieu_hanh_dk" && activeOnMyCourt && (
-              <span className={styles.tabDot} />
+              <span className={styles.tabDot} title="Sân đang có trận đối kháng" />
             )}
           </button>
         ))}
@@ -819,6 +833,7 @@ export default function BanThuKy() {
           numbered={numbered}
           eventOf={eventOf}
           athleteName={athleteName}
+          athleteTeam={athleteTeam}
           currentCourtId={currentCourtId}
           courts={courts}
           onStart={openIntoCourt}

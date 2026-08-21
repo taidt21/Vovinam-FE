@@ -169,12 +169,50 @@ export default function DieuHanhQuyenTab({
   const ss = Math.floor(hienThi % 60);
   const timeLabel = `${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`;
 
+  const statusLabel = daKetThuc
+    ? "Đã kết thúc"
+    : dangThi
+      ? "Đang thi"
+      : dangTamDung
+        ? "Tạm dừng"
+        : "Chờ bắt đầu";
+
+  const statusClass = daKetThuc
+    ? styles.operationStatusDone
+    : dangThi
+      ? styles.operationStatusLive
+      : dangTamDung
+        ? styles.operationStatusPaused
+        : styles.operationStatusWaiting;
+
   return (
     <div className={styles.dieuHanhQuyen}>
-      <div className={styles.matchMeta}>{live.eventTen}</div>
+      <div className={styles.operationHeader}>
+        <div>
+          <span className={styles.sectionEyebrow}>Điều hành quyền</span>
+          <h2 className={styles.operationTitle}>{live.eventTen}</h2>
+          <p className={styles.operationSubline}>
+            Theo dõi VĐV, thời gian và điểm của 5 giám định trong cùng một màn
+            hình.
+          </p>
+        </div>
+        <span className={`${styles.operationStatus} ${statusClass}`}>
+          <span /> {statusLabel}
+        </span>
+      </div>
 
       <div className={styles.quyenLayout}>
         <div className={styles.quyenJudgePanel}>
+          <div className={styles.panelHeading}>
+            <div>
+              <span className={styles.panelEyebrow}>Tổ giám định</span>
+              <strong>Điểm chấm</strong>
+            </div>
+            <span className={styles.judgeCountBadge}>
+              {Math.min(scores.length, 5)}/5 đã chấm
+            </span>
+          </div>
+
           <div className={styles.quyenJudgeList}>
             {[1, 2, 3, 4, 5].map((n) => {
               const gd = giamDinhSan.find((t) => t.thuTuGiamDinh === n);
@@ -182,13 +220,18 @@ export default function DieuHanhQuyenTab({
                 ? scores.find((s) => s.giamKhaoId === gd.id)?.diem
                 : undefined;
               return (
-                <div key={n} className={styles.quyenJudgeCell}>
+                <div
+                  key={n}
+                  className={`${styles.quyenJudgeCell} ${
+                    diem !== undefined ? styles.quyenJudgeCellScored : ""
+                  }`}>
+                  <div className={styles.judgeIndex}>{n}</div>
                   <div className={styles.quyenJudgeInfo}>
                     <span className={styles.quyenJudgeLabel}>
                       Giám định {n}
                     </span>
                     <span className={styles.quyenJudgeName}>
-                      {gd ? gd.hoTen : "chưa gán"}
+                      {gd ? gd.hoTen : "Chưa gán giám định"}
                     </span>
                   </div>
                   <span
@@ -197,16 +240,26 @@ export default function DieuHanhQuyenTab({
                         ? styles.quyenJudgeScore
                         : styles.quyenJudgeScorePending
                     }>
-                    {diem !== undefined ? diem : gd ? "chưa chấm" : "—"}
+                    {diem !== undefined ? diem : gd ? "Chờ điểm" : "—"}
                   </span>
                 </div>
               );
             })}
           </div>
 
+          <div className={styles.judgeProgressSummary}>
+            <div className={styles.judgeProgressTrack}>
+              <span style={{ width: `${Math.min(scores.length, 5) * 20}%` }} />
+            </div>
+            <span>{Math.min(scores.length, 5)} / 5 giám định đã gửi điểm</span>
+          </div>
+
           {tongHop !== null && (
             <div className={styles.quyenResultBox}>
-              <span>Tổng điểm</span>
+              <div>
+                <span>Kết quả tổng hợp</span>
+                <small>Điểm hợp lệ sau khi tổng hợp</small>
+              </div>
               <strong>{tongHop.toFixed(2)}</strong>
             </div>
           )}
@@ -214,80 +267,100 @@ export default function DieuHanhQuyenTab({
 
         <div className={styles.quyenMainCol}>
           <div className={styles.quyenPerformer}>
+            <span className={styles.panelEyebrow}>Đang điều hành</span>
             <AthleteAvatar
               name={live.performerLabel}
               photoUrl={live.photoUrl}
-              size={96}
+              size={104}
             />
             <div className={styles.quyenPerformerName}>
               {live.performerLabel}
             </div>
             <div className={styles.quyenPerformerSub}>{live.performerSub}</div>
-            {live.thanhVien && live.thanhVien.length > 0 && (
+            {/* {live.thanhVien && live.thanhVien.length > 0 && (
               <div className={styles.quyenThanhVien}>
-                {live.thanhVien.join(" - ")}
+                {live.thanhVien.join(" · ")}
               </div>
-            )}
+            )} */}
           </div>
 
           {daKetThuc ? (
-            <div className={styles.endedBox}>
-              <Award size={28} />
+            <div className={`${styles.endedBox} ${styles.quyenEndedBox}`}>
+              <div className={styles.endedIcon}>
+                <Award size={28} />
+              </div>
               <span className={styles.endedLabel}>
                 {live.lyDoKetThuc === "hoan_thanh"
-                  ? "Đã hoàn thành"
+                  ? "Đã hoàn thành lượt thi"
                   : `Đã kết thúc — ${LY_DO_KET_THUC_QUYEN_LABEL[live.lyDoKetThuc!]}`}
               </span>
-              <div className={styles.controlBtns}>
+              {tongHop !== null && (
+                <strong className={styles.endedScore}>
+                  {tongHop.toFixed(2)}
+                </strong>
+              )}
+              <div
+                className={`${styles.controlBtns} ${styles.quyenEndActions}`}>
                 <button className={styles.btnPrimary} onClick={xongHan}>
                   <Check size={16} /> Xong, qua lượt tiếp theo
                 </button>
                 <button className={styles.linkBtn} onClick={choThiLai}>
-                  Cho thi lại
+                  Cho thi lại từ đầu
                 </button>
               </div>
             </div>
           ) : (
-            <>
-              <span
-                className={`${styles.timerBig} ${hetGio ? styles.timerDone : ""}`}>
-                {timeLabel}
-              </span>
-              {!live.coGioiHan && (
-                <p className={styles.hint}>
-                  Không giới hạn thời gian — đồng hồ chỉ đếm để tham khảo.
-                </p>
-              )}
-              {hetGio && (
-                <p className={styles.hint}>
-                  Đã hết thời gian tham chiếu của bài.
-                </p>
-              )}
+            <div className={styles.quyenControlPanel}>
+              <div className={styles.timerPanel}>
+                <span className={styles.timerCaption}>
+                  {live.coGioiHan ? "Thời gian còn lại" : "Thời gian đã thi"}
+                </span>
+                <span
+                  className={`${styles.timerBig} ${hetGio ? styles.timerDone : ""}`}>
+                  {timeLabel}
+                </span>
+                <span className={styles.timerSupportText}>
+                  {!live.coGioiHan
+                    ? "Không giới hạn thời gian · đồng hồ dùng để tham khảo"
+                    : hetGio
+                      ? "Đã hết thời gian tham chiếu của bài"
+                      : `Thời gian tham chiếu: ${live.thoiGianGioiHanGiay ?? 0} giây`}
+                </span>
+              </div>
 
-              {live.trangThai === "cho_bat_dau" && (
-                <button className={styles.timerBtn} onClick={batDau}>
-                  <Play size={15} /> Bắt đầu
-                </button>
-              )}
-              {dangThi && (
-                <button className={styles.timerBtn} onClick={tamDung}>
-                  <Pause size={15} /> Tạm dừng
-                </button>
-              )}
-              {dangTamDung && (
-                <button className={styles.timerBtn} onClick={tiepTuc}>
-                  <Play size={15} /> Tiếp tục
-                </button>
-              )}
+              <div className={styles.quyenTimerActions}>
+                {live.trangThai === "cho_bat_dau" && (
+                  <button
+                    className={`${styles.timerBtn} ${styles.timerBtnPrimary}`}
+                    onClick={batDau}>
+                    <Play size={16} /> Bắt đầu lượt thi
+                  </button>
+                )}
+                {dangThi && (
+                  <button className={styles.timerBtn} onClick={tamDung}>
+                    <Pause size={16} /> Tạm dừng đồng hồ
+                  </button>
+                )}
+                {dangTamDung && (
+                  <button
+                    className={`${styles.timerBtn} ${styles.timerBtnPrimary}`}
+                    onClick={tiepTuc}>
+                    <Play size={16} /> Tiếp tục
+                  </button>
+                )}
+              </div>
 
               {!showEndFlow ? (
                 <button
-                  className={styles.btnDangerBig}
+                  className={`${styles.btnDangerBig} ${styles.quyenFinishBtn}`}
                   onClick={() => setShowEndFlow(true)}>
                   <Flag size={18} /> Kết thúc lượt
                 </button>
               ) : (
-                <div className={styles.settingsForm}>
+                <div className={`${styles.settingsForm} ${styles.endFlowCard}`}>
+                  <div className={styles.endFlowTitle}>
+                    Xác nhận kết thúc lượt
+                  </div>
                   <label className={styles.reasonRow}>
                     <span>Lý do</span>
                     <select
@@ -302,14 +375,22 @@ export default function DieuHanhQuyenTab({
                       ))}
                     </select>
                   </label>
-                  <button
-                    className={styles.btnPrimary}
-                    onClick={() => ketThuc(lyDo)}>
-                    Xác nhận kết thúc
-                  </button>
+                  <div className={styles.endFlowActions}>
+                    <button
+                      type="button"
+                      className={styles.editBtn}
+                      onClick={() => setShowEndFlow(false)}>
+                      Huỷ
+                    </button>
+                    <button
+                      className={styles.btnPrimary}
+                      onClick={() => ketThuc(lyDo)}>
+                      Xác nhận kết thúc
+                    </button>
+                  </div>
                 </div>
               )}
-            </>
+            </div>
           )}
         </div>
       </div>

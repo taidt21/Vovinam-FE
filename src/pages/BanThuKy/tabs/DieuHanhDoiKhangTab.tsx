@@ -32,6 +32,13 @@ import { LY_DO_OPTIONS } from "../helpers";
 import RecoveryScreen from "./RecoveryScreen";
 import styles from "../BanThuKy.module.scss";
 
+// Vòng 32 và Vòng 16 gộp chung nhãn "Vòng loại" khi hiện — đúng quy ước
+// đang dùng ở trang xuất PDF đối kháng và tab Lịch thi đấu, để mọi nơi
+// khớp nhau.
+function nhanVong(vong: string): string {
+  return vong === "Vòng 32" || vong === "Vòng 16" ? "Vòng loại" : vong;
+}
+
 export default function DieuHanhDoiKhangTab({
   match,
   eventTen,
@@ -277,7 +284,7 @@ export default function DieuHanhDoiKhangTab({
     <div className={styles.dieuHanh}>
       <div className={styles.matchMeta}>
         {so && <span className={styles.matchNoTag}>#{so}</span>} {eventTen} -{" "}
-        {match.vong}
+        {nhanVong(match.vong)}
       </div>
 
       <div className={styles.scoreBoardBig}>

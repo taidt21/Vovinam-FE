@@ -3,12 +3,76 @@
 .page {
     display: flex;
     flex-direction: column;
+    gap: $space-4;
+    min-width: 0;
+}
+
+.pageHeader {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: $space-5;
+    padding: $space-5;
+    background: linear-gradient(135deg, $color-surface 0%, rgba($color-do, 0.035) 100%);
+    border: 1px solid $color-border;
+    border-radius: 16px;
+}
+
+.eyebrow,
+.resultType,
+.sidebarEyebrow {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: $color-do;
 }
 
 .title {
-    font-size: 20px;
-    font-weight: 700;
-    margin: 0 0 $space-4;
+    margin: 0;
+    font-size: clamp(24px, 3vw, 32px);
+    line-height: 1.15;
+    font-weight: 800;
+    color: $color-text;
+}
+
+.pageDescription {
+    margin: 8px 0 0;
+    max-width: 650px;
+    font-size: 13px;
+    line-height: 1.55;
+    color: $color-text-muted;
+}
+
+.headerStats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(100px, 1fr));
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.headerStat {
+    min-width: 108px;
+    padding: 12px 14px;
+    border: 1px solid $color-border;
+    border-radius: 12px;
+    background: rgba($color-surface, .9);
+
+    strong {
+        display: block;
+        margin-bottom: 3px;
+        font-size: 20px;
+        line-height: 1;
+        color: $color-text;
+    }
+
+    span {
+        font-size: 10.5px;
+        line-height: 1.35;
+        color: $color-text-muted;
+    }
 }
 
 .hint {
@@ -16,251 +80,899 @@
     color: $color-text-muted;
 }
 
+.loadingCard {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: $space-5;
+    border: 1px solid $color-border;
+    border-radius: 14px;
+    background: $color-surface;
+
+    strong {
+        display: block;
+        margin-bottom: 3px;
+    }
+
+    p {
+        margin: 0;
+        font-size: 12px;
+        color: $color-text-muted;
+    }
+}
+
+.loadingDot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: $color-do;
+    box-shadow: 0 0 0 5px rgba($color-do, .1);
+    animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    50% { opacity: .45; transform: scale(.88); }
+}
+
 .tabsBar {
     display: flex;
-    gap: $space-1;
-    border-bottom: 1px solid $color-border;
-    margin-bottom: $space-5;
+    gap: 6px;
+    width: fit-content;
+    max-width: 100%;
+    padding: 5px;
+    border: 1px solid $color-border;
+    border-radius: 12px;
+    background: $color-surface;
+    overflow-x: auto;
 }
 
 .tab,
 .tabActive {
-    padding: $space-3 $space-4;
-    font-size: 14px;
-    font-weight: 600;
-    border: none;
-    background: none;
-    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 38px;
+    padding: 8px 12px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
     color: $color-text-muted;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -1px;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background .18s ease, color .18s ease, box-shadow .18s ease;
 
     &:hover {
+        background: $color-bg;
         color: $color-text;
     }
 }
 
 .tabActive {
+    background: rgba($color-do, .09);
     color: $color-do;
-    border-bottom-color: $color-do;
+    box-shadow: inset 0 0 0 1px rgba($color-do, .13);
+}
 
-    &:hover {
-        color: $color-do;
-    }
+.tabCount {
+    min-width: 22px;
+    padding: 2px 6px;
+    border-radius: 999px;
+    background: rgba($color-text-muted, .1);
+    font-size: 11px;
+    text-align: center;
+}
+
+.tabActive .tabCount {
+    background: rgba($color-do, .12);
 }
 
 .body {
-    display: flex;
-    gap: $space-5;
-    align-items: flex-start;
+    display: grid;
+    grid-template-columns: 280px minmax(0, 1fr);
+    gap: $space-4;
+    align-items: start;
 }
 
 .sidebar {
-    width: 260px;
-    flex-shrink: 0;
-    background: $color-surface;
-    border: 1px solid $color-border;
-    border-radius: 10px;
-    padding: $space-2;
+    position: sticky;
+    top: 12px;
+    max-height: calc(100vh - 28px);
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    min-width: 0;
+    padding: 12px;
+    border: 1px solid $color-border;
+    border-radius: 14px;
+    background: $color-surface;
+}
+
+.sidebarHead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+    padding: 2px 2px 10px;
+    border-bottom: 1px solid $color-border;
+
+    strong {
+        display: block;
+        font-size: 14px;
+    }
+}
+
+.sidebarEyebrow {
+    margin-bottom: 2px;
+    font-size: 9px;
+    color: $color-text-muted;
+}
+
+.sidebarCount,
+.sectionCount {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 30px;
+    height: 26px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: $color-bg;
+    color: $color-text-muted;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.searchBox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    padding: 0 10px;
+    border: 1px solid $color-border;
+    border-radius: 9px;
+    background: $color-bg;
+
+    &:focus-within {
+        border-color: rgba($color-do, .42);
+        background: $color-surface;
+        box-shadow: 0 0 0 3px rgba($color-do, .06);
+    }
+
+    input {
+        width: 100%;
+        min-width: 0;
+        height: 38px;
+        padding: 0;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: $color-text;
+        font: inherit;
+        font-size: 12px;
+
+        &::placeholder { color: $color-text-muted; }
+    }
+}
+
+.searchIcon {
+    font-size: 18px;
+    color: $color-text-muted;
+    line-height: 1;
+}
+
+.eventList {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    overflow-y: auto;
+    padding-right: 2px;
 }
 
 .eventItem,
 .eventItemActive {
+    position: relative;
     display: flex;
     flex-direction: column;
-    gap: 2px;
-    text-align: left;
-    padding: $space-2 $space-3;
-    border-radius: 6px;
-    border: none;
-    background: none;
-    font-size: 13px;
-    cursor: pointer;
+    gap: 4px;
+    width: 100%;
+    padding: 10px 11px;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    background: transparent;
     color: $color-text;
+    text-align: left;
+    cursor: pointer;
+    transition: background .16s ease, border-color .16s ease, transform .16s ease;
 
     &:hover {
         background: $color-bg;
+        border-color: $color-border;
     }
 }
 
 .eventItemActive {
-    background: rgba($color-do, 0.08);
-    color: $color-do;
-    font-weight: 600;
+    padding-left: 14px;
+    background: rgba($color-do, .07);
+    border-color: rgba($color-do, .18);
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: 9px;
+        bottom: 9px;
+        left: 5px;
+        width: 3px;
+        border-radius: 999px;
+        background: $color-do;
+    }
+
+    .eventName { color: $color-do; }
+}
+
+.eventName {
+    font-size: 12.5px;
+    font-weight: 700;
+    line-height: 1.4;
 }
 
 .eventMeta {
-    font-size: 11px;
+    font-size: 10.5px;
     color: $color-text-muted;
-    font-weight: 400;
+    font-weight: 500;
 }
 
 .emptySidebar {
-    padding: $space-3;
+    margin: 4px 0 0;
+    padding: 14px 8px;
     font-size: 12px;
+    line-height: 1.5;
     color: $color-text-muted;
+    text-align: center;
 }
 
 .main {
-    flex: 1;
-    background: $color-surface;
-    border: 1px solid $color-border;
-    border-radius: 10px;
-    padding: $space-5;
     min-width: 0;
+    padding: $space-5;
+    border: 1px solid $color-border;
+    border-radius: 14px;
+    background: $color-surface;
+}
+
+.emptyMain,
+.emptyList {
+    padding: 42px 24px;
+    text-align: center;
+    border: 1px dashed $color-border;
+    border-radius: 12px;
+    background: $color-bg;
+
+    strong {
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    p {
+        margin: 0;
+        font-size: 12px;
+        color: $color-text-muted;
+    }
+}
+
+.resultHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: $space-4;
+    margin: -4px -4px $space-5;
+    padding: 4px 4px $space-5;
+    border-bottom: 1px solid $color-border;
+}
+
+.resultType {
+    margin-bottom: 6px;
+    font-size: 10px;
 }
 
 .eventTitle {
-    font-size: 16px;
-    font-weight: 700;
-    margin: 0 0 $space-4;
+    margin: 0;
+    font-size: clamp(19px, 2.5vw, 24px);
+    line-height: 1.25;
+    font-weight: 800;
+    color: $color-text;
+}
+
+.eventBadges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+
+    span {
+        display: inline-flex;
+        align-items: center;
+        min-height: 24px;
+        padding: 3px 8px;
+        border: 1px solid $color-border;
+        border-radius: 999px;
+        background: $color-bg;
+        color: $color-text-muted;
+        font-size: 10.5px;
+        font-weight: 700;
+    }
+}
+
+.progressSummary {
+    min-width: 148px;
+    padding: 12px 14px;
+    border: 1px solid $color-border;
+    border-radius: 11px;
+    background: $color-bg;
+
+    strong {
+        display: block;
+        margin-bottom: 2px;
+        font-size: 18px;
+        color: $color-text;
+    }
+
+    > span {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 10.5px;
+        color: $color-text-muted;
+    }
+}
+
+.progressTrack {
+    height: 5px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgba($color-text-muted, .12);
+
+    span {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+        background: $color-do;
+        transition: width .25s ease;
+    }
+}
+
+.sectionHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: $space-5 0 $space-3;
+
+    strong {
+        display: block;
+        margin-bottom: 2px;
+        font-size: 14px;
+    }
+
+    > div > span {
+        display: block;
+        font-size: 11px;
+        color: $color-text-muted;
+    }
+}
+
+.bracketShell {
+    overflow-x: auto;
+    padding: 2px;
+    border-radius: 10px;
 }
 
 .medalBox {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
     margin-bottom: $space-5;
     padding: $space-4;
-    border-radius: 12px;
-    background: rgba($color-vang, 0.06);
-    border: 1px solid rgba($color-vang, 0.25);
+    border: 1px solid rgba($color-vang, .24);
+    border-radius: 13px;
+    background: linear-gradient(135deg, rgba($color-vang, .07), rgba($color-vang, .02));
+}
+
+.medalBoxHead {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+
+    strong {
+        display: block;
+        margin-bottom: 2px;
+        font-size: 13px;
+    }
+
+    span {
+        font-size: 10.5px;
+        color: $color-text-muted;
+    }
+}
+
+.medalGrid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
 }
 
 .medalRowVang,
 .medalRowBac,
 .medalRowDong {
     display: flex;
-    align-items: center;
-    gap: $space-3;
-    padding: 8px 12px;
-    border-radius: 8px;
+    align-items: flex-start;
+    gap: 10px;
+    min-width: 0;
+    padding: 11px;
+    border: 1px solid $color-border;
+    border-radius: 10px;
     background: $color-surface;
 }
 
+.medalIcon {
+    flex: 0 0 auto;
+    font-size: 22px;
+    line-height: 1;
+}
+
+.medalContent {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
 .medalTag {
-    font-size: 13px;
-    font-weight: 700;
-    width: 70px;
-    flex-shrink: 0;
+    margin-bottom: 3px;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    color: $color-text-muted;
 }
 
 .medalName {
-    font-size: 14px;
-    font-weight: 600;
-    flex: 1;
+    font-size: 12.5px;
+    font-weight: 800;
+    line-height: 1.4;
+    color: $color-text;
+    overflow-wrap: anywhere;
 }
 
 .medalSub {
-    font-size: 12px;
+    margin-top: 3px;
+    font-size: 10.5px;
+    line-height: 1.4;
     color: $color-text-muted;
 }
 
 .quyenList {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 7px;
 }
 
 .quyenRow {
-    display: flex;
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr) auto;
     align-items: center;
-    gap: $space-3;
-    padding: $space-3;
+    gap: 12px;
+    min-height: 72px;
+    padding: 11px 12px;
     border: 1px solid $color-border;
-    border-radius: 10px;
+    border-radius: 11px;
+    background: $color-surface;
+    transition: border-color .16s ease, background .16s ease, transform .16s ease;
+
+    &:hover {
+        border-color: rgba($color-do, .2);
+        background: rgba($color-do, .018);
+    }
 }
 
 .quyenNo {
-    font-family: $font-mono;
-    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    background: $color-bg;
     color: $color-text-muted;
-    flex-shrink: 0;
+    font-family: $font-mono;
+    font-size: 11px;
+    font-weight: 800;
 }
 
 .quyenInfo {
-    flex: 1;
     min-width: 0;
 }
 
 .quyenName {
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 13.5px;
+    font-weight: 800;
+    line-height: 1.4;
+    color: $color-text;
 }
 
 .quyenSub {
-    font-size: 12px;
+    margin-top: 3px;
+    font-size: 11px;
     color: $color-text-muted;
+}
+
+.quyenTeamLabel {
+    margin-bottom: 5px;
+    font-size: 9.5px;
+    font-weight: 800;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: $color-text-muted;
+}
+
+.quyenMemberList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.quyenMember {
+    display: inline-flex;
+    align-items: center;
+    min-height: 27px;
+    padding: 4px 8px;
+    border: 1px solid rgba($color-do, .13);
+    border-radius: 7px;
+    background: rgba($color-do, .045);
+    color: $color-text;
+    font-size: 11.5px;
+    font-weight: 700;
+}
+
+.quyenMemberEmpty {
+    color: $color-text-muted;
+    font-size: 11.5px;
+}
+
+.quyenStatus {
+    display: flex;
+    justify-content: flex-end;
+    min-width: 126px;
+}
+
+.quyenDone,
+.quyenEnded,
+.quyenPending {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    padding: 7px 9px;
+    border-radius: 8px;
+
+    strong {
+        font-size: 12.5px;
+        line-height: 1.2;
+    }
+
+    small {
+        font-size: 9.5px;
+        color: $color-text-muted;
+    }
 }
 
 .quyenDone {
-    font-size: 13px;
-    font-weight: 700;
-    color: $color-success;
-    flex-shrink: 0;
+    background: rgba(30, 135, 82, .07);
+    color: rgb(29, 119, 73);
+}
+
+.quyenEnded {
+    background: rgba($color-do, .06);
+    color: $color-do;
 }
 
 .quyenPending {
-    font-size: 12px;
+    background: $color-bg;
     color: $color-text-muted;
-    flex-shrink: 0;
+}
+
+.tallySection {
+    display: flex;
+    flex-direction: column;
+    gap: $space-4;
+}
+
+.tallyHeader {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: $space-4;
+    padding: $space-5;
+    border: 1px solid $color-border;
+    border-radius: 14px;
+    background: $color-surface;
+
+    h2 {
+        margin: 0;
+        font-size: 20px;
+    }
+
+    p {
+        margin: 5px 0 0;
+        font-size: 12px;
+        color: $color-text-muted;
+    }
+}
+
+.tallySummary {
+    min-width: 145px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba($color-vang, .07);
+    text-align: right;
+
+    strong {
+        display: block;
+        font-size: 20px;
+        color: $color-text;
+    }
+
+    span {
+        font-size: 10.5px;
+        color: $color-text-muted;
+    }
+}
+
+.sortToggle {
+    display: inline-flex;
+    gap: 4px;
+    padding: 4px;
+    margin-bottom: 14px;
+    border: 1px solid $color-border;
+    border-radius: 10px;
+    background: $color-bg;
+}
+
+.sortToggleBtn,
+.sortToggleActive {
+    padding: 7px 14px;
+    border: none;
+    border-radius: 7px;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.sortToggleBtn {
+    background: transparent;
+    color: $color-text-muted;
+
+    &:hover {
+        background: rgba($color-text-muted, 0.08);
+    }
+}
+
+.sortToggleActive {
+    background: $color-surface;
+    color: $color-text;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 
 .card {
-    background: $color-surface;
-    border: 1px solid $color-border;
-    border-radius: 10px;
     overflow: hidden;
+    border: 1px solid $color-border;
+    border-radius: 14px;
+    background: $color-surface;
+}
+
+.tableScroll {
+    overflow-x: auto;
 }
 
 .medalTable {
     width: 100%;
+    min-width: 620px;
     border-collapse: collapse;
     font-size: 13px;
 
     th,
     td {
-        text-align: left;
-        padding: $space-3;
+        padding: 13px 14px;
         border-bottom: 1px solid $color-border;
+        text-align: left;
     }
 
     th {
-        font-size: 12px;
-        text-transform: uppercase;
+        background: $color-bg;
         color: $color-text-muted;
-        font-weight: 600;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: .05em;
+        text-transform: uppercase;
     }
 
-    tbody tr:last-child td {
-        border-bottom: none;
+    tbody tr {
+        transition: background .15s ease;
+
+        &:hover { background: rgba($color-do, .018); }
+        &:last-child td { border-bottom: none; }
     }
+}
+
+.topRankRow {
+    background: rgba($color-vang, .022);
 }
 
 .center {
     text-align: center !important;
 }
 
-.rankNum {
-    font-weight: 700;
-    font-size: 15px;
-    width: 60px;
+.rankBadge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    height: 32px;
+    padding: 0 8px;
+    border-radius: 9px;
+    background: $color-bg;
+    font-weight: 800;
+}
+
+.teamCell {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+
+    strong { font-size: 13px; }
+    span { font-size: 10.5px; color: $color-text-muted; }
 }
 
 .gold {
     color: $color-vang;
-    font-weight: 700;
+    font-weight: 800;
 }
 
 .total {
-    font-weight: 700;
+    font-weight: 800;
 }
 
 .empty {
-    text-align: center;
-    color: $color-text-muted;
     padding: $space-5 !important;
+    color: $color-text-muted;
+    text-align: center !important;
+}
+
+@media (max-width: 1050px) {
+    .pageHeader {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .headerStats {
+        width: 100%;
+    }
+
+    .body {
+        grid-template-columns: 230px minmax(0, 1fr);
+    }
+
+    .medalGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 780px) {
+    .pageHeader,
+    .main,
+    .tallyHeader {
+        padding: $space-4;
+    }
+
+    .headerStats {
+        grid-template-columns: 1fr;
+    }
+
+    .headerStat {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+
+        strong { margin: 0; min-width: 34px; }
+    }
+
+    .tabsBar {
+        width: 100%;
+    }
+
+    .body {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .sidebar {
+        position: static;
+        width: 100%;
+        max-height: none;
+    }
+
+    .eventList {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        max-height: 240px;
+    }
+
+    .main {
+        width: 100%;
+    }
+
+    .resultHeader,
+    .tallyHeader {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .progressSummary,
+    .tallySummary {
+        width: 100%;
+        min-width: 0;
+        text-align: left;
+    }
+
+    .quyenRow {
+        grid-template-columns: 38px minmax(0, 1fr);
+    }
+
+    .quyenStatus {
+        grid-column: 2;
+        justify-content: flex-start;
+    }
+
+    .quyenDone,
+    .quyenEnded,
+    .quyenPending {
+        align-items: flex-start;
+    }
+}
+
+@media (max-width: 520px) {
+    .pageHeader,
+    .main,
+    .tallyHeader {
+        padding: 14px;
+        border-radius: 12px;
+    }
+
+    .eventList {
+        grid-template-columns: 1fr;
+    }
+
+    .tab,
+    .tabActive {
+        padding-inline: 10px;
+    }
+
+    .resultHeader {
+        margin-bottom: $space-4;
+        padding-bottom: $space-4;
+    }
+
+    .sectionHeader {
+        align-items: flex-start;
+    }
+
+    .quyenRow {
+        grid-template-columns: 34px minmax(0, 1fr);
+        gap: 9px;
+        padding: 10px;
+    }
+
+    .quyenNo {
+        width: 30px;
+        height: 30px;
+    }
+
+    .quyenMember {
+        width: 100%;
+    }
 }

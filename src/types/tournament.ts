@@ -3,6 +3,9 @@ export interface Tournament {
   ten: string;
   soSan: number;
   choPhepHiepPhu: boolean;
+  heSoVang: number;
+  heSoBac: number;
+  heSoDong: number;
 }
 
 export interface Team {

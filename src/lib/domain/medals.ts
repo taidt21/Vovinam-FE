@@ -36,8 +36,9 @@ export interface QuyenRankingEntry {
   athleteId: string | null;
   teamId: string | null;
   diem: number;
-  hang: number; // 1 = vàng, 2 = bạc, 3 = đồng — bằng cả điểm tổng lẫn
-  // điểm cao nhất (hiệu số phụ) thì mới thực sự cùng hạng.
+  hang: number; // 1 = vàng, 2 = bạc, 3 = đồng — bằng điểm tổng là ĐỒNG
+  // hạng, không có hiệu số phụ nào phá hoà (giống cách đối kháng cho
+  // phép đồng hạng ba).
 }
 
 // scores PHẢI đã lọc sẵn đúng 1 nội dung trước khi gọi hàm này.
@@ -55,9 +56,6 @@ export function computeQuyenRanking(
     return {
       ...item,
       diem: tinhDiemQuyenTongHop(diemList),
-      // Hiệu số phụ — dùng khi 2 VĐV bằng điểm tổng: ai có 1 điểm giám
-      // khảo cao nhất (trong 5 điểm) thì xếp hạng cao hơn.
-      diemCaoNhat: diemList.length > 0 ? Math.max(...diemList) : 0,
       count: myScores.length,
     };
   });
@@ -65,15 +63,12 @@ export function computeQuyenRanking(
   const hoanThanh = withScores.every((r) => r.count === 5);
   if (!hoanThanh) return { hoanThanh: false, ranking: [] };
 
-  const sorted = [...withScores].sort(
-    (a, b) => (b.diem ?? 0) - (a.diem ?? 0) || b.diemCaoNhat - a.diemCaoNhat,
-  );
+  const sorted = [...withScores].sort((a, b) => (b.diem ?? 0) - (a.diem ?? 0));
   const ranking: QuyenRankingEntry[] = [];
   let hang = 1;
   sorted.forEach((r, i) => {
     const prev = sorted[i - 1];
-    if (i > 0 && (r.diem !== prev.diem || r.diemCaoNhat !== prev.diemCaoNhat))
-      hang = i + 1;
+    if (i > 0 && r.diem !== prev.diem) hang = i + 1;
     ranking.push({ athleteId: r.athleteId, teamId: r.teamId, diem: r.diem!, hang });
   });
   return { hoanThanh: true, ranking };
@@ -83,12 +78,18 @@ export interface MedalTally {
   vang: number;
   bac: number;
   dong: number;
+  // Hệ số tạm thời để xếp hạng tổng đoàn — không phải điểm quyền/đối
+  // kháng của từng VĐV, chỉ là cách quy đổi huy chương ra 1 con số duy
+  // nhất để so sánh giữa các đoàn.
+  diem: number;
 }
 
 // Gộp huy chương của MỌI đơn vị qua tất cả nội dung đã xong — đối kháng
 // (từng mảng matches, 1 mảng/nội dung) lẫn quyền (từng cặp items+scores,
 // 1 cặp/nội dung). athletes chỉ cần đúng 2 trường id/teamId để tra cứu
-// đơn vị của VĐV, không cần nguyên object đầy đủ.
+// đơn vị của VĐV, không cần nguyên object đầy đủ. heSo lấy từ cấu hình
+// giải (Tournament.HeSoVang/Bac/Dong), BTC tự chỉnh theo quy chế — mặc
+// định 50/20/10 nếu chưa cấu hình gì.
 export function computeMedalTally(
   doiKhangMatchesByEvent: Match[][],
   quyenDataByEvent: {
@@ -96,11 +97,12 @@ export function computeMedalTally(
     scores: QuyenJudgeScoreWire[];
   }[],
   athletes: { id: string; teamId: string }[],
+  heSo: { vang: number; bac: number; dong: number } = { vang: 50, bac: 20, dong: 10 },
 ): MedalTally[] {
   const athleteTeamId = (athleteId: string) =>
     athletes.find((a) => a.id === athleteId)?.teamId ?? null;
 
-  const tally = new Map<string, MedalTally>();
+  const tally = new Map<string, Omit<MedalTally, 'diem'>>();
   const bump = (teamId: string | null | undefined, field: 'vang' | 'bac' | 'dong') => {
     if (!teamId) return;
     if (!tally.has(teamId)) tally.set(teamId, { teamId, vang: 0, bac: 0, dong: 0 });
@@ -120,13 +122,20 @@ export function computeMedalTally(
     if (!hoanThanh) continue;
     for (const r of ranking) {
       if (r.hang > 3) continue;
+      // Đồng đội: mỗi nội dung chỉ sinh ra ĐÚNG 1 dòng xếp hạng cho cả
+      // đội (items đã gộp theo teamId từ lúc xây, không phải 1 dòng/
+      // thành viên) — nên bump() ở đây tự nhiên chỉ +1 huy chương cho
+      // đoàn, dù đội có bao nhiêu người, không cần xử lý gì thêm.
       const teamId = r.athleteId ? athleteTeamId(r.athleteId) : r.teamId;
       const field = r.hang === 1 ? 'vang' : r.hang === 2 ? 'bac' : 'dong';
       bump(teamId, field);
     }
   }
 
-  return Array.from(tally.values()).sort(
-    (a, b) => b.vang - a.vang || b.bac - a.bac || b.dong - a.dong,
-  );
+  return Array.from(tally.values())
+    .map((t) => ({
+      ...t,
+      diem: t.vang * heSo.vang + t.bac * heSo.bac + t.dong * heSo.dong,
+    }))
+    .sort((a, b) => b.vang - a.vang || b.bac - a.bac || b.dong - a.dong);
 }

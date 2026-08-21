@@ -26,6 +26,419 @@
     margin: 0 0 $space-4;
 }
 
+/* Tournament settings */
+.tournamentCard {
+    padding: 0;
+    overflow: hidden;
+}
+
+.tournamentHeader {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: $space-5;
+    padding: 24px 26px 22px;
+    border-bottom: 1px solid $color-border;
+    background: linear-gradient(180deg, rgba($color-do, 0.035) 0%, $color-surface 100%);
+}
+
+.sectionEyebrow {
+    display: block;
+    margin-bottom: 5px;
+    color: $color-do;
+    font-size: 10px;
+    line-height: 1;
+    font-weight: 800;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+}
+
+.tournamentTitle {
+    margin: 0;
+    color: $color-text;
+    font-size: 19px;
+    font-weight: 760;
+    letter-spacing: -0.02em;
+}
+
+.tournamentIntro {
+    max-width: 650px;
+    margin: 7px 0 0;
+    color: $color-text-muted;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.savedBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    flex-shrink: 0;
+    min-height: 30px;
+    padding: 0 10px;
+    border: 1px solid rgba(#15803d, 0.18);
+    border-radius: 999px;
+    background: rgba(#15803d, 0.055);
+    color: #166534;
+    font-size: 11px;
+    font-weight: 650;
+    white-space: nowrap;
+}
+
+.savedDot {
+    width: 7px;
+    height: 7px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: #16a34a;
+    box-shadow: 0 0 0 3px rgba(#16a34a, 0.1);
+}
+
+.tournamentContent {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 20px 26px 24px;
+}
+
+.settingSection {
+    padding: 18px;
+    border: 1px solid $color-border;
+    border-radius: 11px;
+    background: $color-surface;
+}
+
+.settingSectionHead {
+    margin-bottom: 16px;
+
+    >div {
+        display: flex;
+        align-items: flex-start;
+        gap: 11px;
+    }
+
+    h3 {
+        margin: 0;
+        color: $color-text;
+        font-size: 14px;
+        font-weight: 720;
+        line-height: 1.35;
+    }
+
+    p {
+        margin: 4px 0 0;
+        color: $color-text-muted;
+        font-size: 11px;
+        line-height: 1.5;
+    }
+}
+
+.settingIndex {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    flex: 0 0 30px;
+    border-radius: 8px;
+    background: rgba($color-do, 0.075);
+    color: $color-do;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+}
+
+.basicInfoGrid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 190px;
+    gap: 14px;
+    align-items: end;
+}
+
+.tournamentNameField {
+    min-width: 0;
+}
+
+.fieldLabel {
+    color: $color-text;
+    font-size: 11px;
+    font-weight: 680;
+}
+
+.largeInput {
+    min-height: 44px;
+    font-size: 14px !important;
+}
+
+.courtInputWrap {
+    position: relative;
+
+    input {
+        width: 100%;
+        padding-right: 48px !important;
+    }
+}
+
+.inputSuffix {
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    color: $color-text-muted;
+    font-size: 11px;
+    font-weight: 600;
+    pointer-events: none;
+    transform: translateY(-50%);
+}
+
+.ruleOption {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-4;
+    min-height: 72px;
+    padding: 14px 15px;
+    border: 1px solid $color-border;
+    border-radius: 10px;
+    background: $color-bg;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+
+    &:hover {
+        border-color: rgba($color-do, 0.25);
+    }
+}
+
+.ruleOptionMain {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+
+    >div {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 0;
+    }
+
+    strong {
+        color: $color-text;
+        font-size: 12px;
+        font-weight: 680;
+    }
+
+    div>span {
+        max-width: 650px;
+        color: $color-text-muted;
+        font-size: 11px;
+        line-height: 1.5;
+    }
+}
+
+.ruleCheckbox {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.switchVisual {
+    position: relative;
+    width: 38px;
+    height: 22px;
+    flex: 0 0 38px;
+    border-radius: 999px;
+    background: #d7dbe1;
+    transition: background 0.18s ease;
+
+    >span {
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: white;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.16);
+        transition: transform 0.18s ease;
+    }
+}
+
+.ruleCheckbox:checked+.switchVisual {
+    background: $color-do;
+
+    >span {
+        transform: translateX(16px);
+    }
+}
+
+.ruleCheckbox:focus-visible+.switchVisual {
+    box-shadow: 0 0 0 3px rgba($color-do, 0.14);
+}
+
+.ruleStatus {
+    flex: 0 0 auto;
+    padding: 5px 8px;
+    border-radius: 999px;
+    background: #eceff3;
+    color: $color-text-muted;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.ruleStatusOn {
+    background: rgba(#15803d, 0.09);
+    color: #166534;
+}
+
+.ruleFallback {
+    margin: 9px 2px 0 50px;
+    color: $color-text-muted;
+    font-size: 10px;
+    line-height: 1.5;
+}
+
+.medalCoefficientGrid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.medalCoefficient {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-width: 0;
+    padding: 13px 14px;
+    border: 1px solid $color-border;
+    border-radius: 10px;
+    background: $color-bg;
+}
+
+.medalLabel {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+
+    strong {
+        font-size: 13px;
+        font-weight: 800;
+    }
+
+    span {
+        overflow: hidden;
+        color: $color-text-muted;
+        font-size: 10px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+.medalGold .medalLabel strong {
+    color: #9a6700;
+}
+
+.medalSilver .medalLabel strong {
+    color: #64748b;
+}
+
+.medalBronze .medalLabel strong {
+    color: #a14f1c;
+}
+
+.coefficientInput {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 0 0 auto;
+
+    input {
+        width: 64px;
+        min-height: 38px;
+        padding: 7px 8px;
+        border: 1px solid $color-border;
+        border-radius: 7px;
+        background: $color-surface;
+        color: $color-text;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 700;
+        text-align: center;
+        font-variant-numeric: tabular-nums;
+
+        &:focus {
+            outline: none;
+            border-color: $color-do;
+            box-shadow: 0 0 0 3px rgba($color-do, 0.1);
+        }
+    }
+
+    span {
+        color: $color-text-muted;
+        font-size: 9px;
+        font-weight: 600;
+    }
+}
+
+.formulaPreview {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-3;
+    margin-top: 10px;
+    padding: 9px 11px;
+    border-radius: 8px;
+    background: rgba($color-do, 0.045);
+    color: $color-text-muted;
+    font-size: 10px;
+
+    strong {
+        color: $color-text;
+        font-size: 11px;
+        font-weight: 680;
+        font-variant-numeric: tabular-nums;
+    }
+}
+
+.tournamentFooter {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-4;
+    padding: 15px 26px;
+    border-top: 1px solid $color-border;
+    background: $color-bg;
+}
+
+.savedSummary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    color: $color-text-muted;
+    font-size: 11px;
+
+    span:last-child {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    strong {
+        color: $color-text;
+        font-weight: 650;
+    }
+}
+
+.saveTournamentBtn {
+    min-width: 138px;
+    min-height: 40px;
+}
+
 .grid {
     display: grid;
     grid-template-columns: minmax(0, 2fr) minmax(160px, 1fr);
@@ -704,6 +1117,14 @@
 }
 
 @media (max-width: 980px) {
+    .medalCoefficientGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .medalCoefficient {
+        min-height: 64px;
+    }
+
     .eventToolbar {
         grid-template-columns: minmax(220px, 1fr) 1fr 1fr;
     }
@@ -723,6 +1144,56 @@
 @media (max-width: 720px) {
     .page {
         gap: $space-4;
+    }
+
+    .tournamentHeader {
+        flex-direction: column;
+        gap: $space-3;
+        padding: 20px $space-4 18px;
+    }
+
+    .tournamentContent {
+        padding: $space-4;
+    }
+
+    .settingSection {
+        padding: 15px;
+    }
+
+    .basicInfoGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .ruleOption {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .ruleStatus {
+        margin-left: 50px;
+    }
+
+    .ruleFallback {
+        margin-left: 0;
+    }
+
+    .formulaPreview {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .tournamentFooter {
+        align-items: stretch;
+        flex-direction: column;
+        padding: 14px $space-4;
+    }
+
+    .savedSummary span:last-child {
+        white-space: normal;
+    }
+
+    .saveTournamentBtn {
+        width: 100%;
     }
 
     .grid {
@@ -825,6 +1296,41 @@
 @media (max-width: 480px) {
     .title {
         font-size: 21px;
+    }
+
+    .tournamentTitle {
+        font-size: 18px;
+    }
+
+    .tournamentHeader,
+    .tournamentContent {
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+
+    .settingSection {
+        padding: 13px;
+    }
+
+    .settingSectionHead>div {
+        gap: 9px;
+    }
+
+    .medalCoefficient {
+        padding: 11px 12px;
+    }
+
+    .ruleOptionMain {
+        align-items: flex-start;
+    }
+
+    .ruleStatus {
+        margin-left: 0;
+    }
+
+    .tournamentFooter {
+        padding-left: 14px;
+        padding-right: 14px;
     }
 
     .eventsActions {

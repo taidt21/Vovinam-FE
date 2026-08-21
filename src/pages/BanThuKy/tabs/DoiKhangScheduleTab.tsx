@@ -1,7 +1,7 @@
 /** @format */
 
-import { useEffect, useState } from "react";
-import { Pencil, RotateCcw } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Pencil, RotateCcw, Search } from "lucide-react";
 import type {
   CompetitionEvent,
   LiveMatchState,
@@ -19,10 +19,32 @@ import { LY_DO_OPTIONS } from "../helpers";
 import { formatEventNhomTuoi } from "../../../lib/utils/nhomTuoi";
 import styles from "../BanThuKy.module.scss";
 
+type ScheduleFilter =
+  | "tat_ca"
+  | "san_sang"
+  | "dang_thi"
+  | "da_xong"
+  | "cho_xac_dinh";
+
+const FILTERS: { value: ScheduleFilter; label: string }[] = [
+  { value: "tat_ca", label: "Tất cả" },
+  { value: "san_sang", label: "Sẵn sàng" },
+  { value: "dang_thi", label: "Đang thi" },
+  { value: "da_xong", label: "Đã xong" },
+  { value: "cho_xac_dinh", label: "Chờ VĐV" },
+];
+
+// Vòng 32 và Vòng 16 gộp chung nhãn "Vòng loại" khi hiện — đúng quy ước
+// đang dùng ở trang xuất PDF đối kháng, để mọi nơi khớp nhau.
+function nhanVong(vong: string): string {
+  return vong === "Vòng 32" || vong === "Vòng 16" ? "Vòng loại" : vong;
+}
+
 export default function DoiKhangScheduleTab({
   numbered,
   eventOf,
   athleteName,
+  athleteTeam,
   currentCourtId,
   courts,
   onStart,
@@ -33,6 +55,7 @@ export default function DoiKhangScheduleTab({
   numbered: NumberedMatch[];
   eventOf: (id: string) => CompetitionEvent | undefined;
   athleteName: (id: string | null) => string | null;
+  athleteTeam: (id: string | null) => string;
   currentCourtId: string;
   courts: CourtBasic[];
   onStart: (eventId: string, matchId: string) => void;
@@ -52,6 +75,8 @@ export default function DoiKhangScheduleTab({
   const courtName = courts.find((c) => c.id === currentCourtId)?.ten ?? "";
   const [editingItem, setEditingItem] = useState<NumberedMatch | null>(null);
   const [editLyDo, setEditLyDo] = useState<LyDoKetThuc>("thang_diem");
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<ScheduleFilter>("tat_ca");
 
   const openEdit = (item: NumberedMatch) => {
     setEditLyDo(item.match.lyDoKetThuc ?? "thang_diem");
@@ -81,121 +106,259 @@ export default function DoiKhangScheduleTab({
     currentCourtLive?.trangThai === "tam_dung";
   const courtHasPendingStart = currentCourtLive?.trangThai === "cho_bat_dau";
 
+  const rowStatus = (item: NumberedMatch): Exclude<ScheduleFilter, "tat_ca"> => {
+    const { match } = item;
+    const readyToPlay = !!match.athleteRedId && !!match.athleteBlueId;
+    const live = match.courtId ? liveStatesByCourtId[match.courtId] : null;
+    const isLive =
+      live?.trangThai === "dang_thi" ||
+      live?.trangThai === "nghi_giua_hiep" ||
+      live?.trangThai === "tam_dung" ||
+      live?.trangThai === "cho_bat_dau";
+    if (match.trangThai === "da_hoan_thanh") return "da_xong";
+    if (isLive || match.trangThai === "dang_thi") return "dang_thi";
+    if (readyToPlay) return "san_sang";
+    return "cho_xac_dinh";
+  };
+
+  const counts = useMemo(() => {
+    const result = {
+      san_sang: 0,
+      dang_thi: 0,
+      da_xong: 0,
+      cho_xac_dinh: 0,
+    };
+    numbered.forEach((item) => {
+      result[rowStatus(item)] += 1;
+    });
+    return result;
+    // rowStatus reads the current realtime snapshot map.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [numbered, liveStatesByCourtId]);
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLocaleLowerCase("vi");
+    return numbered.filter((item) => {
+      if (filter !== "tat_ca" && rowStatus(item) !== filter) return false;
+      if (!q) return true;
+      const event = eventOf(item.event.id);
+      const searchable = [
+        `#${item.so}`,
+        event?.ten ?? item.event.ten,
+        formatEventNhomTuoi(event?.nhomTuoi ?? item.event.nhomTuoi),
+        nhanVong(item.match.vong),
+        athleteName(item.match.athleteRedId) ?? "",
+        athleteName(item.match.athleteBlueId) ?? "",
+      ]
+        .join(" ")
+        .toLocaleLowerCase("vi");
+      return searchable.includes(q);
+    });
+    // rowStatus reads the current realtime snapshot map.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [numbered, query, filter, eventOf, athleteName, liveStatesByCourtId]);
+
   return (
-    <section className={styles.listCard}>
-      <div className={styles.listHead}>
-        <span>Toàn bộ trận đối kháng ({numbered.length})</span>
-        {trueCourtBusy && (
-          <span className={styles.listHint}>
-            {courtName} đang bận — kết thúc trận hiện tại trước khi bắt đầu trận
-            khác
-          </span>
-        )}
+    <section className={`${styles.listCard} ${styles.scheduleCard}`}>
+      <div className={styles.scheduleHeader}>
+        <div>
+          <span className={styles.sectionEyebrow}>Lịch thi đấu</span>
+          <h2 className={styles.scheduleTitle}>Đối kháng</h2>
+          <p className={styles.scheduleDescription}>
+            Chọn trận để đưa vào {courtName || "sân hiện tại"}. Trận đang diễn
+            ra luôn được ưu tiên hiển thị trạng thái rõ ràng.
+          </p>
+        </div>
+        <div className={styles.scheduleStats}>
+          <div className={styles.scheduleStat}>
+            <strong>{numbered.length}</strong>
+            <span>Tổng trận</span>
+          </div>
+          <div className={styles.scheduleStat}>
+            <strong>{counts.san_sang}</strong>
+            <span>Sẵn sàng</span>
+          </div>
+          <div className={styles.scheduleStat}>
+            <strong>{counts.da_xong}</strong>
+            <span>Đã xong</span>
+          </div>
+        </div>
       </div>
-      <div className={styles.listBody}>
-        {numbered.map((item) => {
+
+      {trueCourtBusy && (
+        <div className={styles.busyBanner}>
+          <span className={styles.busyDot} />
+          <strong>{courtName} đang có trận.</strong>
+          <span>Kết thúc hoặc tạm xử lý trận hiện tại trước khi mở trận khác.</span>
+        </div>
+      )}
+
+      <div className={styles.scheduleToolbar}>
+        <label className={styles.scheduleSearch}>
+          <Search size={16} aria-hidden="true" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Tìm số trận, nội dung hoặc VĐV..."
+            aria-label="Tìm trận đối kháng"
+          />
+        </label>
+        <div className={styles.scheduleFilters}>
+          {FILTERS.map((item) => (
+            <button
+              key={item.value}
+              type="button"
+              className={filter === item.value ? styles.filterActive : styles.filterBtn}
+              onClick={() => setFilter(item.value)}>
+              {item.label}
+              {item.value !== "tat_ca" && (
+                <span className={styles.filterCount}>{counts[item.value]}</span>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className={`${styles.listBody} ${styles.scheduleList}`}>
+        {filtered.map((item) => {
           const { event, match, so } = item;
+          const currentEvent = eventOf(event.id) ?? event;
           const readyToPlay = !!match.athleteRedId && !!match.athleteBlueId;
           const daXong = match.trangThai === "da_hoan_thanh";
-          const live = match.courtId
-            ? liveStatesByCourtId[match.courtId]
-            : null;
+          const live = match.courtId ? liveStatesByCourtId[match.courtId] : null;
           const dangThiThat =
-            live?.trangThai === "dang_thi" ||
-            live?.trangThai === "nghi_giua_hiep";
+            live?.trangThai === "dang_thi" || live?.trangThai === "nghi_giua_hiep";
           const loserSide: "do" | "xanh" | null =
             daXong && match.nguoiThangId
               ? match.nguoiThangId === match.athleteRedId
                 ? "xanh"
                 : "do"
               : null;
+
           return (
-            <div key={match.id} className={styles.listRow}>
-              <span className={styles.listNo}>#{so}</span>
+            <div
+              key={match.id}
+              className={`${styles.listRow} ${styles.scheduleRow} ${
+                daXong ? styles.scheduleRowDone : ""
+              } ${rowStatus(item) === "dang_thi" ? styles.scheduleRowLive : ""}`}>
+              <div className={styles.matchNumberBlock}>
+                <span className={styles.listNo}>#{so}</span>
+                <span className={styles.roundTag}>{nhanVong(match.vong)}</span>
+              </div>
+
               <div className={styles.listInfo}>
-                <div className={styles.listEvent}>
-                  {eventOf(event.id)?.ten} -{" "}
-                  {formatEventNhomTuoi(eventOf(event.id)?.nhomTuoi ?? 1)} -{" "}
-                  {match.vong}
+                <div className={styles.eventMetaLine}>
+                  <span className={styles.eventNameStrong}>{currentEvent.ten}</span>
+                  <span className={styles.metaPill}>
+                    {formatEventNhomTuoi(currentEvent.nhomTuoi)}
+                  </span>
                 </div>
-                <div className={styles.listNames}>
-                  <span className={styles.dotDo} />{" "}
-                  <span
-                    className={
-                      loserSide === "do" ? styles.loserName : undefined
-                    }>
-                    {athleteName(match.athleteRedId) ?? "Chờ xác định"}
-                  </span>
-                  <span className={styles.vs}>vs</span>
-                  <span className={styles.dotXanh} />{" "}
-                  <span
-                    className={
-                      loserSide === "xanh" ? styles.loserName : undefined
-                    }>
-                    {athleteName(match.athleteBlueId) ?? "Chờ xác định"}
-                  </span>
+
+                <div className={styles.competitorPair}>
+                  <div className={`${styles.competitor} ${styles.competitorRed}`}>
+                    <span className={styles.competitorSide}>Đỏ</span>
+                    <div className={styles.competitorInfo}>
+                      <strong className={loserSide === "do" ? styles.loserName : undefined}>
+                        {athleteName(match.athleteRedId) ?? "Chờ xác định"}
+                      </strong>
+                      {athleteTeam(match.athleteRedId) && (
+                        <span className={styles.competitorTeam}>
+                          {athleteTeam(match.athleteRedId)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <span className={styles.vsBadge}>VS</span>
+                  <div className={`${styles.competitor} ${styles.competitorBlue}`}>
+                    <span className={styles.competitorSide}>Xanh</span>
+                    <div className={styles.competitorInfo}>
+                      <strong className={loserSide === "xanh" ? styles.loserName : undefined}>
+                        {athleteName(match.athleteBlueId) ?? "Chờ xác định"}
+                      </strong>
+                      {athleteTeam(match.athleteBlueId) && (
+                        <span className={styles.competitorTeam}>
+                          {athleteTeam(match.athleteBlueId)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
-              {daXong ? (
-                <div className={styles.listActions}>
-                  <button
-                    className={styles.editBtn}
-                    onClick={() => openEdit(item)}
-                    title="Sửa lại người thắng hoặc lý do">
-                    <Pencil size={12} /> Sửa
-                  </button>
-                  <button
-                    className={styles.replayBtn}
-                    onClick={() => onReplay(match, event.id)}
-                    title="Xoá kết quả, cho thi đấu lại từ đầu">
-                    <RotateCcw size={12} /> Đấu lại
-                  </button>
-                </div>
-              ) : match.trangThai === "dang_thi" ? (
-                dangThiThat ? (
-                  <span className={styles.playingTag}>Đang thi</span>
-                ) : live?.trangThai === "tam_dung" ? (
-                  <span className={styles.pausedTag}>Tạm dừng</span>
+
+              <div className={styles.scheduleActionArea}>
+                {daXong ? (
+                  <>
+                    <span className={styles.resultTag}>Đã hoàn thành</span>
+                    <div className={styles.listActions}>
+                      <button
+                        className={styles.editBtn}
+                        onClick={() => openEdit(item)}
+                        title="Sửa lại người thắng hoặc lý do">
+                        <Pencil size={13} /> Sửa
+                      </button>
+                      <button
+                        className={styles.replayBtn}
+                        onClick={() => onReplay(match, event.id)}
+                        title="Xoá kết quả, cho thi đấu lại từ đầu">
+                        <RotateCcw size={13} /> Đấu lại
+                      </button>
+                    </div>
+                  </>
+                ) : match.trangThai === "dang_thi" ? (
+                  dangThiThat ? (
+                    <span className={styles.playingTag}>Đang thi</span>
+                  ) : live?.trangThai === "tam_dung" ? (
+                    <span className={styles.pausedTag}>Tạm dừng</span>
+                  ) : (
+                    <span className={styles.waitTag}>Chờ bắt đầu</span>
+                  )
+                ) : readyToPlay ? (
+                  <>
+                    <button
+                      className={styles.startBtn}
+                      disabled={trueCourtBusy}
+                      onClick={() => onStart(event.id, match.id)}
+                      title={
+                        courtHasPendingStart
+                          ? `Thay trận đang chờ bắt đầu ở ${courtName} bằng trận này`
+                          : undefined
+                      }>
+                      Bắt đầu tại {courtName}
+                    </button>
+                    <div className={styles.quickResultActions}>
+                      <span>Kết quả nhanh:</span>
+                      <button
+                        className={styles.quickBtnDo}
+                        disabled={trueCourtBusy}
+                        onClick={() => onQuickFinish(event.id, match.id, "do")}
+                        title="Xử Đỏ thắng ngay, không qua chấm điểm">
+                        Đỏ thắng
+                      </button>
+                      <button
+                        className={styles.quickBtnXanh}
+                        disabled={trueCourtBusy}
+                        onClick={() => onQuickFinish(event.id, match.id, "xanh")}
+                        title="Xử Xanh thắng ngay, không qua chấm điểm">
+                        Xanh thắng
+                      </button>
+                    </div>
+                  </>
                 ) : (
-                  <span className={styles.waitTag}>Chờ bắt đầu</span>
-                )
-              ) : readyToPlay ? (
-                <div className={styles.listActions}>
-                  <button
-                    className={styles.quickBtnDo}
-                    disabled={trueCourtBusy}
-                    onClick={() => onQuickFinish(event.id, match.id, "do")}
-                    title="Xử Đỏ thắng ngay, không qua chấm điểm">
-                    Đỏ thắng
-                  </button>
-                  <button
-                    className={styles.quickBtnXanh}
-                    disabled={trueCourtBusy}
-                    onClick={() => onQuickFinish(event.id, match.id, "xanh")}
-                    title="Xử Xanh thắng ngay, không qua chấm điểm">
-                    Xanh thắng
-                  </button>
-                  <button
-                    className={styles.startBtn}
-                    disabled={trueCourtBusy}
-                    onClick={() => onStart(event.id, match.id)}
-                    title={
-                      courtHasPendingStart
-                        ? `Thay trận đang chờ bắt đầu ở ${courtName} bằng trận này`
-                        : undefined
-                    }>
-                    Bắt đầu
-                  </button>
-                </div>
-              ) : (
-                <span className={styles.waitTag}>Chờ xác định</span>
-              )}
+                  <span className={styles.waitTag}>Chờ xác định VĐV</span>
+                )}
+              </div>
             </div>
           );
         })}
+
         {numbered.length === 0 && (
           <p className={styles.empty}>
             Chưa có trận nào — vào Nội dung & bốc thăm để bốc thăm trước.
+          </p>
+        )}
+        {numbered.length > 0 && filtered.length === 0 && (
+          <p className={styles.empty}>
+            Không có trận nào phù hợp với tìm kiếm hoặc bộ lọc hiện tại.
           </p>
         )}
       </div>

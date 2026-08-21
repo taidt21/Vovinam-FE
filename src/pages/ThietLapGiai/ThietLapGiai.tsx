@@ -1,7 +1,15 @@
 /** @format */
 
 import { useEffect, useState, type FormEvent } from "react";
-import { Plus, Pencil, Trash2, FileSpreadsheet, Search, X } from "lucide-react";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  FileSpreadsheet,
+  Search,
+  X,
+  Save,
+} from "lucide-react";
 import type {
   CompetitionEvent,
   EventKind,
@@ -39,6 +47,9 @@ export default function ThietLapGiai() {
     ten: "",
     soSan: 1,
     choPhepHiepPhu: false,
+    heSoVang: 50,
+    heSoBac: 20,
+    heSoDong: 10,
   });
   const [savingTournament, setSavingTournament] = useState(false);
 
@@ -65,6 +76,9 @@ export default function ThietLapGiai() {
           ten: t.ten,
           soSan: t.soSan,
           choPhepHiepPhu: t.choPhepHiepPhu,
+          heSoVang: t.heSoVang,
+          heSoBac: t.heSoBac,
+          heSoDong: t.heSoDong,
         });
       })
       .catch(() =>
@@ -256,71 +270,234 @@ export default function ThietLapGiai() {
 
       {loadError && <p className={styles.errorBanner}>{loadError}</p>}
 
-      <form className={styles.card} onSubmit={handleSubmitTournament}>
-        <h2 className={styles.cardTitle}>Thông tin giải đấu</h2>
-
-        <div className={styles.grid}>
-          <label className={styles.field}>
-            <span>
-              Tên giải <span className={styles.required}>*</span>
-            </span>
-            <input
-              type="text"
-              value={form.ten}
-              onChange={(e) => setForm({ ...form, ten: e.target.value })}
-              placeholder="VD: Giải Vovinam Trẻ Toàn quốc 2026"
-              required
-            />
-          </label>
-
-          <label className={styles.field}>
-            <span>
-              Số sân / thảm <span className={styles.required}>*</span>
-            </span>
-            <input
-              type="number"
-              min={1}
-              value={form.soSan}
-              onChange={(e) =>
-                setForm({ ...form, soSan: Number(e.target.value) })
-              }
-              required
-            />
-          </label>
+      <form
+        className={`${styles.card} ${styles.tournamentCard}`}
+        onSubmit={handleSubmitTournament}>
+        <div className={styles.tournamentHeader}>
+          <div>
+            <span className={styles.sectionEyebrow}>Cấu hình chung</span>
+            <h2 className={styles.tournamentTitle}>Thông tin giải đấu</h2>
+            <p className={styles.tournamentIntro}>
+              Thiết lập thông tin cơ bản, luật thi đấu và hệ số tính điểm tổng
+              đoàn. Các thay đổi chỉ có hiệu lực sau khi bấm Lưu.
+            </p>
+          </div>
+          {tournament && (
+            <div className={styles.savedBadge}>
+              <span className={styles.savedDot} />
+              Đã có cấu hình
+            </div>
+          )}
         </div>
 
-        <label className={styles.field}>
-          <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <input
-              type="checkbox"
-              checked={form.choPhepHiepPhu}
-              onChange={(e) =>
-                setForm({ ...form, choPhepHiepPhu: e.target.checked })
-              }
-            />
-            Cho phép thi hiệp phụ (điểm vàng) khi hoà điểm
-          </span>
-          <span className={styles.hint}>
-            Tích: hoà lúc hết giờ hiệp cuối sẽ thi thêm 1 hiệp phụ, dài bằng
-            hiệp chính — ai ghi điểm trước thắng ngay. Không tích: hoà thì Bàn
-            thư ký tự chọn người thắng theo bốc thăm hoặc cân hạng cân tại thời
-            điểm thi đấu.
-          </span>
-        </label>
+        <div className={styles.tournamentContent}>
+          <section className={styles.settingSection}>
+            <div className={styles.settingSectionHead}>
+              <div>
+                <span className={styles.settingIndex}>01</span>
+                <div>
+                  <h3>Thông tin cơ bản</h3>
+                  <p>Tên hiển thị của giải và số sân/thảm được sử dụng.</p>
+                </div>
+              </div>
+            </div>
 
-        <div className={styles.actions}>
+            <div className={styles.basicInfoGrid}>
+              <label
+                className={`${styles.field} ${styles.tournamentNameField}`}>
+                <span className={styles.fieldLabel}>
+                  Tên giải <span className={styles.required}>*</span>
+                </span>
+                <input
+                  className={styles.largeInput}
+                  type="text"
+                  value={form.ten}
+                  onChange={(e) => setForm({ ...form, ten: e.target.value })}
+                  placeholder="VD: Giải Vovinam Trẻ Toàn quốc 2026"
+                  required
+                />
+              </label>
+
+              <label className={styles.field}>
+                <span className={styles.fieldLabel}>
+                  Số sân / thảm <span className={styles.required}>*</span>
+                </span>
+                <div className={styles.courtInputWrap}>
+                  <input
+                    className={styles.largeInput}
+                    type="number"
+                    min={1}
+                    value={form.soSan}
+                    onChange={(e) =>
+                      setForm({ ...form, soSan: Number(e.target.value) })
+                    }
+                    required
+                  />
+                  <span className={styles.inputSuffix}>sân</span>
+                </div>
+              </label>
+            </div>
+          </section>
+
+          <section className={styles.settingSection}>
+            <div className={styles.settingSectionHead}>
+              <div>
+                <span className={styles.settingIndex}>02</span>
+                <div>
+                  <h3>Luật thi đấu đối kháng</h3>
+                  <p>
+                    Thiết lập cách xử lý khi hai VĐV hoà điểm sau hiệp cuối.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <label className={styles.ruleOption}>
+              <div className={styles.ruleOptionMain}>
+                <input
+                  className={styles.ruleCheckbox}
+                  type="checkbox"
+                  checked={form.choPhepHiepPhu}
+                  onChange={(e) =>
+                    setForm({ ...form, choPhepHiepPhu: e.target.checked })
+                  }
+                />
+                <span className={styles.switchVisual} aria-hidden="true">
+                  <span />
+                </span>
+                <div>
+                  <strong>Cho phép hiệp phụ điểm vàng</strong>
+                  <span>
+                    Khi hoà điểm, thi thêm một hiệp bằng thời lượng hiệp chính;
+                    VĐV ghi điểm trước sẽ thắng ngay.
+                  </span>
+                </div>
+              </div>
+              <span
+                className={`${styles.ruleStatus} ${
+                  form.choPhepHiepPhu ? styles.ruleStatusOn : ""
+                }`}>
+                {form.choPhepHiepPhu ? "Đang bật" : "Đang tắt"}
+              </span>
+            </label>
+
+            {!form.choPhepHiepPhu && (
+              <p className={styles.ruleFallback}>
+                Khi tắt, nếu hoà điểm thì Bàn thư ký sẽ chọn người thắng theo
+                quy định áp dụng tại thời điểm thi đấu.
+              </p>
+            )}
+          </section>
+
+          <section className={styles.settingSection}>
+            <div className={styles.settingSectionHead}>
+              <div>
+                <span className={styles.settingIndex}>03</span>
+                <div>
+                  <h3>Hệ số tổng sắp huy chương</h3>
+                  <p>
+                    Điểm đoàn = số huy chương × hệ số tương ứng. Có thể thay đổi
+                    theo điều lệ từng giải.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.medalCoefficientGrid}>
+              <label
+                className={`${styles.medalCoefficient} ${styles.medalGold}`}>
+                <span className={styles.medalLabel}>
+                  <strong>HCV</strong>
+                  <span>Huy chương vàng</span>
+                </span>
+                <div className={styles.coefficientInput}>
+                  <input
+                    type="number"
+                    min={0}
+                    aria-label="Hệ số HCV"
+                    value={form.heSoVang}
+                    onChange={(e) =>
+                      setForm({ ...form, heSoVang: Number(e.target.value) })
+                    }
+                  />
+                  <span>điểm</span>
+                </div>
+              </label>
+
+              <label
+                className={`${styles.medalCoefficient} ${styles.medalSilver}`}>
+                <span className={styles.medalLabel}>
+                  <strong>HCB</strong>
+                  <span>Huy chương bạc</span>
+                </span>
+                <div className={styles.coefficientInput}>
+                  <input
+                    type="number"
+                    min={0}
+                    aria-label="Hệ số HCB"
+                    value={form.heSoBac}
+                    onChange={(e) =>
+                      setForm({ ...form, heSoBac: Number(e.target.value) })
+                    }
+                  />
+                  <span>điểm</span>
+                </div>
+              </label>
+
+              <label
+                className={`${styles.medalCoefficient} ${styles.medalBronze}`}>
+                <span className={styles.medalLabel}>
+                  <strong>HCĐ</strong>
+                  <span>Huy chương đồng</span>
+                </span>
+                <div className={styles.coefficientInput}>
+                  <input
+                    type="number"
+                    min={0}
+                    aria-label="Hệ số HCĐ"
+                    value={form.heSoDong}
+                    onChange={(e) =>
+                      setForm({ ...form, heSoDong: Number(e.target.value) })
+                    }
+                  />
+                  <span>điểm</span>
+                </div>
+              </label>
+            </div>
+
+            <div className={styles.formulaPreview}>
+              <span>Công thức hiện tại</span>
+              <strong>
+                HCV × {form.heSoVang} + HCB × {form.heSoBac} + HCĐ ×{" "}
+                {form.heSoDong}
+              </strong>
+            </div>
+          </section>
+        </div>
+
+        <div className={styles.tournamentFooter}>
+          <div className={styles.savedSummary}>
+            {tournament ? (
+              <>
+                <span className={styles.savedDot} />
+                <span>
+                  Đã lưu: <strong>{tournament.ten}</strong> · {tournament.soSan}{" "}
+                  sân
+                </span>
+              </>
+            ) : (
+              <span>Chưa có cấu hình giải được lưu.</span>
+            )}
+          </div>
+
           <button
             type="submit"
-            className={styles.btnPrimary}
+            className={`${styles.btnPrimary} ${styles.saveTournamentBtn}`}
             disabled={savingTournament}>
-            {savingTournament ? "Đang lưu..." : "Lưu"}
+            <Save size={16} />
+            {savingTournament ? "Đang lưu..." : "Lưu cấu hình"}
           </button>
         </div>
-        {tournament && (
-          <p className={styles.hint}>
-            Đã lưu lần cuối — giải "{tournament.ten}", {tournament.soSan} sân.
-          </p>
-        )}
       </form>
 
       <BanThuKyAccountsSection soSan={form.soSan} />

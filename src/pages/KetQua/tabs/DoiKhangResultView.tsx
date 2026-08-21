@@ -26,12 +26,34 @@ export default function DoiKhangResultView({
   athleteName: (id: string | null) => string;
 }) {
   const medals = useMemo(() => computeDoiKhangMedals(matches), [matches]);
+  const completed = matches.filter((m) => m.trangThai === "da_hoan_thanh").length;
+  const gioiTinhLabel =
+    event.gioiTinh === "nam" ? "Nam" : event.gioiTinh === "nu" ? "Nữ" : "Hỗn hợp";
 
   return (
     <>
-      <h2 className={styles.eventTitle}>
-        {event.ten} - {formatEventNhomTuoi(event.nhomTuoi)}
-      </h2>
+      <div className={styles.resultHeader}>
+        <div>
+          <span className={styles.resultType}>Nội dung đối kháng</span>
+          <h2 className={styles.eventTitle}>{event.ten}</h2>
+          <div className={styles.eventBadges}>
+            <span>{formatEventNhomTuoi(event.nhomTuoi)}</span>
+            <span>{gioiTinhLabel}</span>
+            {event.hangCan != null && <span>{event.hangCan} kg</span>}
+          </div>
+        </div>
+        <div className={styles.progressSummary}>
+          <strong>{completed}/{matches.length}</strong>
+          <span>trận đã hoàn tất</span>
+          <div className={styles.progressTrack}>
+            <span
+              style={{
+                width: `${matches.length ? Math.round((completed / matches.length) * 100) : 0}%`,
+              }}
+            />
+          </div>
+        </div>
+      </div>
 
       {medals && (
         <MedalBox
@@ -55,12 +77,22 @@ export default function DoiKhangResultView({
         />
       )}
 
-      <BracketView
-        matches={matches}
-        athletes={athletes}
-        teams={teams}
-        soByMatchId={soByMatchId}
-      />
+      <div className={styles.sectionHeader}>
+        <div>
+          <strong>Sơ đồ thi đấu</strong>
+          <span>Theo dõi nhánh đấu và kết quả từng vòng.</span>
+        </div>
+        <span className={styles.sectionCount}>{matches.length} trận</span>
+      </div>
+
+      <div className={styles.bracketShell}>
+        <BracketView
+          matches={matches}
+          athletes={athletes}
+          teams={teams}
+          soByMatchId={soByMatchId}
+        />
+      </div>
     </>
   );
 }
