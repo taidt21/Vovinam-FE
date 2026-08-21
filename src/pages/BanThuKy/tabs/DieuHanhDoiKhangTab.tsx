@@ -77,6 +77,95 @@ export default function DieuHanhDoiKhangTab({
     const t = setTimeout(() => setShowRecovery(true), 2000);
     return () => clearTimeout(t);
   }, [live, courtId]);
+  const remaining = live ? tinhThoiGianConLai(live) : 0;
+  const dangChay = live?.trangThai === "dang_thi";
+  const dangNghi = live?.trangThai === "nghi_giua_hiep";
+  const laHiepCuoi = live ? live.hiepHienTai >= live.tongSoHiep : false;
+  // Hiệp phụ (điểm vàng) = hiepHienTai vượt qua tongSoHiep — đúng quy ước
+  // đã có sẵn trong comment của type LiveMatchState từ trước, không phải
+  // mình tự đặt ra.
+  const dangHiepPhu = live ? live.hiepHienTai > live.tongSoHiep : false;
+  const hetGio = remaining <= 0 && (dangChay || dangNghi);
+
+  // 3 hook điểm vàng dưới đây BẮT BUỘC đứng trước "if (!live) return" ở
+  // cuối khối này — Rules of Hooks không cho phép hook chạy có điều
+  // kiện. Trước đây đặt SAU dòng return sớm, nghĩa là mỗi lần live còn
+  // null (đúng lúc trận vừa mở, đang chờ dữ liệu sống) React gọi ÍT hook
+  // hơn bình thường — lỗi thật (oxlint bắt được dạng error, không phải
+  // warning), không phải chuyện vặt.
+  //
+  // Tự động lúc hết giờ, đỡ phải bấm tay:
+  // 1. Hết giờ 1 hiệp (chưa phải hiệp cuối) -> tự chuyển nghỉ/hiệp kế
+  //    tiếp, thuần cơ học, không đụng gì tới ai thắng ai thua.
+  // 2. Hết giờ hiệp CUỐI (kể cả hiệp phụ), điểm KHÔNG hoà -> chỉ tự chọn
+  //    màu thắng (đỡ bước bấm Đỏ/Xanh thắng) rồi DỪNG LẠI ở đúng màn
+  //    hình "Đã có người thắng" như lúc chọn tay — vẫn cần bấm "Xác
+  //    nhận, qua trận tiếp theo" mới thật sự qua trận khác.
+  // 3. Điểm hoà -> không tự chọn gì. Nếu giải cho phép hiệp phụ và CHƯA
+  //    từng vào hiệp phụ, ketThucHiep() ở dưới tự chuyển sang nghỉ giữa
+  //    hiệp thay vì dừng hẳn (xem logic trong đó). Đã ở hiệp phụ mà vẫn
+  //    hoà, hoặc giải không cho phép hiệp phụ -> dừng hẳn, để BTK tự bấm
+  //    "Kết thúc trận" chọn tay (bốc thăm/cân hạng cân).
+  useEffect(() => {
+    const cur = live;
+    if (!cur || !hetGio || !dangChay) return;
+    if (!laHiepCuoi) {
+      ketThucHiep();
+      return;
+    }
+    if (cur.diemChinhThucDo === cur.diemChinhThucXanh) {
+      ketThucHiep();
+      return;
+    }
+    const winner = cur.diemChinhThucDo > cur.diemChinhThucXanh ? "do" : "xanh";
+    patch({
+      trangThai: "da_ket_thuc",
+      nguoiThang: winner,
+      lyDoKetThuc: dangHiepPhu ? "diem_vang" : "thang_diem",
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hetGio, dangChay, laHiepCuoi]);
+
+  // Điểm vàng — ghi nhớ điểm số NGAY LÚC hiệp phụ bắt đầu, để biết chính
+  // xác bên nào ghi điểm ĐẦU TIÊN trong hiệp phụ (không phải tổng điểm
+  // cả trận, chỉ tính từ đây trở đi).
+  useEffect(() => {
+    if (!dangHiepPhu) {
+      diemVangBaseline.current = null;
+      return;
+    }
+    const cur = live;
+    if (diemVangBaseline.current === null && cur) {
+      diemVangBaseline.current = {
+        do: cur.diemChinhThucDo,
+        xanh: cur.diemChinhThucXanh,
+      };
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dangHiepPhu]);
+
+  // Ai ghi điểm trước trong hiệp phụ thắng ngay — không đợi hết giờ hiệp
+  // phụ. Dừng ở màn hình "Đã có người thắng" như mọi trường hợp khác,
+  // vẫn cần bấm "Xác nhận, qua trận tiếp theo" mới thật sự qua trận sau.
+  useEffect(() => {
+    const cur = live;
+    if (!cur || !dangHiepPhu || !dangChay || !diemVangBaseline.current) return;
+    if (cur.diemChinhThucDo > diemVangBaseline.current.do) {
+      patch({
+        trangThai: "da_ket_thuc",
+        nguoiThang: "do",
+        lyDoKetThuc: "diem_vang",
+      });
+    } else if (cur.diemChinhThucXanh > diemVangBaseline.current.xanh) {
+      patch({
+        trangThai: "da_ket_thuc",
+        nguoiThang: "xanh",
+        lyDoKetThuc: "diem_vang",
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dangHiepPhu, dangChay, live?.diemChinhThucDo, live?.diemChinhThucXanh]);
+
   if (!live) {
     if (!showRecovery)
       return <p className={styles.hint}>Đang khởi tạo trận...</p>;
@@ -89,16 +178,6 @@ export default function DieuHanhDoiKhangTab({
       />
     );
   }
-
-  const remaining = tinhThoiGianConLai(live);
-  const dangChay = live.trangThai === "dang_thi";
-  const dangNghi = live.trangThai === "nghi_giua_hiep";
-  const laHiepCuoi = live.hiepHienTai >= live.tongSoHiep;
-  // Hiệp phụ (điểm vàng) = hiepHienTai vượt qua tongSoHiep — đúng quy ước
-  // đã có sẵn trong comment của type LiveMatchState từ trước, không phải
-  // mình tự đặt ra.
-  const dangHiepPhu = live.hiepHienTai > live.tongSoHiep;
-  const hetGio = remaining <= 0 && (dangChay || dangNghi);
 
   const patch = (p: Partial<LiveMatchState>) => {
     const next = { ...live, ...p, capNhatLuc: Date.now() };
@@ -183,76 +262,6 @@ export default function DieuHanhDoiKhangTab({
   };
 
   const daKetThuc = live.trangThai === "da_ket_thuc";
-
-  // Tự động lúc hết giờ, đỡ phải bấm tay:
-  // 1. Hết giờ 1 hiệp (chưa phải hiệp cuối) -> tự chuyển nghỉ/hiệp kế
-  //    tiếp, thuần cơ học, không đụng gì tới ai thắng ai thua.
-  // 2. Hết giờ hiệp CUỐI (kể cả hiệp phụ), điểm KHÔNG hoà -> chỉ tự chọn
-  //    màu thắng (đỡ bước bấm Đỏ/Xanh thắng) rồi DỪNG LẠI ở đúng màn
-  //    hình "Đã có người thắng" như lúc chọn tay — vẫn cần bấm "Xác
-  //    nhận, qua trận tiếp theo" mới thật sự qua trận khác.
-  // 3. Điểm hoà -> không tự chọn gì. Nếu giải cho phép hiệp phụ và CHƯA
-  //    từng vào hiệp phụ, ketThucHiep() ở trên tự chuyển sang nghỉ giữa
-  //    hiệp thay vì dừng hẳn (xem logic trong đó). Đã ở hiệp phụ mà vẫn
-  //    hoà, hoặc giải không cho phép hiệp phụ -> dừng hẳn, để BTK tự bấm
-  //    "Kết thúc trận" chọn tay (bốc thăm/cân hạng cân).
-  useEffect(() => {
-    if (!hetGio || !dangChay) return;
-    if (!laHiepCuoi) {
-      ketThucHiep();
-      return;
-    }
-    if (live.diemChinhThucDo === live.diemChinhThucXanh) {
-      ketThucHiep();
-      return;
-    }
-    const winner =
-      live.diemChinhThucDo > live.diemChinhThucXanh ? "do" : "xanh";
-    patch({
-      trangThai: "da_ket_thuc",
-      nguoiThang: winner,
-      lyDoKetThuc: dangHiepPhu ? "diem_vang" : "thang_diem",
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hetGio, dangChay, laHiepCuoi]);
-
-  // Điểm vàng — ghi nhớ điểm số NGAY LÚC hiệp phụ bắt đầu, để biết chính
-  // xác bên nào ghi điểm ĐẦU TIÊN trong hiệp phụ (không phải tổng điểm
-  // cả trận, chỉ tính từ đây trở đi).
-  useEffect(() => {
-    if (!dangHiepPhu) {
-      diemVangBaseline.current = null;
-      return;
-    }
-    if (diemVangBaseline.current === null) {
-      diemVangBaseline.current = {
-        do: live.diemChinhThucDo,
-        xanh: live.diemChinhThucXanh,
-      };
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dangHiepPhu]);
-
-  // Ai ghi điểm trước trong hiệp phụ thắng ngay — không đợi hết giờ hiệp
-  // phụ. Dừng ở màn hình "Đã có người thắng" như mọi trường hợp khác,
-  // vẫn cần bấm "Xác nhận, qua trận tiếp theo" mới thật sự qua trận sau.
-  useEffect(() => {
-    if (!dangHiepPhu || !dangChay || !diemVangBaseline.current) return;
-    if (live.diemChinhThucDo > diemVangBaseline.current.do) {
-      patch({
-        trangThai: "da_ket_thuc",
-        nguoiThang: "do",
-        lyDoKetThuc: "diem_vang",
-      });
-    } else if (live.diemChinhThucXanh > diemVangBaseline.current.xanh) {
-      patch({
-        trangThai: "da_ket_thuc",
-        nguoiThang: "xanh",
-        lyDoKetThuc: "diem_vang",
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dangHiepPhu, dangChay, live.diemChinhThucDo, live.diemChinhThucXanh]);
 
   const confirmWinner = (thang: "do" | "xanh") => {
     patch({ trangThai: "da_ket_thuc", nguoiThang: thang, lyDoKetThuc: lyDo });

@@ -47,8 +47,15 @@ export function usePressedLights(courtId: string): PressedLights {
     return () => {
       unsubPress();
       unsubConsensus();
+      // timersRef.current LUÔN là đúng 1 Map được tạo 1 lần (dòng 14-16),
+      // chỉ bị mutate qua set/delete/clear chứ không bao giờ bị gán lại
+      // Map mới — nên cảnh báo chung "ref có thể đã đổi lúc cleanup chạy"
+      // không áp dụng đúng cho trường hợp này, khác với ref trỏ vào DOM
+      // node có thể bị unmount trước cleanup.
+      /* eslint-disable react-hooks/exhaustive-deps */
       timersRef.current.forEach((t) => clearTimeout(t));
       timersRef.current.clear();
+      /* eslint-enable react-hooks/exhaustive-deps */
     };
   }, [courtId]);
 

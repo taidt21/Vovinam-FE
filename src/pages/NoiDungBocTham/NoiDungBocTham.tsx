@@ -16,7 +16,6 @@ import {
 import { apiGet, apiPut } from "../../lib/api/api";
 import { laAdmin } from "../../lib/api/adminAuth";
 import BracketView from "../../components/BracketView/BracketView";
-import LichThiDau from "../../components/LichThiDau/LichThiDau";
 import { fetchEvents } from "../../lib/api/eventsApi";
 import { formatEventNhomTuoi, compareNhomTuoi } from "../../lib/utils/nhomTuoi";
 import styles from "./NoiDungBocTham.module.scss";
@@ -40,7 +39,7 @@ function getAthletesForEvent(
 ): Athlete[] {
   return athletes
     .filter((a) => Array.isArray(a.eventIds) && a.eventIds.includes(eventId))
-    .map(({ eventIds, ...rest }) => ({
+    .map(({ eventIds: _eventIds, ...rest }) => ({
       ...rest,
       noiDung: [eventTen],
     }));
@@ -68,10 +67,76 @@ function deriveSquadsForEvent(
   }));
 }
 
-function squadMemberNames(s: Squad, athletes: Athlete[]): string {
-  return s.athleteIds
-    .map((id) => athletes.find((a) => a.id === id)?.hoTen)
-    .join(", ");
+// Bảng STT/HỌ VÀ TÊN/ĐƠN VỊ — khớp đúng kiểu trình bày ở trang xuất
+// in-lich-thi-dau-quyen (đội dùng rowSpan gộp nhiều VĐV dưới 1 số thứ tự
+// và 1 ô đơn vị chung), dùng lại cho cả "Danh sách đăng ký" lẫn "Thứ tự
+// thi diễn" ở đây — 2 chỗ, mỗi chỗ 2 kiểu (cá nhân/đội), tránh viết lặp
+// 4 lần.
+function PeopleTable({
+  isTeam,
+  individuals,
+  squads,
+  squadMembers,
+  squadTeamOf,
+  teams,
+}: {
+  isTeam: boolean;
+  individuals: Athlete[];
+  squads: Squad[];
+  squadMembers: (s: Squad) => Athlete[];
+  squadTeamOf: (s: Squad) => string;
+  teams: { id: string; ten: string }[];
+}) {
+  return (
+    <div className={styles.tableWrap}>
+      <table className={styles.peopleTable}>
+        <thead>
+          <tr>
+            <th className={styles.colOrder}>STT</th>
+            <th className={styles.colName}>HỌ VÀ TÊN</th>
+            <th className={styles.colTeam}>ĐƠN VỊ</th>
+          </tr>
+        </thead>
+        <tbody>
+          {!isTeam
+            ? individuals.map((a, index) => (
+                <tr key={a.id}>
+                  <td className={styles.orderCell}>{index + 1}</td>
+                  <td className={styles.nameCell}>{a.hoTen}</td>
+                  <td className={styles.teamCell}>
+                    {teamName(a.teamId, teams)}
+                  </td>
+                </tr>
+              ))
+            : squads.flatMap((s, squadIndex) => {
+                const members = squadMembers(s);
+                const rows = members.length > 0 ? members : [null];
+                return rows.map((member, memberIndex) => (
+                  <tr key={`${s.id}-${member?.id ?? memberIndex}`}>
+                    {memberIndex === 0 && (
+                      <td
+                        className={`${styles.orderCell} ${styles.groupOrderCell}`}
+                        rowSpan={rows.length}>
+                        {squadIndex + 1}
+                      </td>
+                    )}
+                    <td className={styles.nameCell}>
+                      {member?.hoTen ?? "—"}
+                    </td>
+                    {memberIndex === 0 && (
+                      <td
+                        className={`${styles.teamCell} ${styles.mergedTeamCell}`}
+                        rowSpan={rows.length}>
+                        {squadTeamOf(s)}
+                      </td>
+                    )}
+                  </tr>
+                ));
+              })}
+        </tbody>
+      </table>
+    </div>
+  );
 }
 
 function teamName(
@@ -93,7 +158,6 @@ function isEventDrawn(
 const LOAI_LABEL = {
   quyen: "Quyền",
   doi_khang: "Đối kháng",
-  lich_thi_dau: "Lịch thi đấu",
 } as const;
 
 function BocThamButton({
@@ -145,9 +209,7 @@ export default function NoiDungBocTham() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  const [tab, setTab] = useState<"quyen" | "doi_khang" | "lich_thi_dau">(
-    "quyen",
-  );
+  const [tab, setTab] = useState<"quyen" | "doi_khang">("quyen");
   const [selectedId, setSelectedId] = useState("e1");
   const [bracketsByEvent, setBracketsByEvent] = useState<
     Record<string, Match[]>
@@ -244,9 +306,20 @@ export default function NoiDungBocTham() {
     [events, tab],
   );
   const selected = events.find((ev) => ev.id === selectedId) ?? eventsInTab[0];
+  const nhomTuoiLabel = selected
+    ? formatEventNhomTuoi(selected.nhomTuoi)
+    : "";
   const athletesOfSelected = selected
     ? getAthletesForEvent(athletes, selected.id, selected.ten)
     : [];
+  const squadMembers = (s: Squad): Athlete[] =>
+    s.athleteIds
+      .map((id) => athletesOfSelected.find((a) => a.id === id))
+      .filter((a): a is Athlete => a !== undefined);
+  const squadTeamOf = (s: Squad): string => {
+    const first = athletesOfSelected.find((a) => s.athleteIds.includes(a.id));
+    return first ? teamName(first.teamId, teams) : "—";
+  };
   const bracket = selected ? bracketsByEvent[selected.id] : undefined;
   const order = selected ? orderByEvent[selected.id] : undefined;
   const squadsOfSelected: DerivedSquad[] = selected
@@ -324,17 +397,29 @@ export default function NoiDungBocTham() {
     );
   }
 
+  // Tổng số trận đối kháng (đã bốc thăm) + lượt thi quyền (cá nhân + đội,
+  // đã xếp thứ tự) trên toàn giải — thay cho tab "Lịch thi đấu tổng" đã
+  // bỏ, chỉ còn đúng 1 con số tổng quan, không cần rời trang xem chi
+  // tiết (đã có 2 nút xuất PDF riêng cho việc đó).
+  const tongSoTran =
+    Object.values(bracketsByEvent).flat().length +
+    Object.values(orderByEvent).flat().length +
+    Object.values(squadOrderByEvent).flat().length;
+
   return (
     <div className={styles.page}>
       <div className={styles.tabsBar}>
-        {(["quyen", "doi_khang", "lich_thi_dau"] as const).map((t) => (
-          <button
-            key={t}
-            className={t === tab ? styles.tabActive : styles.tab}
-            onClick={() => setTab(t)}>
-            {LOAI_LABEL[t]}
-          </button>
-        ))}
+        <div className={styles.tabsGroup}>
+          {(["quyen", "doi_khang"] as const).map((t) => (
+            <button
+              key={t}
+              className={t === tab ? styles.tabActive : styles.tab}
+              onClick={() => setTab(t)}>
+              {LOAI_LABEL[t]}
+            </button>
+          ))}
+        </div>
+        <span className={styles.tongSoTran}>Tổng số trận: {tongSoTran}</span>
       </div>
 
       <div className={styles.exportBar}>
@@ -358,9 +443,8 @@ export default function NoiDungBocTham() {
       </div>
 
       <div className={styles.body}>
-        {tab !== "lich_thi_dau" && (
-          <aside className={styles.sidebar}>
-            <div className={styles.eventList}>
+        <aside className={styles.sidebar}>
+          <div className={styles.eventList}>
               {eventsInTab.map((ev) => {
                 const drawn = isEventDrawn(
                   ev,
@@ -394,27 +478,21 @@ export default function NoiDungBocTham() {
               {eventsInTab.length === 0 && (
                 <p className={styles.emptyList}>Chưa có nội dung nào</p>
               )}
-            </div>
-          </aside>
-        )}
+          </div>
+        </aside>
 
         <section className={styles.main}>
-          {tab === "lich_thi_dau" ? (
-            <LichThiDau
-              events={events}
-              athletes={athletes}
-              teams={teams}
-              bracketsByEvent={bracketsByEvent}
-              orderByEvent={orderByEvent}
-              squadOrderByEvent={squadOrderByEvent}
-            />
-          ) : !selected ? (
+          {!selected ? (
             <p>Chọn 1 nội dung ở danh sách bên trái.</p>
           ) : (
             <>
               <h1 className={styles.title}>
                 {selected.ten} |{" "}
-                <small>{formatEventNhomTuoi(selected.nhomTuoi)}</small>
+                <small>
+                  {nhomTuoiLabel === "Hỗn hợp"
+                    ? `Nhóm tuổi: ${nhomTuoiLabel}`
+                    : nhomTuoiLabel}
+                </small>
               </h1>
 
               <section className={styles.registeredSection}>
@@ -428,30 +506,28 @@ export default function NoiDungBocTham() {
                 </h2>
                 {isTeamEvent ? (
                   squadsOfSelected.length > 0 ? (
-                    <ol className={styles.athleteList}>
-                      {squadsOfSelected.map((s) => (
-                        <li key={s.id}>
-                          <strong>{s.ten}</strong> —{" "}
-                          {squadMemberNames(s, athletesOfSelected)}
-                        </li>
-                      ))}
-                    </ol>
+                    <PeopleTable
+                      isTeam
+                      individuals={[]}
+                      squads={squadsOfSelected}
+                      squadMembers={squadMembers}
+                      squadTeamOf={squadTeamOf}
+                      teams={teams}
+                    />
                   ) : (
                     <p className={styles.hint}>
                       Chưa có đội đăng ký nội dung này
                     </p>
                   )
                 ) : athletesOfSelected.length > 0 ? (
-                  <ol className={styles.athleteList}>
-                    {athletesOfSelected.map((a) => (
-                      <li key={a.id}>
-                        {a.hoTen}{" "}
-                        <span className={styles.teamTag}>
-                          ({a.namSinh} - {teamName(a.teamId, teams)})
-                        </span>
-                      </li>
-                    ))}
-                  </ol>
+                  <PeopleTable
+                    isTeam={false}
+                    individuals={athletesOfSelected}
+                    squads={[]}
+                    squadMembers={squadMembers}
+                    squadTeamOf={squadTeamOf}
+                    teams={teams}
+                  />
                 ) : (
                   <p className={styles.hint}>
                     Chưa có VĐV đăng ký nội dung này
@@ -487,14 +563,14 @@ export default function NoiDungBocTham() {
                       <h2 className={styles.registeredTitle}>
                         Thứ tự thi diễn
                       </h2>
-                      <ol className={styles.athleteList}>
-                        {squadOrder.map((s) => (
-                          <li key={s.id}>
-                            <strong>{s.ten}</strong> —{" "}
-                            {squadMemberNames(s, athletesOfSelected)}
-                          </li>
-                        ))}
-                      </ol>
+                      <PeopleTable
+                        isTeam
+                        individuals={[]}
+                        squads={squadOrder}
+                        squadMembers={squadMembers}
+                        squadTeamOf={squadTeamOf}
+                        teams={teams}
+                      />
                     </div>
                   )}
                 </>
@@ -511,16 +587,14 @@ export default function NoiDungBocTham() {
                       <h2 className={styles.registeredTitle}>
                         Thứ tự thi diễn
                       </h2>
-                      <ol className={styles.athleteList}>
-                        {order.map((a) => (
-                          <li key={a.id}>
-                            {a.hoTen}{" "}
-                            <span className={styles.teamTag}>
-                              ({teamName(a.teamId, teams)})
-                            </span>
-                          </li>
-                        ))}
-                      </ol>
+                      <PeopleTable
+                        isTeam={false}
+                        individuals={order}
+                        squads={[]}
+                        squadMembers={squadMembers}
+                        squadTeamOf={squadTeamOf}
+                        teams={teams}
+                      />
                     </div>
                   )}
                 </>

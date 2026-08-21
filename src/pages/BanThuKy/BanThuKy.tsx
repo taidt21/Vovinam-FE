@@ -632,6 +632,7 @@ export default function BanThuKy() {
         );
       });
     return flat.map((x, i) => ({ ...x, so: i + 1 }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [events, orderByEvent, squadOrderByEvent, athletes, teams]);
 
   // Đưa 1 lượt quyền vào ĐÚNG khu vực đang thao tác (currentCourtId) —
@@ -684,6 +685,7 @@ export default function BanThuKy() {
           : (so - 1) % courts.length === courtIndex),
     );
     if (next) openIntoCourt(next.event.id, next.match.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, activeOnMyCourt, numbered, courts, currentCourtId]);
 
   // "Đã xong" giờ theo đúng dữ liệu lưu thật (quyenLuotHoanThanh) — không
@@ -728,6 +730,7 @@ export default function BanThuKy() {
           : (item.so - 1) % courts.length === courtIndex),
     );
     if (next) startQuyenPerformance(next);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     tab,
     currentCourtId,

@@ -2,7 +2,7 @@ import type { Athlete, AthleteRecord } from "../../types";
 import type { LyDoKetThucQuyen } from "../../types/liveQuyen";
 
 export function toAthleteArray(records: AthleteRecord[]): Athlete[] {
-  return records.map(({ eventIds, ...rest }) => ({ ...rest, noiDung: [] }));
+  return records.map(({ eventIds: _eventIds, ...rest }) => ({ ...rest, noiDung: [] }));
 }
 
 export const LY_DO_LABEL: Record<LyDoKetThucQuyen, string> = {

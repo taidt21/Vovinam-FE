@@ -7,6 +7,8 @@
 
 .tabsBar {
     display: flex;
+    align-items: center;
+    justify-content: space-between;
     gap: $space-1;
     border-bottom: 1px solid $color-border;
     margin-bottom: $space-5;
@@ -60,6 +62,22 @@
     &:hover {
         color: $color-do;
     }
+}
+
+.tabsGroup {
+    display: flex;
+    gap: $space-1;
+}
+
+.tongSoTran {
+    padding: $space-2 $space-3;
+    margin-bottom: $space-2;
+    border: 1px solid $color-border;
+    border-radius: 8px;
+    background: $color-bg;
+    color: $color-text-muted;
+    font-size: 13px;
+    font-weight: 700;
 }
 
 .body {
@@ -179,19 +197,114 @@
 }
 
 
-.athleteList {
-    display: flex;
-    flex-direction: column;
-    gap: $space-2;
-    padding-left: $space-5;
-    max-height: 280px;
-    overflow-y: auto;
+.tableWrap {
+    width: 100%;
+    overflow-x: auto;
+}
 
-    li {
-        font-size: 13px;
-        padding: $space-2 0;
-        border-bottom: 1px solid $color-border;
+.peopleTable {
+    width: 100%;
+    min-width: 680px;
+    border: 1px solid #c8c0d3;
+    border-spacing: 0;
+    border-collapse: separate;
+    color: $color-text;
+    font-size: 14px;
+    line-height: 1.4;
+
+    th,
+    td {
+        padding: 12px 14px;
+        border-right: 1px solid #cbc4d5;
+        border-bottom: 1px solid #cbc4d5;
+        vertical-align: middle;
     }
+
+    // Không dùng td:last-child vì ở các dòng con của đội, ô HỌ VÀ TÊN có
+    // thể là last-child do STT/ĐƠN VỊ đang rowSpan.
+    th:last-child {
+        border-right: 0;
+    }
+
+    tbody tr:last-child td:not([rowspan]),
+    tbody tr:last-child td[rowspan] {
+        border-bottom: 0;
+    }
+
+    thead th {
+        background: #f0ebf8;
+        color: #574274;
+        border-bottom: 1.5px solid #aea3bc;
+        font-size: 12px;
+        font-weight: 900;
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 0.055em;
+    }
+
+    tbody tr {
+        background: #fff;
+        transition: background 0.14s ease;
+    }
+
+    tbody tr:nth-child(even) {
+        background: #fcfbfe;
+    }
+
+    tbody tr:hover {
+        background: #f8f5fc;
+    }
+}
+
+.colOrder {
+    width: 64px;
+}
+
+.colName {
+    width: 58%;
+}
+
+.colTeam {
+    width: 42%;
+}
+
+.orderCell {
+    width: 64px;
+    color: #655778;
+    font-family: $font-mono;
+    font-size: 14px;
+    font-weight: 900;
+    text-align: center;
+}
+
+.nameCell {
+    color: #292532;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.teamCell {
+    // ĐƠN VỊ mới là cột cuối thật sự của tbody.
+    border-right: 0 !important;
+    color: #51485f;
+    font-size: 14px;
+    font-weight: 650;
+    text-align: center;
+}
+
+.groupOrderCell {
+    background: #f0f7fc;
+    color: #2b658c;
+    vertical-align: middle !important;
+}
+
+.mergedTeamCell {
+    background: linear-gradient(135deg, #f5faff 0%, #ebf5fc 100%);
+    color: #315d7b;
+    font-size: 15px;
+    font-weight: 800;
+    line-height: 1.45;
+    vertical-align: middle !important;
 }
 
 .registeredSection {
@@ -212,12 +325,6 @@
         color: $color-text-muted;
         font-size: 13px;
     }
-}
-
-.teamTag {
-    color: $color-text-muted;
-    font-size: 12px;
-    font-weight: 400;
 }
 
 .drawnIcon {

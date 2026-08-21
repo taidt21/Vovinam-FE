@@ -8,6 +8,7 @@ export interface CompetitionEvent {
   gioiTinh: GioiTinh | 'hon_hop';
   nhomTuoi: number | 'hon_hop';
   hangCan?: number; // chỉ đối kháng
+  loaiHangCan?: 'dung_can' | 'duoi' | 'tren'; // chỉ có ý nghĩa khi có hangCan
   thoiGianBaiGiay?: number; // chỉ quyền
   hinhThucThi?: 'ca_nhan' | 'doi';
 }

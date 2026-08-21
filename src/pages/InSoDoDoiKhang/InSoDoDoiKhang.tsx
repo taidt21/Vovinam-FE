@@ -80,7 +80,7 @@ export default function InSoDoDoiKhang() {
   const athletesFor = (eventId: string): Athlete[] =>
     athletes
       .filter((a) => a.eventIds.includes(eventId))
-      .map(({ eventIds, ...rest }) => ({ ...rest, noiDung: [] }));
+      .map(({ eventIds: _eventIds, ...rest }) => ({ ...rest, noiDung: [] }));
 
   const xuatPDF = async () => {
     setExportLoi(null);

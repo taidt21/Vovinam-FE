@@ -1,4 +1,5 @@
 @use '../../styles/variables'as *;
+@use 'sass:color';
 
 .page {
     max-width: 1440px;
@@ -31,6 +32,7 @@
     font-weight: 800;
     line-height: 1;
     cursor: pointer;
+
     transition:
         transform 0.15s ease,
         box-shadow 0.15s ease,
@@ -103,11 +105,14 @@
     position: sticky;
     left: 0;
     z-index: 2;
+
     margin: 0;
     padding: 12px 16px;
+
     border-bottom: 1px solid rgba($color-vang, 0.45);
     background: rgba($color-vang, 0.13);
     color: $color-text;
+
     font-size: 14px;
     font-weight: 900;
     line-height: 1.35;
@@ -146,9 +151,12 @@
         position: sticky;
         top: 0;
         z-index: 1;
-        // Các cột thông tin chung dùng vàng trung tính để không bị hiểu
-        // nhầm là thuộc góc XANH. Header ĐỎ/XANH bên dưới override riêng.
-        background: linear-gradient(to right, lighten($color-vang, 7%), $color-vang);
+
+        // Thay lighten() bằng color.adjust()
+        background: linear-gradient(to right,
+                color.adjust($color-vang, $lightness: 7%),
+                $color-vang);
+
         color: $color-text;
         font-size: 12px;
         font-weight: 900;
@@ -156,12 +164,14 @@
         text-transform: uppercase;
         letter-spacing: 0.035em;
         white-space: nowrap;
+
         border-bottom-color: #aaa2b4;
         border-bottom-width: 1.5px;
     }
 
     tbody tr {
         background: #fff;
+
         transition:
             background 0.14s ease,
             box-shadow 0.14s ease;
@@ -191,7 +201,6 @@
     white-space: nowrap;
 }
 
-
 .colVong {
     width: 1%;
     color: $color-text-muted;
@@ -218,9 +227,12 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+
     min-height: 26px;
     padding: 4px 10px;
+
     border-radius: 999px;
+
     font-size: 13px;
     font-weight: 800;
     line-height: 1.15;
@@ -228,17 +240,26 @@
     letter-spacing: 0.01em;
 }
 
-// Header 2 tầng cho hai góc đấu, giống mẫu bảng thi đấu truyền thống.
+// ========================================
+// Header hai góc thi đấu
+// ========================================
+
 .headerDo,
 .subHeaderDo {
-    background: linear-gradient(to right, $color-do, darken($color-do, 9%)) !important;
+    background: linear-gradient(to right,
+            $color-do,
+            color.adjust($color-do, $lightness: -9%)) !important;
+
     color: #fff !important;
     text-align: center !important;
 }
 
 .headerXanh,
 .subHeaderXanh {
-    background: linear-gradient(to right, $color-xanh, darken($color-xanh, 10%)) !important;
+    background: linear-gradient(to right,
+            $color-xanh,
+            color.adjust($color-xanh, $lightness: -10%)) !important;
+
     color: #fff !important;
     text-align: center !important;
 }
@@ -256,7 +277,9 @@
     border-bottom-width: 1.5px !important;
 }
 
-// Trong mỗi góc, cột tên VĐV rộng hơn cột đơn vị.
+// Trong mỗi góc,
+// cột tên VĐV rộng hơn cột đơn vị.
+
 .colVdvName {
     width: 20%;
     min-width: 180px;
@@ -304,6 +327,10 @@
     color: $color-text-muted;
 }
 
+// ========================================
+// Tablet
+// ========================================
+
 @media (max-width: 900px) {
     .page {
         padding: $space-4;
@@ -325,9 +352,11 @@
             padding: 9px 10px;
         }
     }
-
-
 }
+
+// ========================================
+// Mobile
+// ========================================
 
 @media (max-width: 560px) {
     .page {
@@ -357,6 +386,10 @@
         font-size: 12.5px;
     }
 }
+
+// ========================================
+// Print
+// ========================================
 
 @media print {
 

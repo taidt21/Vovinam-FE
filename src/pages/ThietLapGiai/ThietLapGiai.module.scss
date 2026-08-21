@@ -7,27 +7,28 @@
 }
 
 .title {
-    font-size: 22px;
-    font-weight: 700;
+    font-size: 24px;
+    font-weight: 750;
+    letter-spacing: -0.02em;
     margin: 0;
 }
 
 .card {
     background: $color-surface;
     border: 1px solid $color-border;
-    border-radius: 10px;
+    border-radius: 12px;
     padding: $space-5;
 }
 
 .cardTitle {
     font-size: 16px;
-    font-weight: 600;
+    font-weight: 700;
     margin: 0 0 $space-4;
 }
 
 .grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 2fr) minmax(160px, 1fr);
     gap: $space-4;
 }
 
@@ -44,13 +45,15 @@
         font: inherit;
         padding: $space-2 $space-3;
         border: 1px solid $color-border;
-        border-radius: 6px;
+        border-radius: 7px;
         color: $color-text;
+        background: $color-surface;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
 
         &:focus {
-            outline: 2px solid rgba($color-do, 0.3);
-            outline-offset: 1px;
+            outline: none;
             border-color: $color-do;
+            box-shadow: 0 0 0 3px rgba($color-do, 0.12);
         }
     }
 }
@@ -81,140 +84,432 @@
     border-top: 1px solid $color-border;
 }
 
-.btnPrimary {
+.btnPrimary,
+.btnGhost {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: $space-1;
+    min-height: 36px;
+    padding: $space-2 $space-4;
+    border-radius: 7px;
+    font-weight: 650;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+
+    &:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+    }
+}
+
+.btnPrimary {
     background: $color-do;
     color: white;
-    border: none;
-    padding: $space-2 $space-5;
-    border-radius: 6px;
-    font-weight: 600;
-    font-size: 14px;
-    cursor: pointer;
+    border: 1px solid $color-do;
 
-    &:hover {
-        opacity: 0.9;
+    &:hover:not(:disabled) {
+        opacity: 0.92;
     }
 }
 
 .btnGhost {
-    background: transparent;
+    background: $color-surface;
     color: $color-text-muted;
     border: 1px solid $color-border;
-    padding: $space-2 $space-5;
-    border-radius: 6px;
-    font-weight: 600;
-    font-size: 14px;
-    cursor: pointer;
 
-    &:hover {
+    &:hover:not(:disabled) {
         background: $color-bg;
+        color: $color-text;
     }
+}
+
+/* Event catalog */
+.eventsCard {
+    padding: 0;
+    overflow: hidden;
 }
 
 .eventsHead {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: $space-4;
-    margin-bottom: $space-4;
+    gap: $space-5;
+    padding: $space-5;
+    border-bottom: 1px solid $color-border;
+
+    .cardTitle {
+        margin-bottom: 0;
+    }
+}
+
+.eventsTitleRow {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
     flex-wrap: wrap;
+}
+
+.totalBadge,
+.groupCount {
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    font-size: 11px;
+    line-height: 1;
+    font-weight: 650;
+    color: $color-text-muted;
+    background: $color-bg;
+    border: 1px solid $color-border;
+    border-radius: 999px;
+    padding: 5px 8px;
 }
 
 .eventsNote {
     font-size: 12px;
+    line-height: 1.55;
     color: $color-text-muted;
-    margin: 4px 0 0;
-    max-width: 480px;
+    margin: 5px 0 0;
+    max-width: 620px;
 }
 
-.eventGroups {
+.eventsActions {
     display: flex;
-    flex-direction: column;
-    gap: $space-5;
-}
-
-.eventGroup {
-    display: flex;
-    flex-direction: column;
     gap: $space-2;
+    flex-shrink: 0;
 }
 
-.eventGroupTitle {
-    font-size: 13px;
-    font-weight: 700;
-    margin: 0;
+.eventTabs {
+    display: flex;
+    gap: $space-1;
+    padding: 0 $space-5;
+    border-bottom: 1px solid $color-border;
+}
 
-    span {
-        font-weight: 400;
+.eventTab {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: $space-2;
+    padding: 13px 4px 12px;
+    margin-right: $space-4;
+    border: 0;
+    background: transparent;
+    color: $color-text-muted;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 650;
+    cursor: pointer;
+
+    strong {
+        min-width: 24px;
+        padding: 3px 7px;
+        border-radius: 999px;
+        background: $color-bg;
         color: $color-text-muted;
+        font-size: 11px;
+        text-align: center;
+    }
+
+    &::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: -1px;
+        height: 2px;
+        border-radius: 2px 2px 0 0;
+        background: transparent;
+    }
+
+    &:hover {
+        color: $color-text;
     }
 }
 
-.eventList {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    flex-direction: column;
-    border: 1px solid $color-border;
-    border-radius: 8px;
-    overflow: hidden;
+.eventTabActive {
+    color: $color-do;
+
+    strong {
+        background: rgba($color-do, 0.1);
+        color: $color-do;
+    }
+
+    &::after {
+        background: $color-do;
+    }
 }
 
-.eventRow {
+.eventToolbar {
+    display: grid;
+    grid-template-columns: minmax(220px, 1fr) minmax(160px, 220px) minmax(150px, 190px) auto;
+    gap: $space-2;
+    align-items: center;
+    padding: $space-4 $space-5 $space-2;
+}
+
+.searchBox {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    min-width: 0;
+    min-height: 38px;
+    padding: 0 $space-3;
+    border: 1px solid $color-border;
+    border-radius: 8px;
+    background: $color-surface;
+    color: $color-text-muted;
+
+    &:focus-within {
+        border-color: $color-do;
+        box-shadow: 0 0 0 3px rgba($color-do, 0.1);
+    }
+
+    input {
+        width: 100%;
+        min-width: 0;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: $color-text;
+        font: inherit;
+        font-size: 13px;
+
+        &::placeholder {
+            color: $color-text-muted;
+        }
+    }
+}
+
+.filterSelect {
+    width: 100%;
+    min-height: 38px;
+    padding: 0 34px 0 11px;
+    border: 1px solid $color-border;
+    border-radius: 8px;
+    background: $color-surface;
+    color: $color-text;
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+
+    &:focus {
+        outline: none;
+        border-color: $color-do;
+        box-shadow: 0 0 0 3px rgba($color-do, 0.1);
+    }
+}
+
+.clearFiltersBtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-height: 38px;
+    padding: 0 10px;
+    border: 0;
+    background: transparent;
+    color: $color-text-muted;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+
+    &:hover {
+        color: $color-text;
+        background: $color-bg;
+        border-radius: 7px;
+    }
+}
+
+.resultSummary {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: $space-3;
-    padding: $space-2 $space-3;
-    border-bottom: 1px solid $color-border;
+    padding: $space-2 $space-5 $space-4;
+    color: $color-text-muted;
+    font-size: 11px;
 
-    &:last-child {
-        border-bottom: none;
-    }
-
-    &:hover {
-        background: $color-bg;
+    strong {
+        color: $color-text;
     }
 }
 
-.eventInfo {
+.catalogList {
     display: flex;
     flex-direction: column;
-    gap: 2px;
-    min-width: 0;
+    gap: $space-4;
+    padding: 0 $space-5 $space-5;
 }
 
-.eventName {
-    font-size: 13px;
+.ageGroup {
+    overflow: hidden;
+    border: 1px solid $color-border;
+    border-radius: 10px;
+    background: $color-surface;
+}
+
+.ageGroupHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-3;
+    padding: 12px 14px;
+    background: $color-bg;
+    border-bottom: 1px solid $color-border;
+
+    h3 {
+        margin: 1px 0 0;
+        color: $color-text;
+        font-size: 14px;
+        font-weight: 750;
+    }
+}
+
+.ageEyebrow {
+    display: block;
+    color: $color-text-muted;
+    font-size: 9px;
+    line-height: 1.1;
+    font-weight: 750;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.genderGroups {
+    display: flex;
+    flex-direction: column;
+}
+
+.genderGroup {
+    padding: 14px;
+
+    &+& {
+        border-top: 1px solid $color-border;
+    }
+}
+
+.genderGroupHeader {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    margin-bottom: $space-3;
+    color: $color-text-muted;
+    font-size: 11px;
+}
+
+.genderBadge,
+.formBadge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: fit-content;
+    white-space: nowrap;
+    border-radius: 999px;
+    font-size: 10px;
+    line-height: 1;
+    font-weight: 700;
+    padding: 5px 8px;
+}
+
+.genderMale {
+    color: #075985;
+    background: #e0f2fe;
+    border: 1px solid #bae6fd;
+}
+
+.genderFemale {
+    color: #9d174d;
+    background: #fce7f3;
+    border: 1px solid #fbcfe8;
+}
+
+.genderMixed {
+    color: #6b4f16;
+    background: #fef3c7;
+    border: 1px solid #fde68a;
+}
+
+.formBadge {
+    color: $color-text-muted;
+    background: $color-bg;
+    border: 1px solid $color-border;
     font-weight: 600;
 }
 
-.eventMeta {
-    font-size: 11px;
+.weightGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: $space-2;
+}
+
+.weightCard {
+    min-width: 0;
+    padding: 11px;
+    border: 1px solid $color-border;
+    border-radius: 9px;
+    background: $color-surface;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+
+    &:hover {
+        border-color: rgba($color-do, 0.32);
+        box-shadow: 0 5px 14px rgba(0, 0, 0, 0.05);
+        transform: translateY(-1px);
+
+        .eventRowActions {
+            opacity: 1;
+        }
+    }
+}
+
+.weightCardTop {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: $space-2;
+}
+
+.weightValue {
+    color: $color-text;
+    font-size: 16px;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+}
+
+.weightEventName {
+    overflow: hidden;
+    margin: 7px 0 0;
     color: $color-text-muted;
+    font-size: 11px;
+    line-height: 1.35;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .eventRowActions {
     display: flex;
-    gap: $space-1;
+    gap: 4px;
     flex-shrink: 0;
 
     button {
-        display: flex;
+        display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 26px;
-        height: 26px;
-        border: 1px solid $color-border;
-        background: $color-surface;
-        border-radius: 6px;
+        width: 30px;
+        height: 30px;
+        padding: 0;
+        border: 1px solid transparent;
+        background: transparent;
+        border-radius: 7px;
         color: $color-text-muted;
         cursor: pointer;
 
         &:hover {
             background: $color-bg;
+            border-color: $color-border;
             color: $color-text;
         }
     }
@@ -222,7 +517,99 @@
 
 .dangerBtn:hover {
     color: $color-danger !important;
-    border-color: $color-danger !important;
+    border-color: rgba($color-danger, 0.28) !important;
+    background: rgba($color-danger, 0.05) !important;
+}
+
+/* Quyền: list/table compact */
+.quyenTable {
+    width: 100%;
+}
+
+.quyenTableHead,
+.quyenRow {
+    display: grid;
+    grid-template-columns: minmax(220px, 1.7fr) minmax(90px, 0.6fr) minmax(90px, 0.6fr) minmax(90px, 0.55fr) 72px;
+    column-gap: $space-3;
+    align-items: center;
+}
+
+.quyenTableHead {
+    min-height: 34px;
+    padding: 0 14px;
+    border-bottom: 1px solid $color-border;
+    color: $color-text-muted;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.035em;
+    text-transform: uppercase;
+}
+
+.quyenRow {
+    min-height: 58px;
+    padding: 9px 14px;
+    border-bottom: 1px solid $color-border;
+    font-size: 12px;
+
+    &:last-child {
+        border-bottom: 0;
+    }
+
+    &:hover {
+        background: rgba(0, 0, 0, 0.015);
+    }
+
+    >.eventRowActions {
+        justify-self: end;
+    }
+}
+
+.quyenNameCell {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+
+    strong {
+        overflow: hidden;
+        color: $color-text;
+        font-size: 13px;
+        font-weight: 650;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    span {
+        color: $color-text-muted;
+        font-size: 10px;
+    }
+}
+
+.durationCell {
+    color: $color-text-muted;
+    font-variant-numeric: tabular-nums;
+}
+
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: $space-2;
+    min-height: 150px;
+    margin: 0 $space-5 $space-5;
+    padding: $space-5;
+    border: 1px dashed $color-border;
+    border-radius: 10px;
+    background: $color-bg;
+    color: $color-text-muted;
+    text-align: center;
+    font-size: 12px;
+
+    strong {
+        color: $color-text;
+        font-size: 13px;
+    }
 }
 
 .modalForm {
@@ -314,4 +701,160 @@
     color: $color-text-muted;
     font-style: italic;
     margin-top: 2px;
+}
+
+@media (max-width: 980px) {
+    .eventToolbar {
+        grid-template-columns: minmax(220px, 1fr) 1fr 1fr;
+    }
+
+    .clearFiltersBtn {
+        grid-column: 1 / -1;
+        justify-self: start;
+        min-height: 30px;
+    }
+
+    .quyenTableHead,
+    .quyenRow {
+        grid-template-columns: minmax(180px, 1.6fr) 90px 90px 82px 68px;
+    }
+}
+
+@media (max-width: 720px) {
+    .page {
+        gap: $space-4;
+    }
+
+    .grid {
+        grid-template-columns: 1fr;
+    }
+
+    .card {
+        padding: $space-4;
+    }
+
+    .eventsCard {
+        padding: 0;
+    }
+
+    .eventsHead {
+        flex-direction: column;
+        gap: $space-3;
+        padding: $space-4;
+    }
+
+    .eventsActions {
+        width: 100%;
+
+        .btnGhost,
+        .btnPrimary {
+            flex: 1;
+        }
+    }
+
+    .eventTabs {
+        padding: 0 $space-4;
+    }
+
+    .eventTab {
+        flex: 1;
+        justify-content: center;
+        margin-right: 0;
+    }
+
+    .eventToolbar {
+        grid-template-columns: 1fr 1fr;
+        padding: $space-3 $space-4 $space-2;
+    }
+
+    .searchBox {
+        grid-column: 1 / -1;
+    }
+
+    .resultSummary {
+        align-items: flex-start;
+        flex-direction: column;
+        padding: $space-2 $space-4 $space-3;
+    }
+
+    .catalogList {
+        padding: 0 $space-4 $space-4;
+    }
+
+    .weightGrid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .quyenTableHead {
+        display: none;
+    }
+
+    .quyenRow {
+        grid-template-columns: 1fr auto;
+        gap: $space-2 $space-3;
+        padding: 12px 14px;
+
+        >div:not(.quyenNameCell):not(.eventRowActions) {
+            display: flex;
+            align-items: center;
+            gap: $space-2;
+            color: $color-text-muted;
+
+            &::before {
+                content: attr(data-label);
+                min-width: 58px;
+                color: $color-text-muted;
+                font-size: 9px;
+                font-weight: 700;
+                letter-spacing: 0.03em;
+                text-transform: uppercase;
+            }
+        }
+
+        >.eventRowActions {
+            grid-column: 2;
+            grid-row: 1;
+        }
+    }
+
+    .quyenNameCell {
+        grid-column: 1;
+    }
+}
+
+@media (max-width: 480px) {
+    .title {
+        font-size: 21px;
+    }
+
+    .eventsActions {
+        flex-direction: column-reverse;
+    }
+
+    .eventToolbar {
+        grid-template-columns: 1fr;
+    }
+
+    .searchBox,
+    .clearFiltersBtn {
+        grid-column: auto;
+    }
+
+    .filterSelect {
+        min-height: 40px;
+    }
+
+    .weightGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .ageGroupHeader,
+    .genderGroup {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+    .quyenRow {
+        grid-template-columns: 1fr auto;
+    }
 }

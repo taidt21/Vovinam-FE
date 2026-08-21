@@ -102,6 +102,7 @@ function QuyenScoringPanel({
     return () => {
       huy = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     live?.eventId,
     live?.athleteId,

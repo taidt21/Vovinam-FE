@@ -131,6 +131,7 @@ export default function DoanVaVDV() {
 
       return haystack.includes(q);
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [athletes, search, filterTeamId, teams, events]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));

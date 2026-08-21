@@ -1,7 +1,7 @@
 /** @format */
 
 import { useEffect, useState, type FormEvent } from "react";
-import { Plus, Pencil, Trash2, FileSpreadsheet } from "lucide-react";
+import { Plus, Pencil, Trash2, FileSpreadsheet, Search, X } from "lucide-react";
 import type {
   CompetitionEvent,
   EventKind,
@@ -29,12 +29,17 @@ const EMPTY_EVENT_FORM: EventFormState = {
   nhomTuoi: EVENT_NHOM_TUOI_OPTIONS[0],
   hinhThucThi: "ca_nhan",
   hangCan: undefined,
+  loaiHangCan: "dung_can",
   thoiGianBaiGiay: undefined,
 };
 
 export default function ThietLapGiai() {
   const [tournament, setTournament] = useState<Tournament | null>(null);
-  const [form, setForm] = useState({ ten: "", soSan: 1, choPhepHiepPhu: false });
+  const [form, setForm] = useState({
+    ten: "",
+    soSan: 1,
+    choPhepHiepPhu: false,
+  });
   const [savingTournament, setSavingTournament] = useState(false);
 
   const [events, setEvents] = useState<CompetitionEvent[]>([]);
@@ -47,11 +52,20 @@ export default function ThietLapGiai() {
   const [showImportEventsModal, setShowImportEventsModal] = useState(false);
   const [importingEvents, setImportingEvents] = useState(false);
 
+  const [activeEventTab, setActiveEventTab] = useState<EventKind>("doi_khang");
+  const [eventSearch, setEventSearch] = useState("");
+  const [nhomTuoiFilter, setNhomTuoiFilter] = useState("all");
+  const [gioiTinhFilter, setGioiTinhFilter] = useState("all");
+
   useEffect(() => {
     apiGet<Tournament>("/tournament")
       .then((t) => {
         setTournament(t);
-        setForm({ ten: t.ten, soSan: t.soSan, choPhepHiepPhu: t.choPhepHiepPhu });
+        setForm({
+          ten: t.ten,
+          soSan: t.soSan,
+          choPhepHiepPhu: t.choPhepHiepPhu,
+        });
       })
       .catch(() =>
         setLoadError(
@@ -86,7 +100,16 @@ export default function ThietLapGiai() {
 
   const openAddEvent = () => {
     setEditingEventId(null);
-    setEventForm(EMPTY_EVENT_FORM);
+    setEventForm({
+      ...EMPTY_EVENT_FORM,
+      loai: activeEventTab,
+      hangCan:
+        activeEventTab === "doi_khang" ? EMPTY_EVENT_FORM.hangCan : undefined,
+      thoiGianBaiGiay:
+        activeEventTab === "quyen"
+          ? EMPTY_EVENT_FORM.thoiGianBaiGiay
+          : undefined,
+    });
     setShowEventModal(true);
   };
 
@@ -97,8 +120,9 @@ export default function ThietLapGiai() {
       loai: ev.loai,
       gioiTinh: ev.gioiTinh,
       nhomTuoi: ev.nhomTuoi,
-      hinhThucThi: ev.hinhThucThi,
+      hinhThucThi: ev.loai === "doi_khang" ? "ca_nhan" : ev.hinhThucThi,
       hangCan: ev.hangCan,
+      loaiHangCan: ev.loaiHangCan ?? "dung_can",
       thoiGianBaiGiay: ev.thoiGianBaiGiay,
     });
     setShowEventModal(true);
@@ -119,6 +143,7 @@ export default function ThietLapGiai() {
         const created = await createEvent(eventForm);
         setEvents((prev) => [created, ...prev]);
       }
+      setActiveEventTab(eventForm.loai);
       setShowEventModal(false);
     } catch (err) {
       window.alert(
@@ -175,7 +200,11 @@ export default function ThietLapGiai() {
 
   const quyenEvents = [...events]
     .filter((e) => e.loai === "quyen")
-    .sort((a, b) => compareNhomTuoi(a.nhomTuoi, b.nhomTuoi));
+    .sort(
+      (a, b) =>
+        compareNhomTuoi(a.nhomTuoi, b.nhomTuoi) ||
+        a.ten.localeCompare(b.ten, "vi"),
+    );
   const doiKhangEvents = [...events]
     .filter((e) => e.loai === "doi_khang")
     .sort(
@@ -183,6 +212,43 @@ export default function ThietLapGiai() {
         compareNhomTuoi(a.nhomTuoi, b.nhomTuoi) ||
         (a.hangCan ?? 0) - (b.hangCan ?? 0),
     );
+
+  const nhomTuoiFilters = Array.from(
+    new Set(events.map((e) => e.nhomTuoi)),
+  ).sort(compareNhomTuoi);
+  const activeEvents =
+    activeEventTab === "doi_khang" ? doiKhangEvents : quyenEvents;
+  const normalizedSearch = eventSearch.trim().toLocaleLowerCase("vi");
+  const filteredEvents = activeEvents.filter((ev) => {
+    if (nhomTuoiFilter !== "all" && String(ev.nhomTuoi) !== nhomTuoiFilter)
+      return false;
+    if (gioiTinhFilter !== "all" && ev.gioiTinh !== gioiTinhFilter)
+      return false;
+    if (!normalizedSearch) return true;
+
+    const searchable = [
+      ev.ten,
+      formatEventNhomTuoi(ev.nhomTuoi),
+      gioiTinhLabel(ev.gioiTinh),
+      hinhThucLabel(ev.hinhThucThi),
+      ev.hangCan ? `${ev.hangCan}kg` : "",
+      ev.thoiGianBaiGiay ? `${ev.thoiGianBaiGiay}s` : "",
+    ]
+      .join(" ")
+      .toLocaleLowerCase("vi");
+    return searchable.includes(normalizedSearch);
+  });
+
+  const hasEventFilters =
+    eventSearch.trim() !== "" ||
+    nhomTuoiFilter !== "all" ||
+    gioiTinhFilter !== "all";
+
+  const clearEventFilters = () => {
+    setEventSearch("");
+    setNhomTuoiFilter("all");
+    setGioiTinhFilter("all");
+  };
 
   return (
     <div className={styles.page}>
@@ -235,10 +301,10 @@ export default function ThietLapGiai() {
             Cho phép thi hiệp phụ (điểm vàng) khi hoà điểm
           </span>
           <span className={styles.hint}>
-            Tích: hoà lúc hết giờ hiệp cuối sẽ thi thêm 1 hiệp phụ, dài
-            bằng hiệp chính — ai ghi điểm trước thắng ngay. Không tích:
-            hoà thì Bàn thư ký tự chọn người thắng theo bốc thăm hoặc cân
-            hạng cân tại thời điểm thi đấu.
+            Tích: hoà lúc hết giờ hiệp cuối sẽ thi thêm 1 hiệp phụ, dài bằng
+            hiệp chính — ai ghi điểm trước thắng ngay. Không tích: hoà thì Bàn
+            thư ký tự chọn người thắng theo bốc thăm hoặc cân hạng cân tại thời
+            điểm thi đấu.
           </span>
         </label>
 
@@ -259,18 +325,21 @@ export default function ThietLapGiai() {
 
       <BanThuKyAccountsSection soSan={form.soSan} />
 
-      <section className={styles.card}>
+      <section className={`${styles.card} ${styles.eventsCard}`}>
         <div className={styles.eventsHead}>
           <div>
-            <h2 className={styles.cardTitle}>
-              Nội dung, hạng cân & nhóm tuổi được phép đăng ký
-            </h2>
+            <div className={styles.eventsTitleRow}>
+              <h2 className={styles.cardTitle}>Nội dung thi đấu</h2>
+              <span className={styles.totalBadge}>
+                {events.length} nội dung
+              </span>
+            </div>
             <p className={styles.eventsNote}>
-              Đoàn chỉ đăng ký VĐV được vào đúng những nội dung có trong danh
-              sách này — cổng đăng ký không cho tự thêm nội dung mới.
+              Quản lý nội dung, hạng cân và nhóm tuổi mà các đoàn được phép đăng
+              ký. Đối kháng và Quyền được trình bày riêng để dễ kiểm tra.
             </p>
           </div>
-          <div style={{ display: "flex", gap: 8 }}>
+          <div className={styles.eventsActions}>
             <button
               type="button"
               className={styles.btnGhost}
@@ -281,28 +350,131 @@ export default function ThietLapGiai() {
               type="button"
               className={styles.btnPrimary}
               onClick={openAddEvent}>
-              <Plus size={16} /> Thêm nội dung
+              <Plus size={16} />
+              {activeEventTab === "doi_khang" ? "Thêm Đối kháng" : "Thêm Quyền"}
             </button>
           </div>
         </div>
 
+        <div
+          className={styles.eventTabs}
+          role="tablist"
+          aria-label="Loại nội dung">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeEventTab === "doi_khang"}
+            className={`${styles.eventTab} ${
+              activeEventTab === "doi_khang" ? styles.eventTabActive : ""
+            }`}
+            onClick={() => setActiveEventTab("doi_khang")}>
+            <span>Đối kháng</span>
+            <strong>{doiKhangEvents.length}</strong>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeEventTab === "quyen"}
+            className={`${styles.eventTab} ${
+              activeEventTab === "quyen" ? styles.eventTabActive : ""
+            }`}
+            onClick={() => setActiveEventTab("quyen")}>
+            <span>Quyền</span>
+            <strong>{quyenEvents.length}</strong>
+          </button>
+        </div>
+
+        <div className={styles.eventToolbar}>
+          <label className={styles.searchBox}>
+            <Search size={17} aria-hidden="true" />
+            <input
+              value={eventSearch}
+              onChange={(e) => setEventSearch(e.target.value)}
+              placeholder={
+                activeEventTab === "doi_khang"
+                  ? "Tìm tên hoặc hạng cân..."
+                  : "Tìm tên bài quyền..."
+              }
+              aria-label="Tìm nội dung"
+            />
+          </label>
+
+          <select
+            className={styles.filterSelect}
+            value={nhomTuoiFilter}
+            onChange={(e) => setNhomTuoiFilter(e.target.value)}
+            aria-label="Lọc theo nhóm tuổi">
+            <option value="all">Tất cả nhóm tuổi</option>
+            {nhomTuoiFilters.map((nt) => (
+              <option key={String(nt)} value={String(nt)}>
+                {formatEventNhomTuoi(nt)}
+              </option>
+            ))}
+          </select>
+
+          <select
+            className={styles.filterSelect}
+            value={gioiTinhFilter}
+            onChange={(e) => setGioiTinhFilter(e.target.value)}
+            aria-label="Lọc theo giới tính">
+            <option value="all">Tất cả giới tính</option>
+            <option value="nam">Nam</option>
+            <option value="nu">Nữ</option>
+            <option value="hon_hop">Hỗn hợp</option>
+          </select>
+
+          {hasEventFilters && (
+            <button
+              type="button"
+              className={styles.clearFiltersBtn}
+              onClick={clearEventFilters}>
+              <X size={15} /> Xóa lọc
+            </button>
+          )}
+        </div>
+
+        <div className={styles.resultSummary}>
+          <span>
+            Hiển thị <strong>{filteredEvents.length}</strong> /{" "}
+            {activeEvents.length} nội dung
+          </span>
+          {activeEventTab === "doi_khang" && activeEvents.length > 0 && (
+            <span>Ưu tiên theo nhóm tuổi, giới tính và hạng cân</span>
+          )}
+          {activeEventTab === "quyen" && activeEvents.length > 0 && (
+            <span>Danh sách gọn theo nhóm tuổi và tên bài</span>
+          )}
+        </div>
+
         {loadingEvents ? (
-          <p className={styles.hint}>Đang tải...</p>
-        ) : (
-          <div className={styles.eventGroups}>
-            <EventGroupList
-              title="Đối kháng"
-              events={doiKhangEvents}
-              onEdit={openEditEvent}
-              onDelete={deleteEvent}
-            />
-            <EventGroupList
-              title="Quyền"
-              events={quyenEvents}
-              onEdit={openEditEvent}
-              onDelete={deleteEvent}
-            />
+          <div className={styles.emptyState}>
+            Đang tải danh sách nội dung...
           </div>
+        ) : filteredEvents.length === 0 ? (
+          <div className={styles.emptyState}>
+            <strong>Không tìm thấy nội dung phù hợp</strong>
+            <span>Thử đổi từ khóa hoặc bộ lọc đang chọn.</span>
+            {hasEventFilters && (
+              <button
+                type="button"
+                className={styles.btnGhost}
+                onClick={clearEventFilters}>
+                Xóa bộ lọc
+              </button>
+            )}
+          </div>
+        ) : activeEventTab === "doi_khang" ? (
+          <DoiKhangEventList
+            events={filteredEvents}
+            onEdit={openEditEvent}
+            onDelete={deleteEvent}
+          />
+        ) : (
+          <QuyenEventList
+            events={filteredEvents}
+            onEdit={openEditEvent}
+            onDelete={deleteEvent}
+          />
         )}
       </section>
 
@@ -338,31 +510,37 @@ export default function ThietLapGiai() {
                       e.target.value === "doi_khang"
                         ? undefined
                         : eventForm.thoiGianBaiGiay,
+                    hinhThucThi:
+                      e.target.value === "doi_khang"
+                        ? "ca_nhan"
+                        : eventForm.hinhThucThi,
                   })
                 }>
                 <option value="doi_khang">Đối kháng</option>
                 <option value="quyen">Quyền</option>
               </select>
             </label>
-            <label className={styles.field}>
-              <span>Hình thức thi</span>
-              <select
-                value={eventForm.hinhThucThi ?? "ca_nhan"}
-                onChange={(e) => {
-                  const v = e.target.value as "ca_nhan" | "doi";
-                  setEventForm({
-                    ...eventForm,
-                    hinhThucThi: v,
-                    gioiTinh:
-                      v === "ca_nhan" && eventForm.gioiTinh === "hon_hop"
-                        ? "nam"
-                        : eventForm.gioiTinh,
-                  });
-                }}>
-                <option value="ca_nhan">Cá nhân</option>
-                <option value="doi">Đội</option>
-              </select>
-            </label>
+            {eventForm.loai === "quyen" && (
+              <label className={styles.field}>
+                <span>Hình thức thi</span>
+                <select
+                  value={eventForm.hinhThucThi ?? "ca_nhan"}
+                  onChange={(e) => {
+                    const v = e.target.value as "ca_nhan" | "doi";
+                    setEventForm({
+                      ...eventForm,
+                      hinhThucThi: v,
+                      gioiTinh:
+                        v === "ca_nhan" && eventForm.gioiTinh === "hon_hop"
+                          ? "nam"
+                          : eventForm.gioiTinh,
+                    });
+                  }}>
+                  <option value="ca_nhan">Cá nhân</option>
+                  <option value="doi">Đội</option>
+                </select>
+              </label>
+            )}
             <label className={styles.field}>
               <span>Giới tính</span>
               <select
@@ -430,6 +608,26 @@ export default function ThietLapGiai() {
                 />
               </label>
             )}
+            {eventForm.loai === "doi_khang" && (
+              <label className={styles.field}>
+                <span>Loại hạng cân</span>
+                <select
+                  value={eventForm.loaiHangCan ?? "dung_can"}
+                  onChange={(e) =>
+                    setEventForm({
+                      ...eventForm,
+                      loaiHangCan: e.target.value as
+                        | "dung_can"
+                        | "duoi"
+                        | "tren",
+                    })
+                  }>
+                  <option value="dung_can">Đúng cân</option>
+                  <option value="duoi">Dưới</option>
+                  <option value="tren">Trên</option>
+                </select>
+              </label>
+            )}
             {eventForm.loai === "quyen" && (
               <label className={styles.field}>
                 <span>Thời gian tham chiếu (giây)</span>
@@ -481,57 +679,244 @@ export default function ThietLapGiai() {
   );
 }
 
-function EventGroupList({
-  title,
+function gioiTinhLabel(gioiTinh: CompetitionEvent["gioiTinh"]): string {
+  return gioiTinh === "nam" ? "Nam" : gioiTinh === "nu" ? "Nữ" : "Hỗn hợp";
+}
+
+// Tên nội dung thường theo khuôn "Đối kháng <giới tính> - [Dưới/Trên]
+// <hạng cân>kg" — đúng những gì thẻ ĐÃ hiện sẵn (badge giới tính ở nhóm
+// cha, số cân to ở đầu thẻ có sẵn "Dưới/Trên" từ loaiHangCan) — hiện lại
+// y hệt thành dòng phụ bên dưới là lặp vô ích. Chỉ giữ lại phần chữ CÒN
+// THỪA sau khi bỏ 2 phần đó (VD ai đó có ghi thêm ghi chú riêng ngoài
+// khuôn chuẩn); không còn gì thì ẩn hẳn dòng phụ.
+function tenConLai(
+  ten: string,
+  gioiTinh: CompetitionEvent["gioiTinh"],
+  hangCan: number | null | undefined,
+  loaiHangCan: CompetitionEvent["loaiHangCan"],
+): string {
+  const nhan = gioiTinhLabel(gioiTinh);
+  let con = ten.replace(
+    new RegExp(`^\\s*đối\\s*kháng\\s*${nhan}\\s*[-–—:]?\\s*`, "i"),
+    "",
+  );
+  if (hangCan) {
+    const tienTo =
+      loaiHangCan === "duoi"
+        ? "dưới\\s*"
+        : loaiHangCan === "tren"
+          ? "trên\\s*"
+          : "";
+    con = con.replace(
+      new RegExp(`^\\s*[-–—:]?\\s*${tienTo}${hangCan}\\s*kg\\s*$`, "i"),
+      "",
+    );
+  }
+  return con.trim();
+}
+
+function hinhThucLabel(hinhThuc: CompetitionEvent["hinhThucThi"]): string {
+  return hinhThuc === "doi" ? "Đội" : "Cá nhân";
+}
+
+function groupByNhomTuoi(events: CompetitionEvent[]) {
+  return Array.from(new Set(events.map((ev) => ev.nhomTuoi)))
+    .sort(compareNhomTuoi)
+    .map((nhomTuoi) => ({
+      nhomTuoi,
+      events: events.filter((ev) => ev.nhomTuoi === nhomTuoi),
+    }));
+}
+
+function EventActions({
+  event,
+  onEdit,
+  onDelete,
+}: {
+  event: CompetitionEvent;
+  onEdit: (ev: CompetitionEvent) => void;
+  onDelete: (ev: CompetitionEvent) => void;
+}) {
+  return (
+    <div className={styles.eventRowActions}>
+      <button
+        type="button"
+        onClick={() => onEdit(event)}
+        aria-label={`Sửa ${event.ten}`}
+        title="Chỉnh sửa">
+        <Pencil size={15} />
+      </button>
+      <button
+        type="button"
+        onClick={() => onDelete(event)}
+        aria-label={`Xóa ${event.ten}`}
+        title="Xóa"
+        className={styles.dangerBtn}>
+        <Trash2 size={15} />
+      </button>
+    </div>
+  );
+}
+
+function DoiKhangEventList({
   events,
   onEdit,
   onDelete,
 }: {
-  title: string;
+  events: CompetitionEvent[];
+  onEdit: (ev: CompetitionEvent) => void;
+  onDelete: (ev: CompetitionEvent) => void;
+}) {
+  const genderOrder: CompetitionEvent["gioiTinh"][] = ["nam", "nu", "hon_hop"];
+
+  return (
+    <div className={styles.catalogList}>
+      {groupByNhomTuoi(events).map(({ nhomTuoi, events: ageEvents }) => (
+        <section key={String(nhomTuoi)} className={styles.ageGroup}>
+          <div className={styles.ageGroupHeader}>
+            <div>
+              <span className={styles.ageEyebrow}>Nhóm tuổi</span>
+              <h3>{formatEventNhomTuoi(nhomTuoi)}</h3>
+            </div>
+            <span className={styles.groupCount}>
+              {ageEvents.length} nội dung
+            </span>
+          </div>
+
+          <div className={styles.genderGroups}>
+            {genderOrder.map((gender) => {
+              const genderEvents = ageEvents
+                .filter((ev) => ev.gioiTinh === gender)
+                .sort((a, b) => (a.hangCan ?? 0) - (b.hangCan ?? 0));
+              if (genderEvents.length === 0) return null;
+
+              return (
+                <div key={gender} className={styles.genderGroup}>
+                  <div className={styles.genderGroupHeader}>
+                    <span
+                      className={`${styles.genderBadge} ${
+                        gender === "nam"
+                          ? styles.genderMale
+                          : gender === "nu"
+                            ? styles.genderFemale
+                            : styles.genderMixed
+                      }`}>
+                      {gioiTinhLabel(gender)}
+                    </span>
+                    <span>{genderEvents.length} hạng cân</span>
+                  </div>
+
+                  <div className={styles.weightGrid}>
+                    {genderEvents.map((ev) => {
+                      const conLai = tenConLai(
+                        ev.ten,
+                        ev.gioiTinh,
+                        ev.hangCan,
+                        ev.loaiHangCan,
+                      );
+                      const hangCanPrefix =
+                        ev.loaiHangCan === "duoi"
+                          ? "Dưới "
+                          : ev.loaiHangCan === "tren"
+                            ? "Trên "
+                            : "";
+                      return (
+                        <article key={ev.id} className={styles.weightCard}>
+                          <div className={styles.weightCardTop}>
+                            <strong className={styles.weightValue}>
+                              {ev.hangCan
+                                ? `${hangCanPrefix}${ev.hangCan} kg`
+                                : "Chưa đặt hạng cân"}
+                            </strong>
+                            <EventActions
+                              event={ev}
+                              onEdit={onEdit}
+                              onDelete={onDelete}
+                            />
+                          </div>
+                          {conLai && (
+                            <p
+                              className={styles.weightEventName}
+                              title={ev.ten}>
+                              {conLai}
+                            </p>
+                          )}
+                        </article>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      ))}
+    </div>
+  );
+}
+
+function QuyenEventList({
+  events,
+  onEdit,
+  onDelete,
+}: {
   events: CompetitionEvent[];
   onEdit: (ev: CompetitionEvent) => void;
   onDelete: (ev: CompetitionEvent) => void;
 }) {
   return (
-    <div className={styles.eventGroup}>
-      <h3 className={styles.eventGroupTitle}>
-        {title} <span>({events.length})</span>
-      </h3>
-      {events.length === 0 ? (
-        <p className={styles.hint}>Chưa có nội dung nào</p>
-      ) : (
-        <div className={styles.eventList}>
-          {events.map((ev) => (
-            <div key={ev.id} className={styles.eventRow}>
-              <div className={styles.eventInfo}>
-                <span className={styles.eventName}>{ev.ten}</span>
-                <span className={styles.eventMeta}>
-                  {formatEventNhomTuoi(ev.nhomTuoi)} -{" "}
-                  {ev.gioiTinh === "nam"
-                    ? "Nam"
-                    : ev.gioiTinh === "nu"
-                      ? "Nữ"
-                      : "Hỗn hợp"}{" "}
-                  - {ev.hinhThucThi === "doi" ? "Đội" : "Cá nhân"}
-                  {ev.hangCan ? ` - ${ev.hangCan}kg` : ""}
-                  {ev.thoiGianBaiGiay ? ` - ${ev.thoiGianBaiGiay}s` : ""}
-                </span>
-              </div>
-              <div className={styles.eventRowActions}>
-                <button onClick={() => onEdit(ev)} aria-label={`Sửa ${ev.ten}`}>
-                  <Pencil size={14} />
-                </button>
-                <button
-                  onClick={() => onDelete(ev)}
-                  aria-label={`Xóa ${ev.ten}`}
-                  className={styles.dangerBtn}>
-                  <Trash2 size={14} />
-                </button>
-              </div>
+    <div className={styles.catalogList}>
+      {groupByNhomTuoi(events).map(({ nhomTuoi, events: ageEvents }) => (
+        <section key={String(nhomTuoi)} className={styles.ageGroup}>
+          <div className={styles.ageGroupHeader}>
+            <div>
+              <span className={styles.ageEyebrow}>Nhóm tuổi</span>
+              <h3>{formatEventNhomTuoi(nhomTuoi)}</h3>
             </div>
-          ))}
-        </div>
-      )}
+            <span className={styles.groupCount}>
+              {ageEvents.length} nội dung
+            </span>
+          </div>
+
+          <div className={styles.quyenTable}>
+            <div className={styles.quyenTableHead} aria-hidden="true">
+              <span>Nội dung</span>
+              <span>Giới tính</span>
+              <span>Hình thức</span>
+              <span>Thời gian</span>
+              <span />
+            </div>
+            {ageEvents.map((ev) => (
+              <div key={ev.id} className={styles.quyenRow}>
+                <div className={styles.quyenNameCell}>
+                  <strong>{ev.ten}</strong>
+                </div>
+                <div data-label="Giới tính">
+                  <span
+                    className={`${styles.genderBadge} ${
+                      ev.gioiTinh === "nam"
+                        ? styles.genderMale
+                        : ev.gioiTinh === "nu"
+                          ? styles.genderFemale
+                          : styles.genderMixed
+                    }`}>
+                    {gioiTinhLabel(ev.gioiTinh)}
+                  </span>
+                </div>
+                <div data-label="Hình thức">
+                  <span className={styles.formBadge}>
+                    {hinhThucLabel(ev.hinhThucThi)}
+                  </span>
+                </div>
+                <div className={styles.durationCell} data-label="Thời gian">
+                  {ev.thoiGianBaiGiay ? `${ev.thoiGianBaiGiay} giây` : "—"}
+                </div>
+                <EventActions event={ev} onEdit={onEdit} onDelete={onDelete} />
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
     </div>
   );
 }
