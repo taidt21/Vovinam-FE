@@ -408,6 +408,16 @@ export default function NoiDungBocTham() {
 
   return (
     <div className={styles.page}>
+      <header className={styles.pageHeader}>
+        <div className={styles.pageIntro}>
+          <span className={styles.pageEyebrow}>Quản lý nội dung thi đấu</span>
+          <h1 className={styles.pageTitle}>Nội dung & bốc thăm</h1>
+          <p className={styles.pageSubtitle}>
+            Kiểm tra danh sách đăng ký, bốc thăm đối kháng và xếp thứ tự thi quyền theo từng nội dung.
+          </p>
+        </div>
+      </header>
+
       <div className={styles.tabsBar}>
         <div className={styles.tabsGroup}>
           {(["quyen", "doi_khang"] as const).map((t) => (

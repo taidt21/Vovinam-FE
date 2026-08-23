@@ -1,12 +1,45 @@
-@use './variables'as *;
+@use './variables' as *;
 
-* {
+*,
+*::before,
+*::after {
     box-sizing: border-box;
+}
+
+html {
+    color-scheme: light;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
 }
 
 body {
     margin: 0;
     font-family: $font-ui;
+    font-size: $text-md;
+    line-height: 1.5;
     color: $color-text;
     background: $color-bg;
+}
+
+button,
+input,
+select,
+textarea {
+    font: inherit;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+    &:focus-visible {
+        outline: none;
+        box-shadow: $focus-ring;
+    }
+}
+
+::selection {
+    background: rgba($color-do, .16);
 }

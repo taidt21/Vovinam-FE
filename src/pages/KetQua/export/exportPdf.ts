@@ -123,6 +123,37 @@ export function exportKetQuaPdf(report: LuaTuoiReport[], tenGiai: string): Blob 
         continue;
       }
 
+      // Gộp STT/Đơn vị/Thành tích thành 1 ô cao (rowSpan) — CHỈ áp dụng
+      // cho đúng quyền đồng đội (nd.laDongDoi), nơi nhiều dòng liên tiếp
+      // thật sự là nhiều thành viên của CÙNG 1 đội. Đối kháng/quyền cá
+      // nhân giữ nguyên 1 dòng/người như cũ, kể cả khi 2 người tình cờ
+      // trùng STT (đồng hạng ba) hoặc trùng đơn vị — đó là 2 người khác
+      // nhau, không được gộp.
+      type OTableCell = string | { content: string; rowSpan: number };
+      const body: OTableCell[][] = [];
+      if (nd.laDongDoi) {
+        for (let i = 0; i < nd.rows.length; ) {
+          const r = nd.rows[i];
+          let span = 1;
+          while (i + span < nd.rows.length && nd.rows[i + span].stt === r.stt) span++;
+          body.push([
+            span > 1 ? { content: String(r.stt), rowSpan: span } : String(r.stt),
+            r.hoTen,
+            r.namSinh,
+            span > 1 ? { content: r.donVi, rowSpan: span } : r.donVi,
+            span > 1 ? { content: r.thanhTich, rowSpan: span } : r.thanhTich,
+          ]);
+          for (let k = 1; k < span; k++) {
+            body.push([nd.rows[i + k].hoTen, nd.rows[i + k].namSinh]);
+          }
+          i += span;
+        }
+      } else {
+        for (const r of nd.rows) {
+          body.push([String(r.stt), r.hoTen, r.namSinh, r.donVi, r.thanhTich]);
+        }
+      }
+
       autoTable(doc, {
         startY: y,
         margin: {
@@ -133,13 +164,7 @@ export function exportKetQuaPdf(report: LuaTuoiReport[], tenGiai: string): Blob 
         },
         theme: "plain",
         head: [["STT", "Họ và tên", "Năm sinh", "Đơn vị", "Thành tích"]],
-        body: nd.rows.map((r) => [
-          String(r.stt),
-          r.hoTen,
-          r.namSinh,
-          r.donVi,
-          r.thanhTich,
-        ]),
+        body,
         styles: {
           font: "RobotoVN",
           fontStyle: "normal",

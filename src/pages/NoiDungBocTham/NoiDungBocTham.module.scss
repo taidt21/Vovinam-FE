@@ -1,4 +1,5 @@
 @use '../../styles/variables'as *;
+@use '../../styles/admin-ui' as admin;
 
 .page {
     display: flex;
@@ -347,5 +348,170 @@
 
     &:hover {
         background: rgba($color-success, 0.12);
+    }
+}
+/* ========================================================================== */
+/* Shared Admin UI normalization                                               */
+/* ========================================================================== */
+.page {
+    @include admin.page-shell;
+}
+
+.pageHeader {
+    @include admin.page-header;
+    @include admin.responsive-header;
+}
+
+.pageIntro {
+    min-width: 0;
+}
+
+.pageEyebrow {
+    @include admin.eyebrow;
+}
+
+.pageTitle {
+    @include admin.page-title;
+}
+
+.pageSubtitle {
+    @include admin.page-subtitle;
+}
+
+.tabsBar {
+    width: 100%;
+    min-height: 52px;
+    margin: 0;
+    padding: $space-1;
+    border: 1px solid $color-border;
+    border-radius: $radius-lg;
+    background: $color-surface;
+}
+
+.tabsGroup {
+    gap: $space-1;
+}
+
+.tab,
+.tabActive {
+    @include admin.segmented-tab;
+}
+
+.tabActive {
+    @include admin.segmented-tab-active;
+}
+
+.tongSoTran {
+    margin: 0 $space-1 0 auto;
+    border: 0;
+    border-radius: $radius-pill;
+    background: $color-bg;
+    font-size: $text-xs;
+}
+
+.exportBar {
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: $space-2;
+    margin: -$space-2 0 0;
+}
+
+.exportBtn {
+    @include admin.button-secondary;
+}
+
+.body {
+    gap: $space-5;
+}
+
+.sidebar {
+    width: 280px;
+    border-color: $color-border;
+    border-radius: $radius-lg;
+    box-shadow: $shadow-card;
+}
+
+.eventList {
+    gap: $space-1;
+    padding: $space-2;
+}
+
+.eventItem,
+.eventItemActive,
+.eventItemDrawn {
+    padding: 10px 12px;
+    border-radius: $radius-sm;
+    font-size: $text-sm;
+}
+
+.eventItemActive {
+    background: $color-primary-soft;
+}
+
+.main {
+    padding: $admin-card-padding;
+    border-color: $color-border;
+    border-radius: $radius-lg;
+    box-shadow: $shadow-card;
+}
+
+.title {
+    margin-bottom: $space-4;
+    font-size: $text-xl;
+    line-height: 1.3;
+    font-weight: 800;
+    letter-spacing: -.015em;
+}
+
+.registeredTitle {
+    @include admin.section-title;
+}
+
+.btnPrimary {
+    @include admin.button-primary;
+}
+
+.tableWrap {
+    border: 1px solid $color-border;
+    border-radius: $radius-md;
+    overflow-x: auto;
+}
+
+.peopleTable {
+    border: 0;
+    color: $color-text;
+    font-size: $text-sm;
+
+    th,
+    td {
+        border-color: $color-border;
+    }
+
+    th {
+        background: $color-bg-subtle;
+        color: $color-text-muted;
+        font-size: $text-xs;
+        font-weight: 800;
+        letter-spacing: .04em;
+    }
+
+    tbody tr:nth-child(even) {
+        background: $color-surface;
+    }
+
+    tbody tr:hover {
+        background: $color-row-hover;
+    }
+}
+
+@media (max-width: 900px) {
+    .body {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        max-height: 280px;
+        overflow-y: auto;
     }
 }

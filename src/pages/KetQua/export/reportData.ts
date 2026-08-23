@@ -31,6 +31,12 @@ export interface NoiDungReport {
   soThuTu: number;
   tenNoiDung: string;
   rows: KetQuaRow[];
+  // Chỉ true cho ĐÚNG quyền đồng đội — nơi 1 "suất huy chương" thật sự
+  // gồm nhiều dòng (nhiều thành viên). Đối kháng khi đồng hạng ba cũng
+  // có thể ra 2 dòng CÙNG SỐ THỨ TỰ (2 người khác nhau, khác đơn vị),
+  // nhưng đó KHÔNG PHẢI 1 nhóm — cờ này giúp phía xuất PDF/Word biết
+  // chắc khi nào được gộp ô, không đoán qua việc trùng STT.
+  laDongDoi: boolean;
 }
 
 export interface LuaTuoiReport {
@@ -74,6 +80,9 @@ export function buildReport(params: {
     };
   };
 
+  // Đội quyền: 1 dòng/thành viên (không gộp thành 1 dòng chung) — nhưng
+  // STT/Đơn vị/Thành tích giống nhau cho cả đội, để phía PDF/Word gộp ô
+  // (rowSpan/verticalMerge) thay vì lặp lại — xem laDongDoi ở NoiDungReport.
   const teamRows = (
     stt: number,
     teamId: string,
@@ -117,7 +126,12 @@ export function buildReport(params: {
       athleteRow(2, medals.bac, null, "Bạc"),
       ...medals.dong.map((id) => athleteRow(3, id, null, "Đồng" as const)),
     ];
-    doiKhangNoiDung.set(ev.id, { soThuTu: 0, tenNoiDung: ev.ten, rows });
+    doiKhangNoiDung.set(ev.id, {
+      soThuTu: 0,
+      tenNoiDung: ev.ten,
+      rows,
+      laDongDoi: false,
+    });
   }
 
   // ---- Nội dung quyền ----
@@ -148,7 +162,12 @@ export function buildReport(params: {
       }
       return [athleteRow(r.hang, r.athleteId, r.teamId, tag as KetQuaRow["thanhTich"])];
     });
-    quyenNoiDung.set(ev.id, { soThuTu: 0, tenNoiDung: ev.ten, rows });
+    quyenNoiDung.set(ev.id, {
+      soThuTu: 0,
+      tenNoiDung: ev.ten,
+      rows,
+      laDongDoi: ev.hinhThucThi === "doi",
+    });
   }
 
   // ---- Gom theo Lứa tuổi ----

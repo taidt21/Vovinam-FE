@@ -1,4 +1,5 @@
 @use '../../styles/variables'as *;
+@use '../../styles/admin-ui' as admin;
 
 .page {
     display: flex;
@@ -1857,5 +1858,105 @@
 
     .quyenRow {
         grid-template-columns: 1fr auto;
+    }
+}
+/* ========================================================================== */
+/* Shared Admin UI normalization                                               */
+/* ========================================================================== */
+.page {
+    @include admin.page-shell;
+}
+
+.pageHeader {
+    @include admin.page-header;
+    padding: 0;
+    @include admin.responsive-header;
+}
+
+.pageEyebrow {
+    @include admin.eyebrow;
+}
+
+.title {
+    @include admin.page-title;
+}
+
+.pageSubtitle {
+    @include admin.page-subtitle;
+}
+
+.card,
+.tournamentCard,
+.eventsCard {
+    border-radius: $radius-lg;
+    box-shadow: $shadow-card;
+}
+
+.btnPrimary {
+    @include admin.button-primary;
+}
+
+.btnGhost,
+.clearFiltersBtn {
+    @include admin.button-secondary;
+}
+
+.field {
+    input:not([type='checkbox']):not([type='radio']),
+    select,
+    textarea {
+        @include admin.control;
+    }
+}
+
+.largeInput,
+.searchBox,
+.filterSelect,
+.confirmInput {
+    min-height: $control-height;
+    border-radius: $radius-md;
+}
+
+.eventTabs {
+    gap: $space-1;
+    padding: $space-1;
+    margin: 0 $space-5;
+    border: 1px solid $color-border;
+    border-radius: $radius-lg;
+    background: $color-surface;
+    overflow-x: auto;
+}
+
+.eventTab,
+.eventTabActive {
+    min-height: 38px;
+    margin: 0;
+    padding: $space-2 $space-3;
+    border: 0;
+    border-radius: $radius-sm;
+    color: $color-text-muted;
+    font-size: $text-sm;
+
+    &:hover {
+        background: $color-bg;
+        color: $color-text;
+    }
+}
+
+.eventTabActive {
+    color: $color-do;
+    background: $color-primary-soft;
+    box-shadow: inset 0 0 0 1px rgba($color-do, .12);
+}
+
+.settingSection,
+.medalCoefficient,
+.weightCard {
+    border-radius: $radius-md;
+}
+
+@media (max-width: 760px) {
+    .eventTabs {
+        margin-inline: $space-4;
     }
 }

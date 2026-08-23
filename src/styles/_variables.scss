@@ -1,29 +1,63 @@
-$color-do: #c8262a; // đỏ — góc đỏ, cũng là màu thương hiệu chính
+// Brand
+$color-do: #c8262a; // đỏ — màu thương hiệu chính
+$color-do-hover: #b52125;
 $color-xanh: #1b4b8f; // xanh — góc xanh
 $color-vang: #d4a72c; // vàng — HCV, điểm nhấn
 
-$color-bg: #f7f7f5;
+// Neutral palette
+$color-bg: #f6f7f9;
+$color-bg-subtle: #fafafa;
 $color-surface: #ffffff;
-$color-text: #1a1a1a;
+$color-text: #1f2937;
 $color-text-muted: #6b7280;
-$color-border: #e2e2e0;
+$color-text-soft: #9ca3af;
+$color-border: #e5e7eb;
+$color-border-strong: #d7dce2;
+$color-row-hover: #fafbfc;
+$color-primary-soft: rgba($color-do, .065);
 
 $color-success: #2f8f4e;
 $color-warning: #d4a72c;
 $color-danger: #d9480f; // khác $color-do có chủ đích
 
+// Spacing — 4px base grid
 $space-1: 4px;
 $space-2: 8px;
 $space-3: 12px;
 $space-4: 16px;
 $space-5: 24px;
 $space-6: 32px;
+$space-7: 40px;
+$space-8: 48px;
 
-// Dùng font hệ thống, KHÔNG link Google Fonts CDN — đúng nguyên tắc
-// đã chốt từ đầu: không phụ thuộc Internet, kể cả lúc load font.
-$font-ui: Roboto,
-sans-serif;
-$font-mono: 'Cascadia Code',
-Consolas,
-'SF Mono',
-monospace; // dành riêng số điểm
+// Typography
+// Không phụ thuộc CDN. Ưu tiên font hệ thống để chạy ổn định tại địa điểm thi đấu.
+$font-ui: Inter, Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+$font-mono: "Cascadia Code", Consolas, "SF Mono", monospace;
+
+$text-2xs: 10px;
+$text-xs: 12px;
+$text-sm: 13px;
+$text-md: 14px;
+$text-lg: 18px;
+$text-xl: 20px;
+$text-page-title: clamp(28px, 2.5vw, 32px);
+
+// Shape & elevation
+$radius-xs: 6px;
+$radius-sm: 8px;
+$radius-md: 10px;
+$radius-lg: 14px;
+$radius-xl: 16px;
+$radius-pill: 999px;
+
+$shadow-card: 0 4px 16px rgba(15, 23, 42, .035);
+$shadow-card-hover: 0 8px 24px rgba(15, 23, 42, .07);
+$focus-ring: 0 0 0 3px rgba($color-do, .1);
+
+// Shared admin dimensions
+$admin-content-max: 1480px;
+$admin-section-gap: 24px;
+$admin-card-padding: 20px;
+$control-height: 42px;
+$control-height-lg: 46px;

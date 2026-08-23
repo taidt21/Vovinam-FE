@@ -1,4 +1,4 @@
-@use '../../styles/variables'as *;
+@use '../../styles/variables' as *;
 
 .shell {
     display: flex;
@@ -7,90 +7,95 @@
 }
 
 .sidebar {
-    width: 240px;
+    width: 248px;
     flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
     background: $color-surface;
     border-right: 1px solid $color-border;
     display: flex;
     flex-direction: column;
     padding: $space-4 0;
-    transition: width 0.2s ease;
+    transition: width .2s ease;
     overflow: hidden;
 }
 
 .sidebarCollapsed {
-    width: 64px;
+    width: 68px;
 
     .brand {
         justify-content: center;
-        padding: 0 $space-2 $space-4;
+        padding-inline: $space-2;
     }
 
-    .navItem {
-        justify-content: center;
-        padding: $space-2;
-    }
-
+    .navItem,
+    .logoutBtn,
     .collapseBtn {
         justify-content: center;
-        padding: $space-3;
+        padding-inline: $space-2;
     }
 }
 
 .brand {
     display: flex;
     align-items: center;
-    gap: $space-2;
+    gap: $space-3;
+    min-height: 58px;
     padding: 0 $space-4 $space-4;
-    border-bottom: 1px solid $color-border;
     margin-bottom: $space-3;
+    border-bottom: 1px solid $color-border;
 }
 
 .brandMark {
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 50px;
-    height: 50px;
-    flex-shrink: 0;
-    border-radius: 6px;
-    // background: $color-do;
-    color: white;
-    font-weight: 700;
-    font-size: 13px;
+    border-radius: $radius-md;
+    overflow: hidden;
 
     img {
         width: 100%;
         height: 100%;
+        object-fit: contain;
     }
 }
 
 .brandName {
-    font-weight: 700;
-    font-size: 20px;
     color: $color-do;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -.015em;
     white-space: nowrap;
 }
 
 .nav {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: $space-1;
     padding: 0 $space-2;
 }
 
 .navItem {
+    min-height: 42px;
     display: flex;
     align-items: center;
-    gap: $space-2;
-    padding: $space-2 $space-3;
-    border-radius: 8px;
+    gap: $space-3;
+    padding: 0 $space-3;
+    border-radius: $radius-md;
     color: $color-text-muted;
-    font-size: 14px;
-    font-weight: 500;
+    font-size: $text-md;
+    font-weight: 650;
     text-decoration: none;
     white-space: nowrap;
-    transition: background-color 0.15s, color 0.15s;
+    transition: background-color .16s ease, color .16s ease;
+
+    svg {
+        flex: 0 0 auto;
+    }
 
     &:hover {
         background: $color-bg;
@@ -99,48 +104,45 @@
 }
 
 .navItemActive {
-    background: rgba($color-do, 0.08);
+    background: $color-primary-soft;
     color: $color-do;
 
     &:hover {
-        background: rgba($color-do, 0.08);
+        background: $color-primary-soft;
         color: $color-do;
     }
 }
 
-.logoutBtn {
+.logoutBtn,
+.collapseBtn {
+    width: 100%;
+    min-height: 44px;
     display: flex;
     align-items: center;
-    gap: $space-2;
-    margin-top: auto;
-    padding: $space-3 $space-4;
-    border: none;
+    gap: $space-3;
+    padding: 0 $space-4;
+    border: 0;
     border-top: 1px solid $color-border;
-    background: none;
+    background: transparent;
     color: $color-text-muted;
-    font-size: 13px;
+    font: inherit;
+    font-size: $text-sm;
+    font-weight: 650;
+    white-space: nowrap;
     cursor: pointer;
+    transition: background-color .16s ease, color .16s ease;
+}
+
+.logoutBtn {
+    margin-top: auto;
 
     &:hover {
+        background: rgba($color-danger, .035);
         color: $color-danger;
     }
 }
 
 .collapseBtn {
-    display: flex;
-    align-items: center;
-    gap: $space-2;
-    padding: $space-3 $space-4;
-    border: none;
-    border-top: 1px solid $color-border;
-    background: none;
-    color: $color-text-muted;
-    font-size: 13px;
-    font-weight: 500;
-    white-space: nowrap;
-    cursor: pointer;
-    width: 100%;
-
     &:hover {
         background: $color-bg;
         color: $color-text;
@@ -149,9 +151,9 @@
 
 .main {
     flex: 1;
+    min-width: 0;
     display: flex;
     flex-direction: column;
-    min-width: 0;
 }
 
 .topbar {
@@ -163,12 +165,56 @@
 }
 
 .roleBadge {
-    font-size: 13px;
     color: $color-text-muted;
+    font-size: $text-sm;
 }
 
 .content {
     flex: 1;
-    padding: $space-5;
+    min-width: 0;
+    padding: 28px 30px 36px;
     overflow-y: auto;
+}
+
+@media (max-width: 1100px) {
+    .sidebar {
+        width: 220px;
+    }
+
+    .sidebarCollapsed {
+        width: 68px;
+    }
+
+    .content {
+        padding: $space-5;
+    }
+}
+
+@media (max-width: 760px) {
+    .sidebar {
+        width: 68px;
+    }
+
+    .brand {
+        justify-content: center;
+        padding-inline: $space-2;
+    }
+
+    .brandName,
+    .navItem span,
+    .logoutBtn span,
+    .collapseBtn span {
+        display: none;
+    }
+
+    .navItem,
+    .logoutBtn,
+    .collapseBtn {
+        justify-content: center;
+        padding-inline: $space-2;
+    }
+
+    .content {
+        padding: $space-4;
+    }
 }

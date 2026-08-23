@@ -1,4 +1,5 @@
 @use '../../styles/variables'as *;
+@use '../../styles/admin-ui' as admin;
 
 .page {
     display: flex;
@@ -3059,4 +3060,71 @@
         width: 100%;
         max-width: none;
     }
+}
+/* ========================================================================== */
+/* Shared Admin UI normalization                                               */
+/* ========================================================================== */
+.page {
+    @include admin.page-shell;
+}
+
+.topbar {
+    @include admin.page-header;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    @include admin.responsive-header;
+}
+
+.pageEyebrow {
+    @include admin.eyebrow;
+}
+
+.title {
+    @include admin.page-title;
+}
+
+.pageSubtitle {
+    @include admin.page-subtitle;
+}
+
+.topbarActions {
+    gap: $space-2;
+}
+
+.courtControl {
+    min-width: 180px;
+    min-height: $control-height-lg;
+    padding: 7px 11px;
+    border-color: $color-border-strong;
+    border-radius: $radius-md;
+    background: $color-surface;
+    box-shadow: $shadow-card;
+}
+
+.publicScreenLink {
+    @include admin.button-secondary;
+    min-height: $control-height-lg;
+}
+
+.tabsBar {
+    @include admin.segmented-tabs;
+    width: 100%;
+}
+
+.tab,
+.tabActive {
+    @include admin.segmented-tab;
+}
+
+.tabActive {
+    @include admin.segmented-tab-active;
+}
+
+.scheduleCard,
+.listCard {
+    border-color: $color-border;
+    border-radius: $radius-lg;
+    box-shadow: $shadow-card;
 }

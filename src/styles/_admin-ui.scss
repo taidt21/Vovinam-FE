@@ -1,0 +1,243 @@
+@use './variables'as *;
+
+// -----------------------------------------------------------------------------
+// Shared Admin UI primitives
+// Keep these mixins visual-only: pages retain their current DOM and business logic.
+// -----------------------------------------------------------------------------
+
+@mixin page-shell {
+    width: min(100%, $admin-content-max);
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: $admin-section-gap;
+    min-width: 0;
+}
+
+@mixin page-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: $space-6;
+    min-width: 0;
+}
+
+@mixin eyebrow {
+    display: block;
+    margin-bottom: $space-2;
+    color: $color-do;
+    font-size: $text-xs;
+    line-height: 1.2;
+    font-weight: 800;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+}
+
+@mixin page-title {
+    margin: 0;
+    color: $color-text;
+    font-size: $text-page-title;
+    line-height: 1.18;
+    font-weight: 800;
+    letter-spacing: -.025em;
+}
+
+@mixin page-subtitle {
+    max-width: 760px;
+    margin: $space-2 0 0;
+    color: $color-text-muted;
+    font-size: $text-md;
+    line-height: 1.55;
+}
+
+@mixin card($padding: $admin-card-padding) {
+    padding: $padding;
+    border: 1px solid $color-border;
+    border-radius: $radius-lg;
+    background: $color-surface;
+    box-shadow: $shadow-card;
+}
+
+@mixin card-flat($padding: $admin-card-padding) {
+    padding: $padding;
+    border: 1px solid $color-border;
+    border-radius: $radius-lg;
+    background: $color-surface;
+}
+
+@mixin button-base($height: $control-height) {
+    min-height: $height;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: $space-2;
+    padding: 0 $space-4;
+    border-radius: $radius-md;
+    font: inherit;
+    font-size: $text-sm;
+    font-weight: 700;
+    line-height: 1.2;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+        background-color .16s ease,
+        border-color .16s ease,
+        color .16s ease,
+        box-shadow .16s ease,
+        transform .16s ease;
+
+    &:focus-visible {
+        outline: none;
+        box-shadow: $focus-ring;
+    }
+
+    &:disabled {
+        opacity: .52;
+        cursor: not-allowed;
+        transform: none;
+    }
+}
+
+@mixin button-primary {
+    @include button-base;
+    border: 1px solid $color-do;
+    background: $color-do;
+    color: #fff;
+
+    &:hover:not(:disabled) {
+        background: $color-do-hover;
+        border-color: $color-do-hover;
+        transform: translateY(-1px);
+    }
+}
+
+@mixin button-secondary {
+    @include button-base;
+    border: 1px solid $color-border-strong;
+    background: $color-surface;
+    color: $color-text;
+
+    &:hover:not(:disabled) {
+        border-color: rgba($color-do, .34);
+        background: $color-primary-soft;
+    }
+}
+
+@mixin control {
+    min-height: $control-height;
+    border: 1px solid $color-border-strong;
+    border-radius: $radius-md;
+    background: $color-surface;
+    color: $color-text;
+    font: inherit;
+    font-size: $text-sm;
+    transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
+
+    &:focus,
+    &:focus-within {
+        outline: none;
+        border-color: rgba($color-do, .45);
+        box-shadow: $focus-ring;
+    }
+}
+
+@mixin segmented-tabs {
+    display: flex;
+    align-items: center;
+    gap: $space-1;
+    width: fit-content;
+    max-width: 100%;
+    padding: $space-1;
+    border: 1px solid $color-border;
+    border-radius: $radius-lg;
+    background: $color-surface;
+    overflow-x: auto;
+}
+
+@mixin segmented-tab {
+    min-height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: $space-2;
+    padding: $space-2 $space-3;
+    margin: 0;
+    border: 0;
+    border-radius: $radius-sm;
+    background: transparent;
+    color: $color-text-muted;
+    font: inherit;
+    font-size: $text-sm;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color .16s ease, color .16s ease, box-shadow .16s ease;
+
+    &:hover {
+        background: $color-bg;
+        color: $color-text;
+    }
+}
+
+@mixin segmented-tab-active {
+    color: $color-do;
+    background: $color-primary-soft;
+    box-shadow: inset 0 0 0 1px rgba($color-do, .12);
+}
+
+@mixin section-title {
+    margin: 0;
+    color: $color-text;
+    font-size: $text-lg;
+    line-height: 1.3;
+    font-weight: 800;
+    letter-spacing: -.01em;
+}
+
+@mixin table-shell {
+    border: 1px solid $color-border;
+    border-radius: $radius-lg;
+    background: $color-surface;
+    overflow: hidden;
+}
+
+@mixin table-base {
+    width: 100%;
+    border-collapse: collapse;
+    color: $color-text;
+    font-size: $text-sm;
+
+    th {
+        padding: 11px 14px;
+        border-bottom: 1px solid $color-border;
+        background: $color-bg-subtle;
+        color: $color-text-muted;
+        font-size: $text-xs;
+        font-weight: 800;
+        letter-spacing: .04em;
+        text-align: left;
+        text-transform: uppercase;
+    }
+
+    td {
+        padding: 12px 14px;
+        border-bottom: 1px solid $color-border;
+        vertical-align: middle;
+    }
+
+    tbody tr:last-child td {
+        border-bottom: 0;
+    }
+
+    tbody tr:hover {
+        background: $color-row-hover;
+    }
+}
+
+@mixin responsive-header {
+    @media (max-width: 900px) {
+        flex-direction: column;
+        align-items: stretch;
+        gap: $space-4;
+    }
+}

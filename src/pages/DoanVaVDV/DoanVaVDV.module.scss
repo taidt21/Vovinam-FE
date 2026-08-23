@@ -1,4 +1,5 @@
 @use '../../styles/variables'as *;
+@use '../../styles/admin-ui' as admin;
 
 .page {
     display: flex;
@@ -888,5 +889,102 @@
 
     .title {
         font-size: 26px;
+    }
+}
+/* ========================================================================== */
+/* Shared Admin UI normalization                                               */
+/* ========================================================================== */
+.page {
+    @include admin.page-shell;
+}
+
+.pageHeader {
+    @include admin.page-header;
+    padding: 0;
+    @include admin.responsive-header;
+}
+
+.pageEyebrow {
+    @include admin.eyebrow;
+}
+
+.title {
+    @include admin.page-title;
+}
+
+.pageSubtitle {
+    @include admin.page-subtitle;
+}
+
+.headerActions {
+    gap: $space-2;
+}
+
+.btnPrimary {
+    @include admin.button-primary;
+}
+
+.btnGhost {
+    @include admin.button-secondary;
+}
+
+.summaryGrid {
+    gap: $space-3;
+}
+
+.summaryCard,
+.teamsCard,
+.athleteSection,
+.card {
+    border-radius: $radius-lg;
+    box-shadow: $shadow-card;
+}
+
+.summaryCard {
+    min-height: 88px;
+    padding: $space-4 $space-5;
+}
+
+.summaryIcon {
+    border-radius: $radius-md;
+}
+
+.sectionTitleRow h2,
+.teamsTitle {
+    @include admin.section-title;
+}
+
+.searchBox,
+.teamFilter {
+    min-height: $control-height;
+    border-radius: $radius-md;
+    border-color: $color-border-strong;
+}
+
+.field {
+    input:not([type='checkbox']):not([type='radio']),
+    select,
+    textarea {
+        @include admin.control;
+    }
+}
+
+.tableScroll {
+    border-color: $color-border;
+    border-radius: $radius-lg;
+}
+
+.table {
+    font-size: $text-sm;
+
+    th {
+        background: $color-bg-subtle;
+        color: $color-text-muted;
+        font-size: $text-xs;
+        letter-spacing: .04em;
+    }
+
+    tbody tr:hover {
+        background: $color-row-hover;
     }
 }

@@ -39,10 +39,16 @@ function headerCell(text: string, width: number) {
   });
 }
 
-function dataCell(text: string, width: number, center = false) {
+function dataCell(
+  text: string,
+  width: number,
+  center = false,
+  verticalMerge?: "restart" | "continue",
+) {
   return new TableCell({
     width: { size: width, type: WidthType.PERCENTAGE },
     borders: cellBorder,
+    verticalMerge,
     children: [
       new Paragraph({
         alignment: center ? AlignmentType.CENTER : AlignmentType.LEFT,
@@ -52,7 +58,66 @@ function dataCell(text: string, width: number, center = false) {
   });
 }
 
-function resultTable(rows: LuaTuoiReport["noiDungs"][number]["rows"]) {
+// Gộp STT/Đơn vị/Thành tích thành 1 ô cao (verticalMerge) — CHỈ áp dụng
+// cho đúng quyền đồng đội (laDongDoi), nơi nhiều dòng liên tiếp thật sự
+// là nhiều thành viên của CÙNG 1 đội. Đối kháng/quyền cá nhân giữ
+// nguyên 1 dòng/người, kể cả khi 2 người tình cờ trùng STT (đồng hạng
+// ba) hoặc trùng đơn vị — đó là 2 người khác nhau, không được gộp.
+function resultTable(
+  rows: LuaTuoiReport["noiDungs"][number]["rows"],
+  laDongDoi: boolean,
+) {
+  const dataRows: TableRow[] = [];
+  if (laDongDoi) {
+    for (let i = 0; i < rows.length; ) {
+      const r = rows[i];
+      let span = 1;
+      while (i + span < rows.length && rows[i + span].stt === r.stt) span++;
+      const merge = span > 1 ? "restart" : undefined;
+
+      dataRows.push(
+        new TableRow({
+          children: [
+            dataCell(String(r.stt), 10, true, merge),
+            dataCell(r.hoTen, 30),
+            dataCell(r.namSinh, 15, true),
+            dataCell(r.donVi, 25, false, merge),
+            dataCell(r.thanhTich, 20, true, merge),
+          ],
+        }),
+      );
+      for (let k = 1; k < span; k++) {
+        const m = rows[i + k];
+        dataRows.push(
+          new TableRow({
+            children: [
+              dataCell("", 10, true, "continue"),
+              dataCell(m.hoTen, 30),
+              dataCell(m.namSinh, 15, true),
+              dataCell("", 25, false, "continue"),
+              dataCell("", 20, true, "continue"),
+            ],
+          }),
+        );
+      }
+      i += span;
+    }
+  } else {
+    for (const r of rows) {
+      dataRows.push(
+        new TableRow({
+          children: [
+            dataCell(String(r.stt), 10, true),
+            dataCell(r.hoTen, 30),
+            dataCell(r.namSinh, 15, true),
+            dataCell(r.donVi, 25),
+            dataCell(r.thanhTich, 20, true),
+          ],
+        }),
+      );
+    }
+  }
+
   return new Table({
     width: { size: 100, type: WidthType.PERCENTAGE },
     rows: [
@@ -65,18 +130,7 @@ function resultTable(rows: LuaTuoiReport["noiDungs"][number]["rows"]) {
           headerCell("Thành tích", 20),
         ],
       }),
-      ...rows.map(
-        (r) =>
-          new TableRow({
-            children: [
-              dataCell(String(r.stt), 10, true),
-              dataCell(r.hoTen, 30),
-              dataCell(r.namSinh, 15, true),
-              dataCell(r.donVi, 25),
-              dataCell(r.thanhTich, 20, true),
-            ],
-          }),
-      ),
+      ...dataRows,
     ],
   });
 }
@@ -106,7 +160,7 @@ export async function exportKetQuaWord(
           ],
         }),
       );
-      children.push(resultTable(nd.rows));
+      children.push(resultTable(nd.rows, nd.laDongDoi));
       children.push(new Paragraph({ text: "", spacing: { after: 80 } }));
     }
   }
