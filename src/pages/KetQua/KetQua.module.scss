@@ -3,27 +3,34 @@
 .page {
     display: flex;
     flex-direction: column;
-    gap: $space-4;
+    gap: 22px;
     min-width: 0;
+    width: 100%;
 }
 
 .pageHeader {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: $space-5;
-    padding: $space-5;
+    display: grid;
+    grid-template-columns: minmax(260px, 1fr) minmax(520px, auto);
+    align-items: stretch;
+    gap: 28px;
+    padding: 28px 30px;
     background: linear-gradient(135deg, $color-surface 0%, rgba($color-do, 0.035) 100%);
     border: 1px solid $color-border;
-    border-radius: 16px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, .045);
+}
+
+.headerIntro {
+    align-self: center;
+    min-width: 0;
 }
 
 .eyebrow,
 .resultType,
 .sidebarEyebrow {
     display: block;
-    margin-bottom: 4px;
-    font-size: 11px;
+    margin-bottom: 6px;
+    font-size: 12px;
     font-weight: 800;
     letter-spacing: .08em;
     text-transform: uppercase;
@@ -32,71 +39,193 @@
 
 .title {
     margin: 0;
-    font-size: clamp(24px, 3vw, 32px);
+    font-size: clamp(30px, 3.5vw, 40px);
     line-height: 1.15;
     font-weight: 800;
     color: $color-text;
 }
 
 .pageDescription {
-    margin: 8px 0 0;
+    margin: 10px 0 0;
     max-width: 650px;
-    font-size: 13px;
-    line-height: 1.55;
+    font-size: 15px;
+    line-height: 1.65;
     color: $color-text-muted;
+}
+
+.headerTools {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 12px;
+    min-width: 0;
 }
 
 .headerStats {
     display: grid;
-    grid-template-columns: repeat(3, minmax(100px, 1fr));
-    gap: 8px;
-    flex-shrink: 0;
+    grid-template-columns: repeat(3, minmax(120px, 1fr));
+    gap: 10px;
 }
 
 .headerStat {
-    min-width: 108px;
-    padding: 12px 14px;
+    min-width: 0;
+    padding: 14px 16px;
     border: 1px solid $color-border;
-    border-radius: 12px;
+    border-radius: 14px;
     background: rgba($color-surface, .9);
 
     strong {
         display: block;
-        margin-bottom: 3px;
-        font-size: 20px;
+        margin-bottom: 5px;
+        font-size: 24px;
         line-height: 1;
         color: $color-text;
     }
 
     span {
-        font-size: 10.5px;
+        font-size: 12.5px;
+        line-height: 1.4;
+        color: $color-text-muted;
+    }
+}
+
+.exportPanel {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 11px 12px 11px 14px;
+    border: 1px solid $color-border;
+    border-radius: 14px;
+    background: rgba($color-surface, .92);
+}
+
+.exportPanelLabel {
+    min-width: 140px;
+
+    strong {
+        display: block;
+        margin-bottom: 3px;
+        font-size: 13px;
+        color: $color-text;
+    }
+
+    span {
+        display: block;
+        max-width: 190px;
+        font-size: 11px;
         line-height: 1.35;
         color: $color-text-muted;
     }
 }
 
+.exportActions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.exportWordBtn,
+.exportPdfBtn {
+    min-width: 142px;
+    min-height: 52px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 8px 11px;
+    border-radius: 10px;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease, background .16s ease;
+
+    &:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(15, 23, 42, .07);
+    }
+
+    &:disabled {
+        opacity: .58;
+        cursor: wait;
+    }
+}
+
+.exportWordBtn {
+    border: 1px solid rgba(37, 99, 235, .18);
+    background: rgba(37, 99, 235, .055);
+    color: rgb(29, 78, 216);
+
+    &:hover:not(:disabled) {
+        border-color: rgba(37, 99, 235, .32);
+        background: rgba(37, 99, 235, .085);
+    }
+}
+
+.exportPdfBtn {
+    border: 1px solid rgba($color-do, .2);
+    background: rgba($color-do, .06);
+    color: $color-do;
+
+    &:hover:not(:disabled) {
+        border-color: rgba($color-do, .35);
+        background: rgba($color-do, .095);
+    }
+}
+
+.exportBtnIcon {
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+    display: grid;
+    place-items: center;
+    border-radius: 9px;
+    background: rgba(255, 255, 255, .72);
+    box-shadow: inset 0 0 0 1px rgba(15, 23, 42, .045);
+}
+
+.exportBtnText {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    strong {
+        font-size: 12.5px;
+        font-weight: 800;
+        line-height: 1.2;
+        white-space: nowrap;
+    }
+
+    small {
+        font-size: 10.5px;
+        line-height: 1.2;
+        color: $color-text-muted;
+        white-space: nowrap;
+    }
+}
+
 .hint {
-    font-size: 13px;
+    font-size: 14px;
     color: $color-text-muted;
 }
 
 .loadingCard {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: $space-5;
+    gap: 14px;
+    padding: 24px 26px;
     border: 1px solid $color-border;
-    border-radius: 14px;
+    border-radius: 16px;
     background: $color-surface;
 
     strong {
         display: block;
-        margin-bottom: 3px;
+        margin-bottom: 4px;
     }
 
     p {
         margin: 0;
-        font-size: 12px;
+        font-size: 13.5px;
         color: $color-text-muted;
     }
 }
@@ -111,17 +240,20 @@
 }
 
 @keyframes pulse {
-    50% { opacity: .45; transform: scale(.88); }
+    50% {
+        opacity: .45;
+        transform: scale(.88);
+    }
 }
 
 .tabsBar {
     display: flex;
-    gap: 6px;
+    gap: 9px;
     width: fit-content;
     max-width: 100%;
-    padding: 5px;
+    padding: 6px;
     border: 1px solid $color-border;
-    border-radius: 12px;
+    border-radius: 16px;
     background: $color-surface;
     overflow-x: auto;
 }
@@ -130,14 +262,14 @@
 .tabActive {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    min-height: 38px;
-    padding: 8px 12px;
+    gap: 9px;
+    min-height: 46px;
+    padding: 10px 16px;
     border: 0;
-    border-radius: 8px;
+    border-radius: 10px;
     background: transparent;
     color: $color-text-muted;
-    font-size: 13px;
+    font-size: 14.5px;
     font-weight: 700;
     white-space: nowrap;
     cursor: pointer;
@@ -156,11 +288,11 @@
 }
 
 .tabCount {
-    min-width: 22px;
-    padding: 2px 6px;
+    min-width: 26px;
+    padding: 3px 8px;
     border-radius: 999px;
     background: rgba($color-text-muted, .1);
-    font-size: 11px;
+    font-size: 12px;
     text-align: center;
 }
 
@@ -170,8 +302,8 @@
 
 .body {
     display: grid;
-    grid-template-columns: 280px minmax(0, 1fr);
-    gap: $space-4;
+    grid-template-columns: 320px minmax(0, 1fr);
+    gap: 22px;
     align-items: start;
 }
 
@@ -182,9 +314,9 @@
     display: flex;
     flex-direction: column;
     min-width: 0;
-    padding: 12px;
+    padding: 16px;
     border: 1px solid $color-border;
-    border-radius: 14px;
+    border-radius: 16px;
     background: $color-surface;
 }
 
@@ -193,19 +325,19 @@
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    margin-bottom: 10px;
-    padding: 2px 2px 10px;
+    margin-bottom: 12px;
+    padding: 2px 2px 12px;
     border-bottom: 1px solid $color-border;
 
     strong {
         display: block;
-        font-size: 14px;
+        font-size: 16px;
     }
 }
 
 .sidebarEyebrow {
     margin-bottom: 2px;
-    font-size: 9px;
+    font-size: 10px;
     color: $color-text-muted;
 }
 
@@ -214,24 +346,24 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 30px;
-    height: 26px;
-    padding: 0 8px;
+    min-width: 34px;
+    height: 30px;
+    padding: 0 10px;
     border-radius: 999px;
     background: $color-bg;
     color: $color-text-muted;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
 }
 
 .searchBox {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 10px;
-    padding: 0 10px;
+    gap: 10px;
+    margin-bottom: 12px;
+    padding: 0 12px;
     border: 1px solid $color-border;
-    border-radius: 9px;
+    border-radius: 13px;
     background: $color-bg;
 
     &:focus-within {
@@ -243,16 +375,18 @@
     input {
         width: 100%;
         min-width: 0;
-        height: 38px;
+        height: 44px;
         padding: 0;
         border: 0;
         outline: 0;
         background: transparent;
         color: $color-text;
         font: inherit;
-        font-size: 12px;
+        font-size: 14px;
 
-        &::placeholder { color: $color-text-muted; }
+        &::placeholder {
+            color: $color-text-muted;
+        }
     }
 }
 
@@ -265,7 +399,7 @@
 .eventList {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
     overflow-y: auto;
     padding-right: 2px;
 }
@@ -275,50 +409,53 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
     width: 100%;
-    padding: 10px 11px;
+    padding: 13px 14px;
     border: 1px solid transparent;
-    border-radius: 9px;
+    border-radius: 13px;
     background: transparent;
     color: $color-text;
     text-align: left;
     cursor: pointer;
-    transition: background .16s ease, border-color .16s ease, transform .16s ease;
+    transition: background .16s ease, border-color .16s ease, transform .16s ease, box-shadow .16s ease;
 
     &:hover {
         background: $color-bg;
-        border-color: $color-border;
+        border-color: rgba($color-do, .18);
+        box-shadow: 0 4px 14px rgba(15, 23, 42, .04);
     }
 }
 
 .eventItemActive {
-    padding-left: 14px;
+    padding-left: 18px;
     background: rgba($color-do, .07);
     border-color: rgba($color-do, .18);
 
     &::before {
         content: '';
         position: absolute;
-        top: 9px;
-        bottom: 9px;
+        top: 11px;
+        bottom: 11px;
         left: 5px;
         width: 3px;
         border-radius: 999px;
         background: $color-do;
     }
 
-    .eventName { color: $color-do; }
+    .eventName {
+        color: $color-do;
+    }
 }
 
 .eventName {
-    font-size: 12.5px;
-    font-weight: 700;
-    line-height: 1.4;
+    font-size: 14.5px;
+    font-weight: 750;
+    line-height: 1.45;
 }
 
 .eventMeta {
-    font-size: 10.5px;
+    font-size: 12px;
     color: $color-text-muted;
     font-weight: 500;
 }
@@ -334,28 +471,28 @@
 
 .main {
     min-width: 0;
-    padding: $space-5;
+    padding: 28px;
     border: 1px solid $color-border;
-    border-radius: 14px;
+    border-radius: 18px;
     background: $color-surface;
 }
 
 .emptyMain,
 .emptyList {
-    padding: 42px 24px;
+    padding: 54px 28px;
     text-align: center;
     border: 1px dashed $color-border;
-    border-radius: 12px;
+    border-radius: 16px;
     background: $color-bg;
 
     strong {
         display: block;
-        margin-bottom: 5px;
+        margin-bottom: 7px;
     }
 
     p {
         margin: 0;
-        font-size: 12px;
+        font-size: 14px;
         color: $color-text-muted;
     }
 }
@@ -364,20 +501,20 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    gap: $space-4;
-    margin: -4px -4px $space-5;
-    padding: 4px 4px $space-5;
+    gap: 22px;
+    margin: -2px -2px 26px;
+    padding: 2px 2px 24px;
     border-bottom: 1px solid $color-border;
 }
 
 .resultType {
-    margin-bottom: 6px;
-    font-size: 10px;
+    margin-bottom: 8px;
+    font-size: 14px;
 }
 
 .eventTitle {
     margin: 0;
-    font-size: clamp(19px, 2.5vw, 24px);
+    font-size: clamp(24px, 3vw, 30px);
     line-height: 1.25;
     font-weight: 800;
     color: $color-text;
@@ -386,47 +523,47 @@
 .eventBadges {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 10px;
+    gap: 8px;
+    margin-top: 12px;
 
     span {
         display: inline-flex;
         align-items: center;
-        min-height: 24px;
-        padding: 3px 8px;
+        min-height: 30px;
+        padding: 5px 10px;
         border: 1px solid $color-border;
         border-radius: 999px;
         background: $color-bg;
         color: $color-text-muted;
-        font-size: 10.5px;
+        font-size: 12px;
         font-weight: 700;
     }
 }
 
 .progressSummary {
-    min-width: 148px;
-    padding: 12px 14px;
+    min-width: 180px;
+    padding: 16px 18px;
     border: 1px solid $color-border;
-    border-radius: 11px;
+    border-radius: 13px;
     background: $color-bg;
 
     strong {
         display: block;
-        margin-bottom: 2px;
-        font-size: 18px;
+        margin-bottom: 4px;
+        font-size: 24px;
         color: $color-text;
     }
 
-    > span {
+    >span {
         display: block;
-        margin-bottom: 8px;
-        font-size: 10.5px;
+        margin-bottom: 10px;
+        font-size: 12.5px;
         color: $color-text-muted;
     }
 }
 
 .progressTrack {
-    height: 5px;
+    height: 7px;
     overflow: hidden;
     border-radius: 999px;
     background: rgba($color-text-muted, .12);
@@ -445,17 +582,17 @@
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    margin: $space-5 0 $space-3;
+    margin: 28px 0 14px;
 
     strong {
         display: block;
         margin-bottom: 2px;
-        font-size: 14px;
+        font-size: 16px;
     }
 
-    > div > span {
+    >div>span {
         display: block;
-        font-size: 11px;
+        font-size: 13px;
         color: $color-text-muted;
     }
 }
@@ -467,99 +604,146 @@
 }
 
 .medalBox {
-    margin-bottom: $space-5;
-    padding: $space-4;
-    border: 1px solid rgba($color-vang, .24);
-    border-radius: 13px;
-    background: linear-gradient(135deg, rgba($color-vang, .07), rgba($color-vang, .02));
+    margin-bottom: 30px;
 }
 
 .medalBoxHead {
     display: flex;
+    align-items: flex-end;
     justify-content: space-between;
-    margin-bottom: 10px;
+    gap: 12px;
+    margin: 28px 0 14px;
 
     strong {
         display: block;
-        margin-bottom: 2px;
-        font-size: 13px;
+        margin-bottom: 3px;
+        font-size: 17px;
+        font-weight: 800;
+        color: $color-text;
     }
 
     span {
-        font-size: 10.5px;
+        display: block;
+        font-size: 13.5px;
         color: $color-text-muted;
     }
 }
 
-.medalGrid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 8px;
-}
-
-.medalRowVang,
-.medalRowBac,
-.medalRowDong {
+.medalListNew {
     display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    min-width: 0;
-    padding: 11px;
-    border: 1px solid $color-border;
-    border-radius: 10px;
-    background: $color-surface;
+    flex-direction: column;
+    gap: 9px;
 }
 
-.medalIcon {
-    flex: 0 0 auto;
-    font-size: 22px;
+// Cùng cấu trúc thị giác với .quyenRow bên dưới: cột trạng thái bên trái,
+// nội dung chính ở giữa và kết quả ở bên phải. Không dùng card vàng riêng
+// để phần huy chương và danh sách thi đấu đọc như một bảng liên tục.
+.medalListRow {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 16px;
+    min-height: 92px;
+    padding: 15px 16px;
+    border: 1px solid $color-border;
+    border-radius: 13px;
+    background: $color-surface;
+    transition: border-color .16s ease, background .16s ease, transform .16s ease;
+
+    &:hover {
+        border-color: rgba($color-do, .2);
+        background: rgba($color-do, .018);
+    }
+}
+
+.medalListIcon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 13px;
+    background: $color-bg;
+    font-size: 23px;
     line-height: 1;
 }
 
-.medalContent {
-    display: flex;
-    flex-direction: column;
+.medalListInfo {
     min-width: 0;
 }
 
-.medalTag {
-    margin-bottom: 3px;
-    font-size: 9px;
-    font-weight: 800;
-    letter-spacing: .08em;
-    color: $color-text-muted;
-}
-
-.medalName {
-    font-size: 12.5px;
+.medalListName {
+    font-size: 15.5px;
     font-weight: 800;
     line-height: 1.4;
     color: $color-text;
     overflow-wrap: anywhere;
 }
 
-.medalSub {
-    margin-top: 3px;
-    font-size: 10.5px;
+.medalListSub {
+    margin-top: 4px;
+    font-size: 13px;
     line-height: 1.4;
     color: $color-text-muted;
+}
+
+.medalListBadge {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 3px;
+    min-width: 118px;
+    min-height: 54px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    white-space: nowrap;
+
+    strong {
+        font-size: 14px;
+        font-weight: 850;
+        line-height: 1.2;
+        letter-spacing: .03em;
+    }
+
+    small {
+        font-size: 11px;
+        font-weight: 700;
+        color: currentColor;
+        opacity: .78;
+    }
+}
+
+.medalBadgeVang {
+    background: rgba($color-vang, .14);
+    color: rgb(133, 100, 12);
+}
+
+.medalBadgeBac {
+    background: rgba(148, 163, 184, .18);
+    color: rgb(71, 85, 105);
+}
+
+.medalBadgeDong {
+    background: rgba(180, 106, 55, .13);
+    color: rgb(133, 77, 38);
 }
 
 .quyenList {
     display: flex;
     flex-direction: column;
-    gap: 7px;
+    gap: 9px;
 }
 
 .quyenRow {
     display: grid;
-    grid-template-columns: 42px minmax(0, 1fr) auto;
+    grid-template-columns: 52px minmax(0, 1fr) auto;
     align-items: center;
-    gap: 12px;
-    min-height: 72px;
-    padding: 11px 12px;
+    gap: 16px;
+    min-height: 92px;
+    padding: 15px 16px;
     border: 1px solid $color-border;
-    border-radius: 11px;
+    border-radius: 13px;
     background: $color-surface;
     transition: border-color .16s ease, background .16s ease, transform .16s ease;
 
@@ -573,13 +757,13 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 34px;
-    height: 34px;
-    border-radius: 9px;
+    width: 42px;
+    height: 42px;
+    border-radius: 13px;
     background: $color-bg;
     color: $color-text-muted;
     font-family: $font-mono;
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 800;
 }
 
@@ -588,55 +772,46 @@
 }
 
 .quyenName {
-    font-size: 13.5px;
+    font-size: 15.5px;
     font-weight: 800;
     line-height: 1.4;
     color: $color-text;
 }
 
 .quyenSub {
-    margin-top: 3px;
-    font-size: 11px;
-    color: $color-text-muted;
-}
-
-.quyenTeamLabel {
-    margin-bottom: 5px;
-    font-size: 9.5px;
-    font-weight: 800;
-    letter-spacing: .07em;
-    text-transform: uppercase;
+    margin-top: 4px;
+    font-size: 13px;
     color: $color-text-muted;
 }
 
 .quyenMemberList {
     display: flex;
     flex-wrap: wrap;
-    gap: 5px;
+    gap: 7px;
 }
 
 .quyenMember {
     display: inline-flex;
     align-items: center;
-    min-height: 27px;
-    padding: 4px 8px;
+    min-height: 32px;
+    padding: 5px 10px;
     border: 1px solid rgba($color-do, .13);
     border-radius: 7px;
     background: rgba($color-do, .045);
     color: $color-text;
-    font-size: 11.5px;
+    font-size: 14px;
     font-weight: 700;
 }
 
 .quyenMemberEmpty {
     color: $color-text-muted;
-    font-size: 11.5px;
+    font-size: 14px;
 }
 
 .quyenStatus {
     display: flex;
     justify-content: flex-end;
-    min-width: 126px;
+    min-width: 150px;
 }
 
 .quyenDone,
@@ -645,17 +820,17 @@
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    gap: 2px;
-    padding: 7px 9px;
+    gap: 3px;
+    padding: 9px 11px;
     border-radius: 8px;
 
     strong {
-        font-size: 12.5px;
+        font-size: 14px;
         line-height: 1.2;
     }
 
     small {
-        font-size: 9.5px;
+        font-size: 11px;
         color: $color-text-muted;
     }
 }
@@ -678,55 +853,56 @@
 .tallySection {
     display: flex;
     flex-direction: column;
-    gap: $space-4;
+    gap: 22px;
 }
 
 .tallyHeader {
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
-    gap: $space-4;
-    padding: $space-5;
+    gap: 22px;
+    padding: 28px;
     border: 1px solid $color-border;
-    border-radius: 14px;
+    border-radius: 18px;
     background: $color-surface;
 
     h2 {
         margin: 0;
-        font-size: 20px;
+        font-size: 26px;
     }
 
     p {
-        margin: 5px 0 0;
-        font-size: 12px;
+        margin: 8px 0 0;
+        font-size: 14px;
+        line-height: 1.6;
         color: $color-text-muted;
     }
 }
 
 .tallySummary {
-    min-width: 145px;
-    padding: 10px 12px;
+    min-width: 170px;
+    padding: 14px 16px;
     border-radius: 10px;
     background: rgba($color-vang, .07);
     text-align: right;
 
     strong {
         display: block;
-        font-size: 20px;
+        font-size: 26px;
         color: $color-text;
     }
 
     span {
-        font-size: 10.5px;
+        font-size: 12px;
         color: $color-text-muted;
     }
 }
 
 .sortToggle {
     display: inline-flex;
-    gap: 4px;
-    padding: 4px;
-    margin-bottom: 14px;
+    gap: 5px;
+    padding: 5px;
+    margin-bottom: 16px;
     border: 1px solid $color-border;
     border-radius: 10px;
     background: $color-bg;
@@ -734,10 +910,10 @@
 
 .sortToggleBtn,
 .sortToggleActive {
-    padding: 7px 14px;
+    padding: 10px 18px;
     border: none;
     border-radius: 7px;
-    font-size: 12.5px;
+    font-size: 14px;
     font-weight: 700;
     cursor: pointer;
     transition: background 0.15s ease, color 0.15s ease;
@@ -761,7 +937,7 @@
 .card {
     overflow: hidden;
     border: 1px solid $color-border;
-    border-radius: 14px;
+    border-radius: 16px;
     background: $color-surface;
 }
 
@@ -771,13 +947,13 @@
 
 .medalTable {
     width: 100%;
-    min-width: 620px;
+    min-width: 720px;
     border-collapse: collapse;
-    font-size: 13px;
+    font-size: 15px;
 
     th,
     td {
-        padding: 13px 14px;
+        padding: 16px 18px;
         border-bottom: 1px solid $color-border;
         text-align: left;
     }
@@ -785,7 +961,7 @@
     th {
         background: $color-bg;
         color: $color-text-muted;
-        font-size: 10px;
+        font-size: 11.5px;
         font-weight: 800;
         letter-spacing: .05em;
         text-transform: uppercase;
@@ -794,8 +970,13 @@
     tbody tr {
         transition: background .15s ease;
 
-        &:hover { background: rgba($color-do, .018); }
-        &:last-child td { border-bottom: none; }
+        &:hover {
+            background: rgba($color-do, .018);
+        }
+
+        &:last-child td {
+            border-bottom: none;
+        }
     }
 }
 
@@ -811,10 +992,10 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 34px;
-    height: 32px;
+    min-width: 40px;
+    height: 38px;
     padding: 0 8px;
-    border-radius: 9px;
+    border-radius: 13px;
     background: $color-bg;
     font-weight: 800;
 }
@@ -822,10 +1003,16 @@
 .teamCell {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 4px;
 
-    strong { font-size: 13px; }
-    span { font-size: 10.5px; color: $color-text-muted; }
+    strong {
+        font-size: 15px;
+    }
+
+    span {
+        font-size: 12px;
+        color: $color-text-muted;
+    }
 }
 
 .gold {
@@ -845,32 +1032,60 @@
 
 @media (max-width: 1050px) {
     .pageHeader {
-        align-items: flex-start;
-        flex-direction: column;
+        grid-template-columns: 1fr;
     }
 
+    .headerTools,
     .headerStats {
         width: 100%;
     }
 
-    .body {
-        grid-template-columns: 230px minmax(0, 1fr);
+    .exportPanel {
+        width: 100%;
     }
 
-    .medalGrid {
-        grid-template-columns: 1fr;
+    .body {
+        grid-template-columns: 280px minmax(0, 1fr);
+    }
+
+    .medalListRow {
+        grid-template-columns: 38px minmax(0, 1fr);
+    }
+
+    .medalListBadge {
+        grid-column: 2;
+        justify-self: start;
     }
 }
 
 @media (max-width: 780px) {
+
     .pageHeader,
     .main,
     .tallyHeader {
-        padding: $space-4;
+        padding: 22px;
     }
 
     .headerStats {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .exportPanel {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .exportPanelLabel span {
+        max-width: none;
+    }
+
+    .exportActions {
+        width: 100%;
+    }
+
+    .exportWordBtn,
+    .exportPdfBtn {
+        flex: 1;
     }
 
     .headerStat {
@@ -878,7 +1093,10 @@
         align-items: center;
         gap: 10px;
 
-        strong { margin: 0; min-width: 34px; }
+        strong {
+            margin: 0;
+            min-width: 34px;
+        }
     }
 
     .tabsBar {
@@ -899,7 +1117,7 @@
     .eventList {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        max-height: 240px;
+        max-height: 300px;
     }
 
     .main {
@@ -920,7 +1138,7 @@
     }
 
     .quyenRow {
-        grid-template-columns: 38px minmax(0, 1fr);
+        grid-template-columns: 46px minmax(0, 1fr);
     }
 
     .quyenStatus {
@@ -936,20 +1154,34 @@
 }
 
 @media (max-width: 520px) {
+
     .pageHeader,
     .main,
     .tallyHeader {
-        padding: 14px;
-        border-radius: 12px;
+        padding: 17px;
+        border-radius: 14px;
     }
 
     .eventList {
         grid-template-columns: 1fr;
     }
 
+    .headerStats {
+        grid-template-columns: 1fr;
+    }
+
+    .exportActions {
+        flex-direction: column;
+    }
+
+    .exportWordBtn,
+    .exportPdfBtn {
+        width: 100%;
+    }
+
     .tab,
     .tabActive {
-        padding-inline: 10px;
+        padding-inline: 13px;
     }
 
     .resultHeader {
@@ -962,17 +1194,40 @@
     }
 
     .quyenRow {
-        grid-template-columns: 34px minmax(0, 1fr);
-        gap: 9px;
-        padding: 10px;
+        grid-template-columns: 40px minmax(0, 1fr);
+        gap: 11px;
+        padding: 12px;
+    }
+
+    .medalListRow {
+        grid-template-columns: 40px minmax(0, 1fr);
+        gap: 11px;
+        padding: 12px;
+    }
+
+    .medalListIcon {
+        width: 36px;
+        height: 36px;
     }
 
     .quyenNo {
-        width: 30px;
-        height: 30px;
+        width: 36px;
+        height: 36px;
     }
 
     .quyenMember {
         width: 100%;
+    }
+}
+
+
+/* Larger, distance-friendly result presentation */
+@media (min-width: 781px) {
+    .main {
+        box-shadow: 0 10px 30px rgba(15, 23, 42, .035);
+    }
+
+    .sidebar {
+        box-shadow: 0 8px 24px rgba(15, 23, 42, .03);
     }
 }

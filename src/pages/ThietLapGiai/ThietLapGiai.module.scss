@@ -1116,7 +1116,493 @@
     margin-top: 2px;
 }
 
+
+/* ========================================================================== */
+/* Visual refresh: clearer hierarchy + larger, easier interaction targets      */
+/* ========================================================================== */
+
+.page {
+    width: min(100%, 1480px);
+    margin: 0 auto;
+    gap: 28px;
+}
+
+.pageHeader {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 4px 2px 0;
+}
+
+.pageEyebrow {
+    display: block;
+    margin-bottom: 7px;
+    color: $color-do;
+    font-size: 11px;
+    line-height: 1;
+    font-weight: 800;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+}
+
+.title {
+    font-size: 30px;
+    line-height: 1.15;
+    font-weight: 780;
+    letter-spacing: -0.035em;
+}
+
+.pageSubtitle {
+    max-width: 760px;
+    margin: 8px 0 0;
+    color: $color-text-muted;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.card {
+    border-radius: 16px;
+    box-shadow: 0 8px 26px rgba(15, 23, 42, 0.045);
+}
+
+.tournamentCard {
+    border-radius: 16px;
+}
+
+.tournamentHeader {
+    padding: 28px 30px 25px;
+    background:
+        radial-gradient(circle at top right, rgba($color-do, 0.07), transparent 34%),
+        linear-gradient(180deg, rgba($color-do, 0.025) 0%, $color-surface 100%);
+}
+
+.sectionEyebrow {
+    margin-bottom: 7px;
+    font-size: 11px;
+}
+
+.tournamentTitle {
+    font-size: 22px;
+}
+
+.tournamentIntro {
+    max-width: 760px;
+    margin-top: 9px;
+    font-size: 13px;
+    line-height: 1.65;
+}
+
+.savedBadge {
+    min-height: 34px;
+    padding: 0 12px;
+    font-size: 12px;
+}
+
+.tournamentContent {
+    gap: 18px;
+    padding: 24px 30px 28px;
+}
+
+.settingSection {
+    padding: 21px;
+    border-radius: 13px;
+    background: linear-gradient(180deg, rgba($color-bg, 0.35), $color-surface 46%);
+}
+
+.settingSectionHead {
+    margin-bottom: 18px;
+
+    h3 {
+        font-size: 15px;
+    }
+
+    p {
+        margin-top: 5px;
+        font-size: 12px;
+    }
+}
+
+.settingIndex {
+    width: 34px;
+    height: 34px;
+    flex-basis: 34px;
+    border-radius: 9px;
+    font-size: 11px;
+}
+
+.basicInfoGrid {
+    grid-template-columns: minmax(0, 1fr) 220px;
+    gap: 16px;
+}
+
+.fieldLabel {
+    font-size: 12px;
+}
+
+.largeInput {
+    min-height: 48px;
+    padding: 10px 13px !important;
+    border-radius: 9px !important;
+    font-size: 15px !important;
+}
+
+.inputSuffix {
+    right: 14px;
+    font-size: 12px;
+}
+
+.ruleGrid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.ruleOption {
+    min-height: 104px;
+    padding: 17px;
+    border-radius: 12px;
+    background: $color-surface;
+
+    &:has(.ruleCheckbox:checked) {
+        border-color: rgba($color-do, 0.24);
+        background: rgba($color-do, 0.025);
+    }
+}
+
+.ruleOptionMain {
+    align-items: flex-start;
+    gap: 13px;
+
+    strong {
+        font-size: 13px;
+    }
+
+    div>span {
+        margin-top: 1px;
+        font-size: 11.5px;
+        line-height: 1.55;
+    }
+}
+
+.switchVisual {
+    margin-top: 1px;
+    width: 42px;
+    height: 24px;
+    flex-basis: 42px;
+
+    >span {
+        width: 18px;
+        height: 18px;
+    }
+}
+
+.ruleCheckbox:checked+.switchVisual>span {
+    transform: translateX(18px);
+}
+
+.ruleStatus {
+    align-self: flex-start;
+    padding: 6px 9px;
+    font-size: 10.5px;
+}
+
+.medalCoefficientGrid {
+    gap: 12px;
+}
+
+.medalCoefficient {
+    min-height: 76px;
+    padding: 15px 16px;
+    border-radius: 12px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+
+    &:focus-within {
+        border-color: rgba($color-do, 0.3);
+        box-shadow: 0 0 0 3px rgba($color-do, 0.07);
+    }
+
+    &:hover {
+        transform: translateY(-1px);
+    }
+}
+
+.medalLabel {
+    strong {
+        font-size: 15px;
+    }
+
+    span {
+        font-size: 11px;
+    }
+}
+
+.coefficientInput {
+    input {
+        width: 72px;
+        min-height: 42px;
+        border-radius: 8px;
+        font-size: 15px;
+    }
+
+    span {
+        font-size: 10px;
+    }
+}
+
+.formulaPreview {
+    min-height: 42px;
+    margin-top: 12px;
+    padding: 10px 13px;
+    border-radius: 9px;
+    font-size: 11px;
+
+    strong {
+        font-size: 12px;
+    }
+}
+
+.tournamentFooter {
+    padding: 17px 30px;
+}
+
+.savedSummary {
+    font-size: 12px;
+}
+
+.saveTournamentBtn {
+    min-width: 150px;
+    min-height: 44px;
+    padding-inline: 20px;
+}
+
+.btnPrimary,
+.btnGhost {
+    min-height: 42px;
+    padding: 9px 16px;
+    border-radius: 9px;
+    font-size: 13px;
+}
+
+.eventsCard {
+    border-radius: 16px;
+}
+
+.eventsHead {
+    padding: 24px 26px 20px;
+}
+
+.eventsHead .cardTitle {
+    font-size: 19px;
+    letter-spacing: -0.015em;
+}
+
+.totalBadge,
+.groupCount {
+    min-height: 28px;
+    padding: 6px 10px;
+    font-size: 11px;
+}
+
+.eventsNote {
+    max-width: 760px;
+    margin-top: 7px;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.eventsActions {
+    gap: 10px;
+}
+
+.eventTabs {
+    gap: 8px;
+    padding: 0 26px;
+}
+
+.eventTab {
+    min-height: 52px;
+    padding: 14px 6px 13px;
+    margin-right: 18px;
+    font-size: 14px;
+
+    strong {
+        min-width: 28px;
+        padding: 4px 8px;
+        font-size: 11px;
+    }
+}
+
+.eventToolbar {
+    grid-template-columns: minmax(280px, 1fr) minmax(180px, 230px) minmax(170px, 210px) auto;
+    gap: 10px;
+    padding: 18px 26px 10px;
+}
+
+.searchBox,
+.filterSelect {
+    min-height: 44px;
+    border-radius: 10px;
+}
+
+.searchBox {
+    padding-inline: 13px;
+
+    input {
+        font-size: 14px;
+    }
+}
+
+.filterSelect {
+    padding-left: 13px;
+    font-size: 13px;
+}
+
+.clearFiltersBtn {
+    min-height: 44px;
+    padding-inline: 12px;
+    border-radius: 9px;
+    font-size: 12px;
+}
+
+.resultSummary {
+    padding: 8px 26px 18px;
+    font-size: 12px;
+}
+
+.catalogList {
+    gap: 18px;
+    padding: 0 26px 26px;
+}
+
+.ageGroup {
+    border-radius: 13px;
+}
+
+.ageGroupHeader {
+    padding: 15px 17px;
+
+    h3 {
+        margin-top: 2px;
+        font-size: 16px;
+    }
+}
+
+.ageEyebrow {
+    font-size: 9.5px;
+}
+
+.genderGroup {
+    padding: 17px;
+}
+
+.genderGroupHeader {
+    margin-bottom: 13px;
+    font-size: 12px;
+}
+
+.genderBadge,
+.formBadge {
+    padding: 6px 9px;
+    font-size: 11px;
+}
+
+.weightGrid {
+    grid-template-columns: repeat(auto-fill, minmax(205px, 1fr));
+    gap: 10px;
+}
+
+.weightCard {
+    min-height: 72px;
+    padding: 14px;
+    border-radius: 11px;
+}
+
+.weightValue {
+    font-size: 18px;
+}
+
+.weightEventName {
+    margin-top: 8px;
+    font-size: 12px;
+}
+
+.eventRowActions {
+    gap: 5px;
+
+    button {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+    }
+}
+
+.quyenTableHead,
+.quyenRow {
+    grid-template-columns: minmax(260px, 1.8fr) minmax(100px, 0.6fr) minmax(100px, 0.6fr) minmax(100px, 0.55fr) 78px;
+}
+
+.quyenTableHead {
+    min-height: 40px;
+    padding: 0 17px;
+    font-size: 10.5px;
+}
+
+.quyenRow {
+    min-height: 68px;
+    padding: 11px 17px;
+    font-size: 13px;
+    transition: background 0.15s ease;
+
+    &:hover {
+        background: rgba($color-do, 0.022);
+    }
+}
+
+.quyenNameCell strong {
+    font-size: 14px;
+}
+
+.durationCell {
+    font-size: 13px;
+}
+
+.emptyState {
+    min-height: 180px;
+    margin: 0 26px 26px;
+    border-radius: 12px;
+    font-size: 13px;
+
+    strong {
+        font-size: 15px;
+    }
+}
+
+.dangerZone {
+    margin-top: 8px;
+    padding: 22px 24px;
+    border-radius: 14px;
+}
+
+.dangerTitle {
+    font-size: 16px;
+}
+
+.dangerDesc {
+    max-width: 900px;
+    font-size: 13px;
+}
+
+.dangerZoneBtn {
+    min-height: 40px;
+    border-radius: 8px;
+}
+
 @media (max-width: 980px) {
+    .ruleGrid {
+        grid-template-columns: 1fr;
+    }
+
     .medalCoefficientGrid {
         grid-template-columns: 1fr;
     }
@@ -1142,6 +1628,15 @@
 }
 
 @media (max-width: 720px) {
+    .pageHeader {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .pageSubtitle {
+        font-size: 13px;
+    }
+
     .page {
         gap: $space-4;
     }

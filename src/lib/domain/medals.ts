@@ -36,17 +36,36 @@ export interface QuyenRankingEntry {
   athleteId: string | null;
   teamId: string | null;
   diem: number;
-  hang: number; // 1 = vàng, 2 = bạc, 3 = đồng — bằng điểm tổng là ĐỒNG
-  // hạng, không có hiệu số phụ nào phá hoà (giống cách đối kháng cho
-  // phép đồng hạng ba).
+  hang: number; // Luôn tuần tự (1, 2, 3, 4...) — không có 2 lượt chung 1
+  // số hạng, kể cả khi bằng điểm (xem diemCaoNhat bên dưới cho tiêu chí
+  // phân định thứ tự).
+  huyChuong: 1 | 2 | 3 | null; // 1=vàng, 2=bạc, 3=đồng, null=không có.
+  // Thuần theo VỊ TRÍ, không phải theo việc có bằng điểm hay không: hạng
+  // 3 luôn có HCĐ; hạng 4 có HCĐ THÊM khi giải cho phép đồng hạng ba —
+  // dù hạng 4 điểm THẤP HƠN hạng 3 (không cần bằng điểm mới được tính).
 }
 
 // scores PHẢI đã lọc sẵn đúng 1 nội dung trước khi gọi hàm này.
+// hoanThanhRecords = các bản ghi "kết thúc lượt" của nội dung đó (bảng
+// QuyenLuotHoanThanh) — chỉ cần đúng athleteId/teamId để đối chiếu, dùng
+// để biết lượt nào ĐÃ CÓ KẾT LUẬN (dù đủ 5 điểm hay dừng giữa chừng vì
+// chấn thương/quên bài/rơi vũ khí...), tránh nhầm với lượt CHƯA THI.
+// choPhepDongHang (mặc định true, lấy từ Tournament.ChoPhepDongHangBaQuyen):
+// true = có 2 vị trí HCĐ (hạng 3 VÀ hạng 4); false = chỉ đúng 1 (hạng 3).
+// Không liên quan gì tới việc 2 lượt có thật sự bằng điểm hay không —
+// đây là quy định "bao nhiêu suất đồng", không phải cách phá bằng điểm.
 export function computeQuyenRanking(
   items: { athleteId: string | null; teamId: string | null }[],
   scores: QuyenJudgeScoreWire[],
+  hoanThanhRecords: { athleteId: string | null; teamId: string | null }[] = [],
+  choPhepDongHang = true,
 ): { hoanThanh: boolean; ranking: QuyenRankingEntry[] } {
   if (items.length === 0) return { hoanThanh: false, ranking: [] };
+
+  const daKetLuan = (item: { athleteId: string | null; teamId: string | null }) =>
+    hoanThanhRecords.some(
+      (h) => h.athleteId === item.athleteId && h.teamId === item.teamId,
+    );
 
   const withScores = items.map((item) => {
     const myScores = scores.filter(
@@ -56,21 +75,44 @@ export function computeQuyenRanking(
     return {
       ...item,
       diem: tinhDiemQuyenTongHop(diemList),
+      // Hiệu số phụ — LUÔN dùng để phân định thứ tự khi bằng điểm tổng
+      // (cho ra 1 thứ tự rõ ràng, ổn định), tách biệt hoàn toàn khỏi
+      // việc có mấy suất đồng hạng ba (đó là chuyện của choPhepDongHang).
+      diemCaoNhat: diemList.length > 0 ? Math.max(...diemList) : 0,
       count: myScores.length,
     };
   });
 
-  const hoanThanh = withScores.every((r) => r.count === 5);
+  // Sẵn sàng xếp hạng khi MỌI lượt đã có kết luận — hoặc đủ 5 điểm giám
+  // khảo, hoặc đã có bản ghi "kết thúc lượt" (dừng giữa chừng vì bất kỳ
+  // lý do gì). Trước đây bắt buộc TẤT CẢ đủ 5 điểm mới xong — 1 lượt
+  // chấn thương (không bao giờ đủ 5 điểm) khiến cả nội dung không bao
+  // giờ được xếp hạng, dù các lượt còn lại đã xong hết.
+  const hoanThanh = withScores.every((r) => r.count === 5 || daKetLuan(r));
   if (!hoanThanh) return { hoanThanh: false, ranking: [] };
 
-  const sorted = [...withScores].sort((a, b) => (b.diem ?? 0) - (a.diem ?? 0));
-  const ranking: QuyenRankingEntry[] = [];
-  let hang = 1;
-  sorted.forEach((r, i) => {
-    const prev = sorted[i - 1];
-    if (i > 0 && r.diem !== prev.diem) hang = i + 1;
-    ranking.push({ athleteId: r.athleteId, teamId: r.teamId, diem: r.diem!, hang });
+  // Chỉ xếp hạng lượt thi ĐỦ 5 điểm (hoàn thành bình thường) — lượt bị
+  // dừng giữa chừng (chấn thương, quên bài, rơi vũ khí, lỗi máy...)
+  // không được tính vào tranh huy chương, dù nội dung đã coi là xong.
+  const rankable = withScores.filter((r) => r.count === 5);
+
+  const sorted = [...rankable].sort(
+    (a, b) => (b.diem ?? 0) - (a.diem ?? 0) || b.diemCaoNhat - a.diemCaoNhat,
+  );
+
+  const ranking: QuyenRankingEntry[] = sorted.map((r, i) => {
+    const hang = i + 1;
+    const huyChuong: 1 | 2 | 3 | null =
+      hang === 1
+        ? 1
+        : hang === 2
+          ? 2
+          : hang === 3 || (hang === 4 && choPhepDongHang)
+            ? 3
+            : null;
+    return { athleteId: r.athleteId, teamId: r.teamId, diem: r.diem!, hang, huyChuong };
   });
+
   return { hoanThanh: true, ranking };
 }
 export interface MedalTally {
@@ -95,9 +137,11 @@ export function computeMedalTally(
   quyenDataByEvent: {
     items: { athleteId: string | null; teamId: string | null }[];
     scores: QuyenJudgeScoreWire[];
+    hoanThanhRecords: { athleteId: string | null; teamId: string | null }[];
   }[],
   athletes: { id: string; teamId: string }[],
   heSo: { vang: number; bac: number; dong: number } = { vang: 50, bac: 20, dong: 10 },
+  choPhepDongHangQuyen = true,
 ): MedalTally[] {
   const athleteTeamId = (athleteId: string) =>
     athletes.find((a) => a.id === athleteId)?.teamId ?? null;
@@ -117,17 +161,22 @@ export function computeMedalTally(
     for (const id of medals.dong) bump(athleteTeamId(id), 'dong');
   }
 
-  for (const { items, scores } of quyenDataByEvent) {
-    const { hoanThanh, ranking } = computeQuyenRanking(items, scores);
+  for (const { items, scores, hoanThanhRecords } of quyenDataByEvent) {
+    const { hoanThanh, ranking } = computeQuyenRanking(
+      items,
+      scores,
+      hoanThanhRecords,
+      choPhepDongHangQuyen,
+    );
     if (!hoanThanh) continue;
     for (const r of ranking) {
-      if (r.hang > 3) continue;
+      if (!r.huyChuong) continue;
       // Đồng đội: mỗi nội dung chỉ sinh ra ĐÚNG 1 dòng xếp hạng cho cả
       // đội (items đã gộp theo teamId từ lúc xây, không phải 1 dòng/
       // thành viên) — nên bump() ở đây tự nhiên chỉ +1 huy chương cho
       // đoàn, dù đội có bao nhiêu người, không cần xử lý gì thêm.
       const teamId = r.athleteId ? athleteTeamId(r.athleteId) : r.teamId;
-      const field = r.hang === 1 ? 'vang' : r.hang === 2 ? 'bac' : 'dong';
+      const field = r.huyChuong === 1 ? 'vang' : r.huyChuong === 2 ? 'bac' : 'dong';
       bump(teamId, field);
     }
   }

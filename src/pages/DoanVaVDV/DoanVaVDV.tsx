@@ -1,7 +1,17 @@
 /** @format */
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { Plus, FileSpreadsheet, Search, Pencil, Trash2 } from "lucide-react";
+import {
+  Plus,
+  FileSpreadsheet,
+  Search,
+  Pencil,
+  Trash2,
+  UsersRound,
+  UserRound,
+  ClipboardList,
+  X,
+} from "lucide-react";
 import type { CompetitionEvent, GioiTinh } from "../../types";
 import { apiGet, apiPost, apiPut, apiDelete } from "../../lib/api/api";
 import { laAdmin } from "../../lib/api/adminAuth";
@@ -298,6 +308,16 @@ export default function DoanVaVDV() {
     }
   };
 
+  const activeTeam =
+    filterTeamId === "all" ? null : teams.find((t) => t.id === filterTeamId);
+  const registeredAthletes = athletes.filter(
+    (a) => a.eventIds.length > 0,
+  ).length;
+  const totalRegistrations = athletes.reduce(
+    (sum, athlete) => sum + athlete.eventIds.length,
+    0,
+  );
+
   if (loading) {
     return (
       <div className={styles.page}>
@@ -315,58 +335,118 @@ export default function DoanVaVDV() {
 
   return (
     <div className={styles.page}>
-      <div className={styles.headerRow}>
-        <h1 className={styles.title}>Đoàn & vận động viên</h1>
+      <header className={styles.pageHeader}>
+        <div className={styles.pageIntro}>
+          <span className={styles.pageEyebrow}>Quản lý lực lượng tham dự</span>
+          <h1 className={styles.title}>Đoàn & vận động viên</h1>
+          <p className={styles.pageSubtitle}>
+            Theo dõi đoàn tham dự, hồ sơ VĐV và các nội dung đã đăng ký trong
+            một màn hình.
+          </p>
+        </div>
+
         <div className={styles.headerActions}>
           {coQuyenSua && (
             <>
               <button
                 className={styles.btnGhost}
                 onClick={() => setShowImportModal(true)}>
-                <FileSpreadsheet size={16} /> Import Excel
+                <FileSpreadsheet size={17} /> Import Excel
               </button>
               <button className={styles.btnPrimary} onClick={openAddAthlete}>
-                <Plus size={16} /> Thêm VĐV
+                <Plus size={17} /> Thêm VĐV
               </button>
             </>
           )}
         </div>
-      </div>
+      </header>
+
+      <section className={styles.summaryGrid} aria-label="Tổng quan">
+        <div className={styles.summaryCard}>
+          <span className={styles.summaryIcon}>
+            <UsersRound size={20} />
+          </span>
+          <div>
+            <strong>{teams.length}</strong>
+            <span>Đoàn tham dự</span>
+          </div>
+        </div>
+        <div className={styles.summaryCard}>
+          <span className={styles.summaryIcon}>
+            <UserRound size={20} />
+          </span>
+          <div>
+            <strong>{athletes.length}</strong>
+            <span>Vận động viên</span>
+          </div>
+        </div>
+        <div className={styles.summaryCard}>
+          <span className={styles.summaryIcon}>
+            <ClipboardList size={20} />
+          </span>
+          <div>
+            <strong>{totalRegistrations}</strong>
+            <span>Lượt đăng ký nội dung</span>
+          </div>
+        </div>
+        <div className={styles.summaryCard}>
+          <span className={styles.summaryIcon}>
+            <ClipboardList size={20} />
+          </span>
+          <div>
+            <strong>{registeredAthletes}</strong>
+            <span>VĐV đã có nội dung</span>
+          </div>
+        </div>
+      </section>
 
       <section className={styles.teamsCard}>
         <div className={styles.teamsHeader}>
-          <h2 className={styles.teamsTitle}>
-            Đoàn tham dự
-            <span className={styles.teamsCount}>{teams.length} đoàn</span>
-          </h2>
+          <div>
+            <div className={styles.sectionTitleRow}>
+              <h2 className={styles.teamsTitle}>Đoàn tham dự</h2>
+              <span className={styles.teamsCount}>{teams.length} đoàn</span>
+            </div>
+            <p className={styles.sectionNote}>
+              Bấm vào một đoàn để lọc nhanh danh sách VĐV bên dưới.
+            </p>
+          </div>
           {coQuyenSua && (
             <button className={styles.btnGhost} onClick={openAddTeam}>
               <Plus size={16} /> Thêm đoàn
             </button>
           )}
         </div>
+
         <div className={styles.teamsList}>
           {teams.map((t) => (
             <div
               key={t.id}
-              className={`${styles.teamChip} ${filterTeamId === t.id ? styles.teamChipActive : ""}`}>
+              className={`${styles.teamChip} ${
+                filterTeamId === t.id ? styles.teamChipActive : ""
+              }`}>
               <button
                 type="button"
                 className={styles.teamChipMain}
                 onClick={() => toggleTeamFilter(t.id)}
                 title="Bấm để lọc VĐV theo đoàn này">
-                <span className={styles.teamChipName}>{t.ten}</span>
-                <span className={styles.teamChipCount}>{t.soVdv} VĐV</span>
+                <span className={styles.teamInitial} aria-hidden="true">
+                  {t.ten.trim().charAt(0).toUpperCase()}
+                </span>
+                <span className={styles.teamChipText}>
+                  <span className={styles.teamChipName}>{t.ten}</span>
+                  <span className={styles.teamChipCount}>{t.soVdv} VĐV</span>
+                </span>
               </button>
               {coQuyenSua && (
-                <>
+                <div className={styles.teamChipActions}>
                   <button
                     type="button"
                     className={styles.teamChipEdit}
                     onClick={() => openEditTeam(t)}
                     aria-label={`Sửa tên đoàn ${t.ten}`}
                     title="Sửa tên đoàn">
-                    <Pencil size={12} />
+                    <Pencil size={14} />
                   </button>
                   <button
                     type="button"
@@ -374,126 +454,221 @@ export default function DoanVaVDV() {
                     onClick={() => deleteTeam(t)}
                     aria-label={`Xóa đoàn ${t.ten}`}
                     title="Xóa đoàn">
-                    <Trash2 size={12} />
+                    <Trash2 size={14} />
                   </button>
-                </>
+                </div>
               )}
             </div>
           ))}
           {teams.length === 0 && (
-            <p className={styles.teamsEmpty}>Chưa có đoàn nào</p>
+            <div className={styles.teamsEmpty}>
+              <UsersRound size={22} />
+              <span>Chưa có đoàn nào</span>
+            </div>
           )}
         </div>
       </section>
 
-      <div className={styles.filters}>
-        <div className={styles.searchBox}>
-          <Search size={16} />
-          <input
-            placeholder="Tìm theo tên, năm sinh, nhóm tuổi, đơn vị, nội dung..."
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-          />
-        </div>
-        <select
-          value={filterTeamId}
-          onChange={(e) => {
-            setFilterTeamId(e.target.value);
-            setPage(1);
-          }}>
-          <option value="all">Tất cả đoàn</option>
-          {teams.map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.ten}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className={styles.card}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>Họ tên</th>
-              <th>Năm sinh</th>
-              <th>Giới tính</th>
-              <th>Nhóm tuổi</th>
-              <th>Đơn vị</th>
-              <th>Nội dung</th>
-              <th>Thao tác</th>
-            </tr>
-          </thead>
-          <tbody>
-            {pageItems.map((a) => (
-              <tr key={a.id}>
-                <td>{a.hoTen}</td>
-                <td>{a.namSinh}</td>
-                <td>{a.gioiTinh === "nam" ? "Nam" : "Nữ"}</td>
-                <td>{formatNhomTuoi(a.nhomTuoi)}</td>
-                <td>{teamName(a.teamId)}</td>
-                <td>
-                  {a.eventIds.length > 0 ? (
-                    <div className={styles.noiDungList}>
-                      {a.eventIds.map((eid) => (
-                        <span key={eid} className={styles.noiDungChip}>
-                          {eventName(eid)}
-                        </span>
-                      ))}
-                    </div>
-                  ) : (
-                    "—"
-                  )}
-                </td>
-                <td className={styles.rowActions}>
-                  {coQuyenSua ? (
-                    <>
-                      <button onClick={() => openEditAthlete(a)}>Sửa</button>
-                      <button
-                        onClick={() => deleteAthlete(a)}
-                        className={styles.dangerLink}>
-                        Xóa
-                      </button>
-                    </>
-                  ) : (
-                    "—"
-                  )}
-                </td>
-              </tr>
-            ))}
-            {pageItems.length === 0 && (
-              <tr>
-                <td colSpan={7} className={styles.empty}>
-                  Không có VĐV nào khớp bộ lọc
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-
-        <div className={styles.pagination}>
-          <span>
-            Hiển thị {pageItems.length ? (page - 1) * PAGE_SIZE + 1 : 0}–
-            {(page - 1) * PAGE_SIZE + pageItems.length} của {filtered.length}
-          </span>
-          <div className={styles.pageBtns}>
-            <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
-              ‹
-            </button>
-            <span>
-              {page}/{totalPages}
-            </span>
+      <section className={styles.athleteSection}>
+        <div className={styles.athleteSectionHead}>
+          <div>
+            <div className={styles.sectionTitleRow}>
+              <h2>Danh sách vận động viên</h2>
+              <span className={styles.resultBadge}>{filtered.length} VĐV</span>
+            </div>
+            <p className={styles.sectionNote}>
+              {activeTeam
+                ? `Đang lọc theo đoàn ${activeTeam.ten}.`
+                : "Tìm theo tên, năm sinh, đơn vị hoặc nội dung đăng ký."}
+            </p>
+          </div>
+          {activeTeam && (
             <button
-              disabled={page >= totalPages}
-              onClick={() => setPage((p) => p + 1)}>
-              ›
+              type="button"
+              className={styles.clearTeamBtn}
+              onClick={() => {
+                setFilterTeamId("all");
+                setPage(1);
+              }}>
+              <X size={15} /> Bỏ lọc đoàn
             </button>
+          )}
+        </div>
+
+        <div className={styles.filters}>
+          <label className={styles.searchBox}>
+            <Search size={18} />
+            <input
+              placeholder="Tìm VĐV, năm sinh, nhóm tuổi, đơn vị, nội dung..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              aria-label="Tìm vận động viên"
+            />
+            {search && (
+              <button
+                type="button"
+                className={styles.searchClear}
+                onClick={() => {
+                  setSearch("");
+                  setPage(1);
+                }}
+                aria-label="Xóa từ khóa tìm kiếm">
+                <X size={15} />
+              </button>
+            )}
+          </label>
+          <select
+            className={styles.teamFilter}
+            value={filterTeamId}
+            onChange={(e) => {
+              setFilterTeamId(e.target.value);
+              setPage(1);
+            }}>
+            <option value="all">Tất cả đoàn</option>
+            {teams.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.ten}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className={styles.card}>
+          <div className={styles.tableScroll}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>Vận động viên</th>
+                  <th>Thông tin</th>
+                  <th>Đoàn</th>
+                  <th>Nội dung đăng ký</th>
+                  <th className={styles.actionHead}>Thao tác</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pageItems.map((a) => (
+                  <tr key={a.id}>
+                    <td>
+                      <div className={styles.athleteIdentity}>
+                        <span
+                          className={styles.athleteAvatar}
+                          aria-hidden="true">
+                          {a.hoTen.trim().charAt(0).toUpperCase()}
+                        </span>
+                        <div>
+                          <strong className={styles.athleteName}>
+                            {a.hoTen}
+                          </strong>
+                          <span className={styles.athleteYear}>
+                            Sinh năm {a.namSinh}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div className={styles.metaBadges}>
+                        <span
+                          className={`${styles.metaBadge} ${
+                            a.gioiTinh === "nam"
+                              ? styles.genderMale
+                              : styles.genderFemale
+                          }`}>
+                          {a.gioiTinh === "nam" ? "Nam" : "Nữ"}
+                        </span>
+                        <span className={styles.metaBadge}>
+                          Nhóm {formatNhomTuoi(a.nhomTuoi)}
+                        </span>
+                      </div>
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        className={styles.teamLink}
+                        onClick={() => toggleTeamFilter(a.teamId)}
+                        title="Lọc theo đoàn này">
+                        {teamName(a.teamId)}
+                      </button>
+                    </td>
+                    <td>
+                      {a.eventIds.length > 0 ? (
+                        <div className={styles.noiDungList}>
+                          {a.eventIds.map((eid) => (
+                            <span key={eid} className={styles.noiDungChip}>
+                              {eventName(eid)}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className={styles.noEvent}>Chưa đăng ký</span>
+                      )}
+                    </td>
+                    <td className={styles.rowActions}>
+                      {coQuyenSua ? (
+                        <>
+                          <button
+                            className={styles.editAction}
+                            onClick={() => openEditAthlete(a)}
+                            title={`Sửa ${a.hoTen}`}>
+                            <Pencil size={15} />
+                            <span>Sửa</span>
+                          </button>
+                          <button
+                            onClick={() => deleteAthlete(a)}
+                            className={styles.deleteAction}
+                            title={`Xóa ${a.hoTen}`}>
+                            <Trash2 size={15} />
+                            <span>Xóa</span>
+                          </button>
+                        </>
+                      ) : (
+                        <span className={styles.readOnlyText}>Chỉ xem</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+                {pageItems.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className={styles.empty}>
+                      <div className={styles.emptyState}>
+                        <Search size={24} />
+                        <strong>Không có VĐV phù hợp</strong>
+                        <span>Thử đổi từ khóa hoặc bỏ bộ lọc đoàn.</span>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <div className={styles.pagination}>
+            <span>
+              Hiển thị {pageItems.length ? (page - 1) * PAGE_SIZE + 1 : 0}–
+              {(page - 1) * PAGE_SIZE + pageItems.length} của {filtered.length}
+            </span>
+            <div className={styles.pageBtns}>
+              <button
+                disabled={page <= 1}
+                onClick={() => setPage((p) => p - 1)}
+                aria-label="Trang trước">
+                ‹
+              </button>
+              <span>
+                Trang <strong>{page}</strong> / {totalPages}
+              </span>
+              <button
+                disabled={page >= totalPages}
+                onClick={() => setPage((p) => p + 1)}
+                aria-label="Trang sau">
+                ›
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-
+      </section>
       {showAddTeam && (
         <Modal
           title={editingTeamId ? "Sửa tên đoàn" : "Thêm đoàn"}

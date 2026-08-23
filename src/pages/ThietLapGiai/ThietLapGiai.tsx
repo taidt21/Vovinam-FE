@@ -1,15 +1,7 @@
 /** @format */
 
 import { useEffect, useState, type FormEvent } from "react";
-import {
-  Plus,
-  Pencil,
-  Trash2,
-  FileSpreadsheet,
-  Search,
-  X,
-  Save,
-} from "lucide-react";
+import { Plus, Pencil, Trash2, FileSpreadsheet, Search, X } from "lucide-react";
 import type {
   CompetitionEvent,
   EventKind,
@@ -50,6 +42,7 @@ export default function ThietLapGiai() {
     heSoVang: 50,
     heSoBac: 20,
     heSoDong: 10,
+    choPhepDongHangBaQuyen: true,
   });
   const [savingTournament, setSavingTournament] = useState(false);
 
@@ -79,6 +72,7 @@ export default function ThietLapGiai() {
           heSoVang: t.heSoVang,
           heSoBac: t.heSoBac,
           heSoDong: t.heSoDong,
+          choPhepDongHangBaQuyen: t.choPhepDongHangBaQuyen,
         });
       })
       .catch(() =>
@@ -266,7 +260,16 @@ export default function ThietLapGiai() {
 
   return (
     <div className={styles.page}>
-      <h1 className={styles.title}>Thiết lập giải</h1>
+      <div className={styles.pageHeader}>
+        <div>
+          <span className={styles.pageEyebrow}>Quản trị giải đấu</span>
+          <h1 className={styles.title}>Thiết lập giải</h1>
+          <p className={styles.pageSubtitle}>
+            Cấu hình vận hành, luật thi đấu và danh mục nội dung trước khi mở
+            đăng ký.
+          </p>
+        </div>
+      </div>
 
       {loadError && <p className={styles.errorBanner}>{loadError}</p>}
 
@@ -275,18 +278,21 @@ export default function ThietLapGiai() {
         onSubmit={handleSubmitTournament}>
         <div className={styles.tournamentHeader}>
           <div>
-            <span className={styles.sectionEyebrow}>Cấu hình chung</span>
-            <h2 className={styles.tournamentTitle}>Thông tin giải đấu</h2>
+            <span className={styles.sectionEyebrow}>Cấu hình giải đấu</span>
+            <h2 className={styles.tournamentTitle}>
+              Thông tin & quy tắc vận hành
+            </h2>
             <p className={styles.tournamentIntro}>
-              Thiết lập thông tin cơ bản, luật thi đấu và hệ số tính điểm tổng
-              đoàn. Các thay đổi chỉ có hiệu lực sau khi bấm Lưu.
+              Những thiết lập này ảnh hưởng trực tiếp đến Bàn thư ký, cách xử lý
+              kết quả và bảng tổng sắp. Nên kiểm tra lại trước khi giải bắt đầu.
             </p>
           </div>
+
           {tournament && (
-            <div className={styles.savedBadge}>
+            <span className={styles.savedBadge}>
               <span className={styles.savedDot} />
               Đã có cấu hình
-            </div>
+            </span>
           )}
         </div>
 
@@ -297,7 +303,10 @@ export default function ThietLapGiai() {
                 <span className={styles.settingIndex}>01</span>
                 <div>
                   <h3>Thông tin cơ bản</h3>
-                  <p>Tên hiển thị của giải và số sân/thảm được sử dụng.</p>
+                  <p>
+                    Tên giải và số sân/thảm được sử dụng trong suốt quá trình
+                    vận hành.
+                  </p>
                 </div>
               </div>
             </div>
@@ -344,49 +353,76 @@ export default function ThietLapGiai() {
               <div>
                 <span className={styles.settingIndex}>02</span>
                 <div>
-                  <h3>Luật thi đấu đối kháng</h3>
+                  <h3>Luật xử lý kết quả</h3>
                   <p>
-                    Thiết lập cách xử lý khi hai VĐV hoà điểm sau hiệp cuối.
+                    Bật hoặc tắt các quy tắc đặc biệt của Đối kháng và Quyền.
                   </p>
                 </div>
               </div>
             </div>
 
-            <label className={styles.ruleOption}>
-              <div className={styles.ruleOptionMain}>
-                <input
-                  className={styles.ruleCheckbox}
-                  type="checkbox"
-                  checked={form.choPhepHiepPhu}
-                  onChange={(e) =>
-                    setForm({ ...form, choPhepHiepPhu: e.target.checked })
-                  }
-                />
-                <span className={styles.switchVisual} aria-hidden="true">
-                  <span />
-                </span>
-                <div>
-                  <strong>Cho phép hiệp phụ điểm vàng</strong>
-                  <span>
-                    Khi hoà điểm, thi thêm một hiệp bằng thời lượng hiệp chính;
-                    VĐV ghi điểm trước sẽ thắng ngay.
+            <div className={styles.ruleGrid}>
+              <label className={styles.ruleOption}>
+                <div className={styles.ruleOptionMain}>
+                  <input
+                    className={styles.ruleCheckbox}
+                    type="checkbox"
+                    checked={form.choPhepHiepPhu}
+                    onChange={(e) =>
+                      setForm({ ...form, choPhepHiepPhu: e.target.checked })
+                    }
+                  />
+                  <span className={styles.switchVisual} aria-hidden="true">
+                    <span />
                   </span>
+                  <div>
+                    <strong>Hiệp phụ điểm vàng</strong>
+                    <span>
+                      Khi hoà sau hiệp cuối, thi thêm hiệp phụ và ai ghi điểm
+                      trước sẽ thắng.
+                    </span>
+                  </div>
                 </div>
-              </div>
-              <span
-                className={`${styles.ruleStatus} ${
-                  form.choPhepHiepPhu ? styles.ruleStatusOn : ""
-                }`}>
-                {form.choPhepHiepPhu ? "Đang bật" : "Đang tắt"}
-              </span>
-            </label>
+                <span
+                  className={`${styles.ruleStatus} ${
+                    form.choPhepHiepPhu ? styles.ruleStatusOn : ""
+                  }`}>
+                  {form.choPhepHiepPhu ? "Đang bật" : "Đang tắt"}
+                </span>
+              </label>
 
-            {!form.choPhepHiepPhu && (
-              <p className={styles.ruleFallback}>
-                Khi tắt, nếu hoà điểm thì Bàn thư ký sẽ chọn người thắng theo
-                quy định áp dụng tại thời điểm thi đấu.
-              </p>
-            )}
+              <label className={styles.ruleOption}>
+                <div className={styles.ruleOptionMain}>
+                  <input
+                    className={styles.ruleCheckbox}
+                    type="checkbox"
+                    checked={form.choPhepDongHangBaQuyen}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        choPhepDongHangBaQuyen: e.target.checked,
+                      })
+                    }
+                  />
+                  <span className={styles.switchVisual} aria-hidden="true">
+                    <span />
+                  </span>
+                  <div>
+                    <strong>Đồng hạng ba nội dung Quyền</strong>
+                    <span>
+                      Hai lượt bằng điểm tổng có thể cùng nhận HCĐ; nếu tắt, hệ
+                      thống xét tiếp điểm giám khảo cao nhất.
+                    </span>
+                  </div>
+                </div>
+                <span
+                  className={`${styles.ruleStatus} ${
+                    form.choPhepDongHangBaQuyen ? styles.ruleStatusOn : ""
+                  }`}>
+                  {form.choPhepDongHangBaQuyen ? "Đang bật" : "Đang tắt"}
+                </span>
+              </label>
+            </div>
           </section>
 
           <section className={styles.settingSection}>
@@ -396,8 +432,8 @@ export default function ThietLapGiai() {
                 <div>
                   <h3>Hệ số tổng sắp huy chương</h3>
                   <p>
-                    Điểm đoàn = số huy chương × hệ số tương ứng. Có thể thay đổi
-                    theo điều lệ từng giải.
+                    Điểm đoàn được tính từ số huy chương nhân với hệ số tương
+                    ứng.
                   </p>
                 </div>
               </div>
@@ -410,7 +446,7 @@ export default function ThietLapGiai() {
                   <strong>HCV</strong>
                   <span>Huy chương vàng</span>
                 </span>
-                <div className={styles.coefficientInput}>
+                <span className={styles.coefficientInput}>
                   <input
                     type="number"
                     min={0}
@@ -421,7 +457,7 @@ export default function ThietLapGiai() {
                     }
                   />
                   <span>điểm</span>
-                </div>
+                </span>
               </label>
 
               <label
@@ -430,7 +466,7 @@ export default function ThietLapGiai() {
                   <strong>HCB</strong>
                   <span>Huy chương bạc</span>
                 </span>
-                <div className={styles.coefficientInput}>
+                <span className={styles.coefficientInput}>
                   <input
                     type="number"
                     min={0}
@@ -441,7 +477,7 @@ export default function ThietLapGiai() {
                     }
                   />
                   <span>điểm</span>
-                </div>
+                </span>
               </label>
 
               <label
@@ -450,7 +486,7 @@ export default function ThietLapGiai() {
                   <strong>HCĐ</strong>
                   <span>Huy chương đồng</span>
                 </span>
-                <div className={styles.coefficientInput}>
+                <span className={styles.coefficientInput}>
                   <input
                     type="number"
                     min={0}
@@ -461,7 +497,7 @@ export default function ThietLapGiai() {
                     }
                   />
                   <span>điểm</span>
-                </div>
+                </span>
               </label>
             </div>
 
@@ -477,24 +513,23 @@ export default function ThietLapGiai() {
 
         <div className={styles.tournamentFooter}>
           <div className={styles.savedSummary}>
-            {tournament ? (
-              <>
-                <span className={styles.savedDot} />
-                <span>
+            <span className={styles.savedDot} />
+            <span>
+              {tournament ? (
+                <>
                   Đã lưu: <strong>{tournament.ten}</strong> · {tournament.soSan}{" "}
                   sân
-                </span>
-              </>
-            ) : (
-              <span>Chưa có cấu hình giải được lưu.</span>
-            )}
+                </>
+              ) : (
+                "Chưa có cấu hình được lưu"
+              )}
+            </span>
           </div>
 
           <button
             type="submit"
             className={`${styles.btnPrimary} ${styles.saveTournamentBtn}`}
             disabled={savingTournament}>
-            <Save size={16} />
             {savingTournament ? "Đang lưu..." : "Lưu cấu hình"}
           </button>
         </div>

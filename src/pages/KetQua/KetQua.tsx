@@ -1,7 +1,13 @@
 /** @format */
 
 import { useEffect, useMemo, useState } from "react";
-import type { AthleteRecord, CompetitionEvent, Match, Tournament } from "../../types";
+import { FileDown, FileText } from "lucide-react";
+import type {
+  AthleteRecord,
+  CompetitionEvent,
+  Match,
+  Tournament,
+} from "../../types";
 import { fetchEvents } from "../../lib/api/eventsApi";
 import { apiGet } from "../../lib/api/api";
 import { fetchMatches } from "../../lib/api/matchesApi";
@@ -23,6 +29,20 @@ import TongSapTab from "./tabs/TongSapTab";
 import DoiKhangResultView from "./tabs/DoiKhangResultView";
 import QuyenResultView from "./tabs/QuyenResultView";
 import styles from "./KetQua.module.scss";
+import { buildReport } from "./export/reportData";
+import { exportKetQuaWord } from "./export/exportWord";
+import { exportKetQuaPdf } from "./export/exportPdf";
+
+function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
 
 export default function KetQua() {
   const [events, setEvents] = useState<CompetitionEvent[]>([]);
@@ -41,6 +61,7 @@ export default function KetQua() {
   );
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [eventSearch, setEventSearch] = useState("");
+  const [exporting, setExporting] = useState<"word" | "pdf" | null>(null);
 
   const loadAll = () =>
     Promise.all([
@@ -93,8 +114,6 @@ export default function KetQua() {
     return a ? teamName(a.teamId) : "—";
   };
 
-  // Quyền đồng đội: UI kết quả chỉ hiển thị đúng danh sách VĐV của đội,
-  // không dùng tên đoàn làm tên đội (VD: "Đội Vovinam Quảng Nam").
   const thanhVienCuaDoi = (teamId: string, eventId: string): string[] =>
     athletes
       .filter((a) => a.teamId === teamId && a.eventIds.includes(eventId))
@@ -131,8 +150,9 @@ export default function KetQua() {
     : eventsInTab;
 
   const selected =
-    events.find((e) => e.id === selectedEventId && eventsInTab.some((x) => x.id === e.id)) ??
-    eventsInTab[0];
+    events.find(
+      (e) => e.id === selectedEventId && eventsInTab.some((x) => x.id === e.id),
+    ) ?? eventsInTab[0];
 
   const numbered = useMemo(() => {
     const byEvent: Record<string, Match[]> = {};
@@ -156,6 +176,9 @@ export default function KetQua() {
             .sort((a, b) => a.thuTu - b.thuTu)
             .map((o) => ({ athleteId: o.athleteId, teamId: o.teamId })),
           scores: quyenScores.filter((s) => s.eventId === e.id),
+          hoanThanhRecords: quyenLuotHoanThanh
+            .filter((h) => h.eventId === e.id)
+            .map((h) => ({ athleteId: h.athleteId, teamId: h.teamId })),
         })),
         athletes,
         tournament
@@ -165,14 +188,64 @@ export default function KetQua() {
               dong: tournament.heSoDong,
             }
           : undefined,
+        tournament?.choPhepDongHangBaQuyen ?? true,
       ),
-    [doiKhangEvents, quyenEvents, matches, orders, quyenScores, athletes, tournament],
+    [
+      doiKhangEvents,
+      quyenEvents,
+      matches,
+      orders,
+      quyenScores,
+      quyenLuotHoanThanh,
+      athletes,
+      tournament,
+    ],
   );
 
   const completedDoiKhang = matches.filter(
     (m) => m.trangThai === "da_hoan_thanh",
   ).length;
   const completedQuyen = quyenLuotHoanThanh.length;
+
+  const tenGiai = tournament?.ten ? `Giải ${tournament.ten}` : "Giải Vovinam";
+
+  const buildReportData = () =>
+    buildReport({
+      events,
+      matches,
+      orders,
+      scores: quyenScores,
+      quyenLuotHoanThanh,
+      athletes,
+      teams,
+      tournament,
+    });
+
+  const handleExportWord = async () => {
+    setExporting("word");
+    try {
+      const report = buildReportData();
+      const blob = await exportKetQuaWord(report, tenGiai);
+      downloadBlob(blob, "bao-cao-ket-qua.docx");
+    } catch {
+      window.alert("Xuất Word thất bại. Vui lòng thử lại.");
+    } finally {
+      setExporting(null);
+    }
+  };
+
+  const handleExportPdf = () => {
+    setExporting("pdf");
+    try {
+      const report = buildReportData();
+      const blob = exportKetQuaPdf(report, tenGiai);
+      downloadBlob(blob, "ket-qua-trao-giai.pdf");
+    } catch {
+      window.alert("Xuất PDF thất bại. Vui lòng thử lại.");
+    } finally {
+      setExporting(null);
+    }
+  };
 
   const selectTab = (nextTab: "tong_sap" | "doi_khang" | "quyen") => {
     setTab(nextTab);
@@ -196,25 +269,68 @@ export default function KetQua() {
   return (
     <div className={styles.page}>
       <header className={styles.pageHeader}>
-        <div>
+        <div className={styles.headerIntro}>
           <span className={styles.eyebrow}>Kết quả thi đấu</span>
           <h1 className={styles.title}>Kết quả & báo cáo</h1>
           <p className={styles.pageDescription}>
-            Theo dõi huy chương, kết quả đối kháng và điểm quyền theo từng nội dung.
+            Theo dõi huy chương, kết quả đối kháng và điểm quyền theo từng nội
+            dung.
           </p>
         </div>
-        <div className={styles.headerStats}>
-          <div className={styles.headerStat}>
-            <strong>{medalTally.length}</strong>
-            <span>Đoàn có huy chương</span>
+
+        <div className={styles.headerTools}>
+          <div className={styles.headerStats}>
+            <div className={styles.headerStat}>
+              <strong>{medalTally.length}</strong>
+              <span>Đoàn có huy chương</span>
+            </div>
+            <div className={styles.headerStat}>
+              <strong>{completedDoiKhang}</strong>
+              <span>Trận đối kháng xong</span>
+            </div>
+            <div className={styles.headerStat}>
+              <strong>{completedQuyen}</strong>
+              <span>Lượt quyền xong</span>
+            </div>
           </div>
-          <div className={styles.headerStat}>
-            <strong>{completedDoiKhang}</strong>
-            <span>Trận đối kháng xong</span>
-          </div>
-          <div className={styles.headerStat}>
-            <strong>{completedQuyen}</strong>
-            <span>Lượt quyền xong</span>
+
+          <div className={styles.exportPanel}>
+            <div className={styles.exportPanelLabel}>
+              <strong>Xuất kết quả</strong>
+              <span>Chọn định dạng phù hợp mục đích sử dụng</span>
+            </div>
+            <div className={styles.exportActions}>
+              <button
+                type="button"
+                className={styles.exportWordBtn}
+                onClick={handleExportWord}
+                disabled={exporting !== null}>
+                <span className={styles.exportBtnIcon}>
+                  <FileText size={19} />
+                </span>
+                <span className={styles.exportBtnText}>
+                  <strong>
+                    {exporting === "word" ? "Đang xuất..." : "Xuất Word"}
+                  </strong>
+                  <small>Báo cáo .docx</small>
+                </span>
+              </button>
+              <button
+                type="button"
+                className={styles.exportPdfBtn}
+                onClick={handleExportPdf}
+                disabled={exporting !== null}>
+                <span className={styles.exportBtnIcon}>
+                  <FileDown size={19} />
+                </span>
+                <span className={styles.exportBtnText}>
+                  <strong>
+                    {exporting === "pdf" ? "Đang xuất..." : "Xuất PDF"}
+                  </strong>
+                  <small>Bản trao giải .pdf</small>
+                </span>
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -255,7 +371,9 @@ export default function KetQua() {
           <aside className={styles.sidebar}>
             <div className={styles.sidebarHead}>
               <div>
-                <span className={styles.sidebarEyebrow}>Danh sách nội dung</span>
+                <span className={styles.sidebarEyebrow}>
+                  Danh sách nội dung
+                </span>
                 <strong>{tab === "doi_khang" ? "Đối kháng" : "Quyền"}</strong>
               </div>
               <span className={styles.sidebarCount}>{eventsInTab.length}</span>
@@ -301,7 +419,10 @@ export default function KetQua() {
             {!selected ? (
               <div className={styles.emptyMain}>
                 <strong>Chưa có nội dung để hiển thị</strong>
-                <p>Chọn một nội dung ở danh sách bên trái khi dữ liệu đã sẵn sàng.</p>
+                <p>
+                  Chọn một nội dung ở danh sách bên trái khi dữ liệu đã sẵn
+                  sàng.
+                </p>
               </div>
             ) : tab === "doi_khang" ? (
               <DoiKhangResultView
@@ -321,7 +442,9 @@ export default function KetQua() {
                 quyenLuotHoanThanh={quyenLuotHoanThanh}
                 athleteName={athleteName}
                 athleteTeamName={athleteTeamName}
+                teamName={teamName}
                 thanhVienCuaDoi={thanhVienCuaDoi}
+                choPhepDongHang={tournament?.choPhepDongHangBaQuyen ?? true}
               />
             )}
           </section>

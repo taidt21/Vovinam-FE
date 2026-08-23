@@ -20,7 +20,9 @@ export default function QuyenResultView({
   quyenLuotHoanThanh,
   athleteName,
   athleteTeamName,
+  teamName,
   thanhVienCuaDoi,
+  choPhepDongHang,
 }: {
   event: CompetitionEvent;
   orders: PerformanceOrderWire[];
@@ -28,7 +30,9 @@ export default function QuyenResultView({
   quyenLuotHoanThanh: QuyenLuotHoanThanhWire[];
   athleteName: (id: string | null) => string;
   athleteTeamName: (id: string | null) => string;
+  teamName: (id: string) => string;
   thanhVienCuaDoi: (teamId: string, eventId: string) => string[];
+  choPhepDongHang: boolean;
 }) {
   const items = useMemo(
     () =>
@@ -38,60 +42,51 @@ export default function QuyenResultView({
     [orders],
   );
 
+  const hoanThanhRecords = useMemo(
+    () =>
+      quyenLuotHoanThanh
+        .filter((h) => h.eventId === event.id)
+        .map((h) => ({ athleteId: h.athleteId, teamId: h.teamId })),
+    [quyenLuotHoanThanh, event.id],
+  );
+
   const { hoanThanh, ranking } = useMemo(
-    () => computeQuyenRanking(items, scores),
-    [items, scores],
+    () => computeQuyenRanking(items, scores, hoanThanhRecords, choPhepDongHang),
+    [items, scores, hoanThanhRecords, choPhepDongHang],
   );
 
   const membersFor = (teamId: string | null) =>
     teamId ? thanhVienCuaDoi(teamId, event.id) : [];
 
-  // Quyền đồng đội: tên hiển thị chính là các VĐV tham gia, không phải tên đoàn.
-  const labelFor = (athleteId: string | null, teamId: string | null) => {
-    if (athleteId) return athleteName(athleteId);
-    const members = membersFor(teamId);
-    return members.length > 0 ? members.join(" • ") : "Chưa có danh sách VĐV";
+  const subFor = (athleteId: string | null, teamId: string | null) => {
+    if (athleteId) return athleteTeamName(athleteId);
+    return teamId ? teamName(teamId) : "—";
   };
-
-  const subFor = (athleteId: string | null) =>
-    athleteId ? athleteTeamName(athleteId) : "";
 
   const rankingOf = (athleteId: string | null, teamId: string | null) =>
     ranking.find((r) => r.athleteId === athleteId && r.teamId === teamId);
 
-  // Đội: mỗi thành viên có 1 khung huy chương RIÊNG (giống hệt cách đối
-  // kháng làm khi 2 người đồng hạng 3 — mỗi người 1 khung), không gộp cả
-  // đội vào chung 1 khung. Tổng sắp đoàn vẫn chỉ tính 1 huy chương cho
-  // đội (xem medals.ts) — đây chỉ là cách HIỂN THỊ, không đổi cách đếm.
+  // Thành tích dùng cùng cấu trúc thông tin với danh sách thi đấu:
+  // dòng chính là VĐV/thành viên, dòng phụ là tên đoàn; huy chương và
+  // điểm được đưa sang cột trạng thái bên phải.
   const medalItems = hoanThanh
     ? ranking
-        .filter((r) => r.hang <= 3)
-        .flatMap((r) => {
-          if (r.teamId) {
-            const members = membersFor(r.teamId);
-            const names = members.length > 0 ? members : ["Chưa có danh sách VĐV"];
-            return names.map((name) => ({
-              hang: r.hang as 1 | 2 | 3,
-              label: name,
-              sub: `${r.diem.toFixed(2)} điểm`,
-            }));
-          }
-          const sub = subFor(r.athleteId);
-          return [
-            {
-              hang: r.hang as 1 | 2 | 3,
-              label: labelFor(r.athleteId, r.teamId),
-              sub: `${sub}${sub ? " • " : ""}${r.diem.toFixed(2)} điểm`,
-            },
-          ];
-        })
+        .filter((r) => r.huyChuong !== null)
+        .map((r) => ({
+          hang: r.huyChuong as 1 | 2 | 3,
+          label: r.athleteId ? athleteName(r.athleteId) : undefined,
+          members: r.teamId ? membersFor(r.teamId) : undefined,
+          sub: subFor(r.athleteId, r.teamId),
+          diem: r.diem,
+        }))
     : [];
 
   const completedCount = items.filter((it) => {
     const ownScores = scores.filter(
       (s) => s.athleteId === it.athleteId && s.teamId === it.teamId,
     );
-    if (tinhDiemQuyenTongHop(ownScores.map((s) => s.diem)) !== null) return true;
+    if (tinhDiemQuyenTongHop(ownScores.map((s) => s.diem)) !== null)
+      return true;
     return quyenLuotHoanThanh.some(
       (x) =>
         x.eventId === event.id &&
@@ -101,7 +96,11 @@ export default function QuyenResultView({
   }).length;
 
   const gioiTinhLabel =
-    event.gioiTinh === "nam" ? "Nam" : event.gioiTinh === "nu" ? "Nữ" : "Hỗn hợp";
+    event.gioiTinh === "nam"
+      ? "Nam"
+      : event.gioiTinh === "nu"
+        ? "Nữ"
+        : "Hỗn hợp";
 
   return (
     <>
@@ -116,7 +115,9 @@ export default function QuyenResultView({
           </div>
         </div>
         <div className={styles.progressSummary}>
-          <strong>{completedCount}/{items.length}</strong>
+          <strong>
+            {completedCount}/{items.length}
+          </strong>
           <span>lượt đã hoàn tất</span>
           <div className={styles.progressTrack}>
             <span
@@ -155,27 +156,37 @@ export default function QuyenResultView({
 
           return (
             <div key={i} className={styles.quyenRow}>
-              <span className={styles.quyenNo}>{String(i + 1).padStart(2, "0")}</span>
+              <span className={styles.quyenNo}>
+                {String(i + 1).padStart(2, "0")}
+              </span>
 
               <div className={styles.quyenInfo}>
                 {it.athleteId ? (
                   <>
-                    <div className={styles.quyenName}>{athleteName(it.athleteId)}</div>
-                    <div className={styles.quyenSub}>{athleteTeamName(it.athleteId)}</div>
+                    <div className={styles.quyenName}>
+                      {athleteName(it.athleteId)}
+                    </div>
+                    <div className={styles.quyenSub}>
+                      {athleteTeamName(it.athleteId)}
+                    </div>
                   </>
                 ) : (
                   <>
-                    <div className={styles.quyenTeamLabel}>VĐV đồng đội</div>
                     <div className={styles.quyenMemberList}>
                       {members.length > 0 ? (
-                        members.map((name) => (
-                          <span key={name} className={styles.quyenMember}>
-                            {name}
+                        members.map((member) => (
+                          <span key={member} className={styles.quyenMember}>
+                            {member}
                           </span>
                         ))
                       ) : (
-                        <span className={styles.quyenMemberEmpty}>Chưa có danh sách VĐV</span>
+                        <span className={styles.quyenMemberEmpty}>
+                          Chưa có danh sách VĐV
+                        </span>
                       )}
+                    </div>
+                    <div className={styles.quyenSub}>
+                      {it.teamId ? teamName(it.teamId) : "—"}
                     </div>
                   </>
                 )}
@@ -185,10 +196,18 @@ export default function QuyenResultView({
                 {r ? (
                   <span className={styles.quyenDone}>
                     <strong>
-                      {r.hang === 1 ? "🥇" : r.hang === 2 ? "🥈" : r.hang === 3 ? "🥉" : "✓"}
-                      {" "}{r.diem.toFixed(2)}
+                      {r.huyChuong === 1
+                        ? "🥇"
+                        : r.huyChuong === 2
+                          ? "🥈"
+                          : r.huyChuong === 3
+                            ? "🥉"
+                            : "✓"}{" "}
+                      {r.diem.toFixed(2)}
                     </strong>
-                    <small>{r.hang <= 3 ? `Hạng ${r.hang}` : "Đã xếp hạng"}</small>
+                    <small>
+                      {r.huyChuong ? `Hạng ${r.hang}` : "Đã xếp hạng"}
+                    </small>
                   </span>
                 ) : diemRieng !== null ? (
                   <span className={styles.quyenDone}>
@@ -198,14 +217,19 @@ export default function QuyenResultView({
                 ) : hoanThanhRow ? (
                   <span className={styles.quyenEnded}>
                     <strong>
-                      {LY_DO_LABEL[hoanThanhRow.lyDo as LyDoKetThucQuyen] ?? "Đã kết thúc"}
+                      {LY_DO_LABEL[hoanThanhRow.lyDo as LyDoKetThucQuyen] ??
+                        "Đã kết thúc"}
                     </strong>
                     <small>Kết thúc lượt</small>
                   </span>
                 ) : (
                   <span className={styles.quyenPending}>
                     <strong>{myScores.length}/5</strong>
-                    <small>{myScores.length > 0 ? "giám định đã chấm" : "Chờ chấm điểm"}</small>
+                    <small>
+                      {myScores.length > 0
+                        ? "giám định đã chấm"
+                        : "Chờ chấm điểm"}
+                    </small>
                   </span>
                 )}
               </div>
