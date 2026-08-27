@@ -141,6 +141,7 @@ export default function ImportExcelModal({
                   <th>Nhóm tuổi</th>
                   <th>Đơn vị</th>
                   <th>Nội dung</th>
+                  <th>Ảnh</th>
                   <th>Ghi chú lỗi</th>
                 </tr>
               </thead>
@@ -167,6 +168,19 @@ export default function ImportExcelModal({
                     <td>{r.nhomTuoi || "—"}</td>
                     <td>{r.donVi || "—"}</td>
                     <td>{r.noiDung.length > 0 ? r.noiDung.join(", ") : "—"}</td>
+                    <td>
+                      {r.anhDaiDien ? (
+                        <a
+                          href={r.anhDaiDien}
+                          target="_blank"
+                          rel="noreferrer"
+                          title={r.anhDaiDien}>
+                          Có ảnh
+                        </a>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
                     <td className={styles.errorCell}>{r.errors.join("; ")}</td>
                   </tr>
                 ))}

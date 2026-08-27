@@ -22,6 +22,12 @@ export default defineConfig({
                 changeOrigin: true,
                 ws: true,
             },
+            // Ảnh VĐV được backend lưu tại wwwroot/uploads. Khi dev,
+            // trình duyệt đang ở Vite :5173 nên phải proxy về backend :5267.
+            "/uploads": {
+                target: "http://localhost:5267",
+                changeOrigin: true,
+            },
         },
     },
     

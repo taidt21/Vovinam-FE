@@ -192,6 +192,30 @@
     }
 }
 
+.btnReset {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-1;
+    padding: $space-2 $space-4;
+    border: 1px solid rgba($color-danger, 0.4);
+    border-radius: 6px;
+    background: rgba($color-danger, 0.06);
+    color: $color-danger;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+        background: rgba($color-danger, 0.12);
+        border-color: rgba($color-danger, 0.6);
+    }
+
+    &:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+    }
+}
+
 .hint {
     font-size: 12px;
     color: $color-text-muted;

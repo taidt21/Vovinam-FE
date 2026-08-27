@@ -13,7 +13,7 @@ export interface Athlete {
   // chỉ mới có chỗ HIỂN THỊ (Bàn thư ký, Màn hình công khai) sẵn sàng dùng
   // ngay khi có dữ liệu thật. Athlete nào chưa có ảnh thì UI tự hiện avatar
   // chữ cái đầu tên (xem components/AthleteAvatar).
-  anhDaiDien?: string;
+  anhDaiDien?: string | null;
 }
 
 // Dạng dữ liệu thô đúng như trong athletes.json — dùng chung cho cả

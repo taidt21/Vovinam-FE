@@ -12,6 +12,7 @@ const HEADER_ALIASES: Record<string, string[]> = {
   nhomTuoi: ['nhom tuoi'],
   donVi: ['don vi', 'doan'],
   noiDung: ['noi dung'],
+  anhDaiDien: ['link anh', 'anh', 'anh dai dien', 'url anh', 'photo url', 'image url'],
 };
 
 export interface ImportRow {
@@ -22,6 +23,7 @@ export interface ImportRow {
   nhomTuoi: string;
   donVi: string;
   noiDung: string[];
+  anhDaiDien: string;
   eventIds: string[];
   errors: string[];
 }
@@ -107,7 +109,12 @@ export function parseWorkbook(
     const donVi = get(row, 'donVi');
     if (!donVi) errors.push('Thiếu đơn vị');
 
-const noiDungRaw = get(row, 'noiDung');
+    // Link ảnh là cột tuỳ chọn do website WordPress xuất ra. Không bắt
+    // buộc phải có ảnh; nếu có thì giữ nguyên URL để backend lưu và các
+    // màn Bàn thư ký / Trọng tài / Màn hình công khai dùng AthleteAvatar.
+    const anhDaiDien = get(row, 'anhDaiDien');
+
+    const noiDungRaw = get(row, 'noiDung');
     const noiDungParts = noiDungRaw ? noiDungRaw.split(/[,;]/).map((s) => s.trim()).filter(Boolean) : [];
     const eventIds: string[] = [];
     for (const part of noiDungParts) {
@@ -135,6 +142,7 @@ const noiDungRaw = get(row, 'noiDung');
       nhomTuoi: nhomTuoiRaw,
       donVi,
       noiDung: noiDungParts,
+      anhDaiDien,
       eventIds,
       errors,
     };
@@ -144,8 +152,16 @@ const noiDungRaw = get(row, 'noiDung');
 }
 
 export function buildTemplateFile(): Blob {
-  const headers = ['Họ tên', 'Năm sinh', 'Giới tính', 'Nhóm tuổi', 'Đơn vị', 'Nội dung'];
-  const example = ['Nguyễn Văn A', 2008, 'Nam', 2, 'Bình Dương', 'Đối kháng nam - 54kg'];
+  const headers = ['Họ tên', 'Năm sinh', 'Giới tính', 'Nhóm tuổi', 'Đơn vị', 'Nội dung', 'Link ảnh'];
+  const example = [
+    'Nguyễn Văn A',
+    2008,
+    'Nam',
+    2,
+    'Bình Dương',
+    'Đối kháng nam - 54kg',
+    'https://example.com/uploads/nguyen-van-a.jpg',
+  ];
   const ws = XLSX.utils.aoa_to_sheet([headers, example]);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'VĐV');

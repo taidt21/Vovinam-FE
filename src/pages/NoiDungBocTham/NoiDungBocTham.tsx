@@ -1,7 +1,7 @@
 /** @format */
 
 import { useEffect, useMemo, useState } from "react";
-import { Shuffle, CheckCircle2, FileDown } from "lucide-react";
+import { Shuffle, CheckCircle2, FileDown, RotateCcw } from "lucide-react";
 import type {
   Athlete,
   AthleteRecord,
@@ -162,14 +162,18 @@ const LOAI_LABEL = {
 
 function BocThamButton({
   onClick,
+  onReset,
   count,
   hasResult,
   itemLabel,
+  resetting = false,
 }: {
   onClick: () => void;
+  onReset: () => void;
   count: number;
   hasResult: boolean;
   itemLabel: string;
+  resetting?: boolean;
 }) {
   // Chỉ Admin mới được bốc thăm — backend cũng đã tự chặn nếu ai đó cố
   // gọi thẳng API, đây chỉ để giao diện không hiện nút vô dụng.
@@ -190,9 +194,18 @@ function BocThamButton({
       <button
         className={styles.btnPrimary}
         onClick={handleClick}
-        disabled={disabled}>
+        disabled={disabled || resetting}>
         <Shuffle size={16} /> {hasResult ? "Bốc thăm lại" : "Bốc thăm"}
       </button>
+      {hasResult && (
+        <button
+          className={styles.btnReset}
+          onClick={onReset}
+          disabled={resetting}>
+          <RotateCcw size={16} />
+          {resetting ? "Đang reset..." : "Reset bốc thăm"}
+        </button>
+      )}
       {disabled && (
         <span className={styles.hint}>
           Cần tối thiểu 2 {itemLabel} để bốc thăm
@@ -220,6 +233,7 @@ export default function NoiDungBocTham() {
   const [squadOrderByEvent, setSquadOrderByEvent] = useState<
     Record<string, Squad[]>
   >({});
+  const [resettingEventId, setResettingEventId] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -379,6 +393,56 @@ export default function NoiDungBocTham() {
       window.alert(
         "Lưu thứ tự thi diễn thất bại — kiểm tra backend đã chạy chưa",
       );
+    }
+  };
+
+  const handleResetBocTham = async () => {
+    if (!selected || !laAdmin() || resettingEventId) return;
+
+    const loaiDuLieu =
+      selected.loai === "doi_khang"
+        ? "toàn bộ sơ đồ và các trận đối kháng"
+        : "toàn bộ thứ tự thi diễn";
+
+    const confirmed = window.confirm(
+      `Reset bốc thăm nội dung “${selected.ten}”?\n\nThao tác này sẽ xóa ${loaiDuLieu} của nội dung này. Danh sách VĐV/đội đăng ký vẫn được giữ nguyên.`,
+    );
+    if (!confirmed) return;
+
+    setResettingEventId(selected.id);
+    try {
+      if (selected.loai === "doi_khang") {
+        await apiPut(`/matches/by-event/${selected.id}`, []);
+        setBracketsByEvent((prev) => {
+          const next = { ...prev };
+          delete next[selected.id];
+          return next;
+        });
+      } else {
+        await apiPut(`/performance-orders/by-event/${selected.id}`, []);
+
+        if (selected.hinhThucThi === "doi") {
+          setSquadOrderByEvent((prev) => {
+            const next = { ...prev };
+            delete next[selected.id];
+            return next;
+          });
+        } else {
+          setOrderByEvent((prev) => {
+            const next = { ...prev };
+            delete next[selected.id];
+            return next;
+          });
+        }
+      }
+    } catch (error) {
+      window.alert(
+        error instanceof Error
+          ? `Reset bốc thăm thất bại: ${error.message}`
+          : "Reset bốc thăm thất bại — kiểm tra backend đã chạy chưa",
+      );
+    } finally {
+      setResettingEventId(null);
     }
   };
 
@@ -549,9 +613,11 @@ export default function NoiDungBocTham() {
                 <>
                   <BocThamButton
                     onClick={handleBocTham}
+                    onReset={handleResetBocTham}
                     count={athletesOfSelected.length}
                     hasResult={!!bracket}
                     itemLabel="VĐV đăng ký"
+                    resetting={resettingEventId === selected.id}
                   />
                   <BracketView
                     matches={bracket ?? []}
@@ -564,9 +630,11 @@ export default function NoiDungBocTham() {
                 <>
                   <BocThamButton
                     onClick={handleBocThamSquads}
+                    onReset={handleResetBocTham}
                     count={squadsOfSelected.length}
                     hasResult={!!squadOrder}
                     itemLabel="đội"
+                    resetting={resettingEventId === selected.id}
                   />
                   {squadOrder && (
                     <div className={styles.registeredSection}>
@@ -588,9 +656,11 @@ export default function NoiDungBocTham() {
                 <>
                   <BocThamButton
                     onClick={handleBocThamQuyen}
+                    onReset={handleResetBocTham}
                     count={athletesOfSelected.length}
                     hasResult={!!order}
                     itemLabel="VĐV đăng ký"
+                    resetting={resettingEventId === selected.id}
                   />
                   {order && (
                     <div className={styles.registeredSection}>

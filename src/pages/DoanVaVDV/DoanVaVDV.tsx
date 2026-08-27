@@ -18,6 +18,7 @@ import { laAdmin } from "../../lib/api/adminAuth";
 import { NHOM_TUOI_OPTIONS } from "../../lib/utils/nhomTuoi";
 import Modal from "../../components/Modal/Modal";
 import ImportExcelModal from "../../components/ImportExcelModal/ImportExcelModal";
+import AthleteAvatar from "../../components/AthleteAvatar/AthleteAvatar";
 import type { ImportRow } from "../../lib/excel/excelImport";
 import { fetchEvents } from "../../lib/api/eventsApi";
 import { formatEventNhomTuoi } from "../../lib/utils/nhomTuoi";
@@ -40,6 +41,7 @@ interface Athlete {
   nhomTuoi: number;
   teamId: string;
   eventIds: string[];
+  anhDaiDien: string | null;
 }
 
 type AthleteFormState = Omit<Athlete, "id">;
@@ -51,6 +53,7 @@ const EMPTY_ATHLETE_FORM: AthleteFormState = {
   nhomTuoi: NHOM_TUOI_OPTIONS[0],
   teamId: "",
   eventIds: [],
+  anhDaiDien: null,
 };
 
 const PAGE_SIZE = 8;
@@ -167,6 +170,7 @@ export default function DoanVaVDV() {
       nhomTuoi: athlete.nhomTuoi,
       teamId: athlete.teamId,
       eventIds: athlete.eventIds,
+      anhDaiDien: athlete.anhDaiDien ?? null,
     });
     setShowAddAthlete(true);
   };
@@ -292,6 +296,7 @@ export default function DoanVaVDV() {
             NHOM_TUOI_OPTIONS[0],
           teamId,
           eventIds: r.eventIds,
+          anhDaiDien: r.anhDaiDien || null,
         });
       }
 
@@ -553,11 +558,11 @@ export default function DoanVaVDV() {
                   <tr key={a.id}>
                     <td>
                       <div className={styles.athleteIdentity}>
-                        <span
-                          className={styles.athleteAvatar}
-                          aria-hidden="true">
-                          {a.hoTen.trim().charAt(0).toUpperCase()}
-                        </span>
+                        <AthleteAvatar
+                          name={a.hoTen}
+                          photoUrl={a.anhDaiDien}
+                          size={40}
+                        />
                         <div>
                           <strong className={styles.athleteName}>
                             {a.hoTen}
@@ -755,6 +760,20 @@ export default function DoanVaVDV() {
                   </option>
                 ))}
               </select>
+            </label>
+            <label className={styles.field}>
+              <span>Link ảnh</span>
+              <input
+                type="url"
+                placeholder="https://.../anh-vdv.jpg"
+                value={athleteForm.anhDaiDien ?? ""}
+                onChange={(e) =>
+                  setAthleteForm({
+                    ...athleteForm,
+                    anhDaiDien: e.target.value.trim() || null,
+                  })
+                }
+              />
             </label>
             <label className={styles.field}>
               <span>Đoàn</span>
