@@ -43,6 +43,7 @@ export default function ThietLapGiai() {
     heSoBac: 20,
     heSoDong: 10,
     choPhepDongHangBaQuyen: true,
+    cuaSoDongThuanGiay: 1.5,
   });
   const [savingTournament, setSavingTournament] = useState(false);
 
@@ -73,6 +74,7 @@ export default function ThietLapGiai() {
           heSoBac: t.heSoBac,
           heSoDong: t.heSoDong,
           choPhepDongHangBaQuyen: t.choPhepDongHangBaQuyen,
+          cuaSoDongThuanGiay: t.cuaSoDongThuanGiay,
         });
       })
       .catch(() =>
@@ -391,6 +393,35 @@ export default function ThietLapGiai() {
                 </span>
               </label>
 
+              <div className={styles.ruleOption}>
+                <div className={styles.ruleOptionMain}>
+                  <div>
+                    <strong>Cửa sổ đồng thuận đối kháng</strong>
+                    <span>
+                      Đủ 3/5 trọng tài bấm cùng màu (đỏ/xanh) trong đúng khoảng
+                      thời gian này thì hệ thống chốt điểm ngay.
+                    </span>
+                  </div>
+                </div>
+                <span className={styles.coefficientInput}>
+                  <input
+                    type="number"
+                    min={0.5}
+                    max={5}
+                    step={0.1}
+                    aria-label="Cửa sổ đồng thuận (giây)"
+                    value={form.cuaSoDongThuanGiay}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        cuaSoDongThuanGiay: Number(e.target.value),
+                      })
+                    }
+                  />
+                  <span>giây</span>
+                </span>
+              </div>
+
               <label className={styles.ruleOption}>
                 <div className={styles.ruleOptionMain}>
                   <input
@@ -408,10 +439,10 @@ export default function ThietLapGiai() {
                     <span />
                   </span>
                   <div>
-                    <strong>Đồng hạng ba nội dung Quyền</strong>
+                    <strong>Đồng huy chương đồng nội dung Quyền</strong>
                     <span>
-                      Hai lượt bằng điểm tổng có thể cùng nhận HCĐ; nếu tắt, hệ
-                      thống xét tiếp điểm giám khảo cao nhất.
+                      Hạng 4 cũng nhận HCĐ như hạng 3, dù điểm thấp hơn. Chỉ áp
+                      dụng cho Quyền, không áp dụng cho Đối kháng.
                     </span>
                   </div>
                 </div>

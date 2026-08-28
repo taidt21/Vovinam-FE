@@ -7,6 +7,7 @@ export interface Tournament {
   heSoBac: number;
   heSoDong: number;
   choPhepDongHangBaQuyen: boolean;
+  cuaSoDongThuanGiay: number;
 }
 
 export interface Team {

@@ -1,7 +1,7 @@
 /** @format */
 
 import { useEffect, useState } from "react";
-import { Play, Pause, Flag, Award, Check } from "lucide-react";
+import { Play, Pause, Flag, Award, Check, X } from "lucide-react";
 import type {
   LiveQuyenState,
   LyDoKetThucQuyen,
@@ -13,6 +13,11 @@ import {
   subscribeQuyenState,
   tinhThoiGianDaTroi,
 } from "../../../lib/realtime/liveQuyenStore";
+import {
+  getCourtResting,
+  publishCourtResting,
+  subscribeCourtResting,
+} from "../../../lib/realtime/courtRestingStore";
 import { serverNow } from "../../../lib/realtime/serverClock";
 import {
   markQuyenLuotHoanThanh,
@@ -53,10 +58,17 @@ export default function DieuHanhQuyenTab({
   const [, setTick] = useState(0);
   const [showEndFlow, setShowEndFlow] = useState(false);
   const [lyDo, setLyDo] = useState<LyDoKetThucQuyen>("hoan_thanh");
+  const [dangNghi, setDangNghiState] = useState(() =>
+    getCourtResting(courtId, "quyen"),
+  );
 
   useEffect(() => {
     setLive(getQuyenSnapshot(courtId));
     return subscribeQuyenState(courtId, setLive);
+  }, [courtId]);
+
+  useEffect(() => {
+    return subscribeCourtResting(courtId, "quyen", setDangNghiState);
   }, [courtId]);
 
   useEffect(() => {
@@ -67,11 +79,29 @@ export default function DieuHanhQuyenTab({
   if (!live) {
     return (
       <div className={styles.noMatch}>
-        Chưa có ai đang thi ở khu vực này — sang tab "Lịch thi đấu quyền" và bấm
-        "Bắt đầu" ở 1 lượt để đưa vào đây.
+        {dangNghi ? (
+          <p>
+            Sân đang được cho nghỉ — nên chọn 1 lượt thi trong danh sách nếu
+            muốn bắt đầu.
+          </p>
+        ) : (
+          <p>
+            Chưa có ai đang thi ở khu vực này — sang tab "Lịch thi đấu quyền"
+            và bấm "Bắt đầu" ở 1 lượt để đưa vào đây.
+          </p>
+        )}
       </div>
     );
   }
+
+  // Gỡ lượt "cho_bat_dau" (đã đưa vào sân, chưa bấm bắt đầu) khỏi sân —
+  // quyền không có bản ghi DB nào cần trả lại (khác đối kháng), nên chỉ
+  // cần xoá state sống rồi báo tạm ngưng tự nhận lượt kế tiếp cho ĐÚNG
+  // bên quyền.
+  const boLuotChoBatDau = () => {
+    clearQuyenState(courtId);
+    publishCourtResting(courtId, "quyen", true);
+  };
 
   const patch = (p: Partial<LiveQuyenState>) => {
     const next = { ...live, ...p, capNhatLuc: Date.now() };
@@ -330,11 +360,19 @@ export default function DieuHanhQuyenTab({
 
               <div className={styles.quyenTimerActions}>
                 {live.trangThai === "cho_bat_dau" && (
-                  <button
-                    className={`${styles.timerBtn} ${styles.timerBtnPrimary}`}
-                    onClick={batDau}>
-                    <Play size={16} /> Bắt đầu lượt thi
-                  </button>
+                  <>
+                    <button
+                      className={`${styles.timerBtn} ${styles.timerBtnPrimary}`}
+                      onClick={batDau}>
+                      <Play size={16} /> Bắt đầu lượt thi
+                    </button>
+                    <button
+                      className={styles.dropMatchBtn}
+                      onClick={boLuotChoBatDau}
+                      title="Gỡ lượt này khỏi sân, cho sân nghỉ">
+                      <X size={15} /> Bỏ, cho sân nghỉ
+                    </button>
+                  </>
                 )}
                 {dangThi && (
                   <button className={styles.timerBtn} onClick={tamDung}>

@@ -1,5 +1,5 @@
 @use '../../styles/variables'as *;
-@use '../../styles/admin-ui' as admin;
+@use '../../styles/admin-ui'as admin;
 
 .page {
     display: flex;
@@ -328,6 +328,28 @@
     border-radius: 10px;
     padding: $space-6;
     text-align: center;
+
+    p {
+        margin: 0 0 $space-4;
+    }
+}
+
+.dropMatchBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    padding: $space-2 $space-4;
+    border: 1px solid $color-border;
+    color: $color-text-muted;
+    background: none;
+    border-radius: 8px;
+    cursor: pointer;
+
+    &:hover {
+        background: $color-bg;
+    }
 }
 
 .dieuHanh {
@@ -648,6 +670,7 @@
 .timerBtnRow {
     display: flex;
     gap: $space-2;
+    flex-direction: column;
 }
 
 .restartBtn {
@@ -3061,6 +3084,7 @@
         max-width: none;
     }
 }
+
 /* ========================================================================== */
 /* Shared Admin UI normalization                                               */
 /* ========================================================================== */

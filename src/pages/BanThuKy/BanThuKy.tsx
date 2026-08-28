@@ -41,6 +41,11 @@ import {
   getActiveMode,
   publishActiveMode,
 } from "../../lib/realtime/activeModeStore";
+import {
+  getCourtResting,
+  publishCourtResting,
+  subscribeCourtResting,
+} from "../../lib/realtime/courtRestingStore";
 import { getConnection } from "../../lib/realtime/matchHubConnection";
 
 import {
@@ -109,6 +114,24 @@ export default function BanThuKy() {
   const ganSan = getGanSan();
   const [currentCourtId, setCurrentCourtId] = useState(ganSan ?? "");
   const [tournament, setTournament] = useState<Tournament | null>(null);
+  const [dangNghiDoiKhang, setDangNghiDoiKhang] = useState(false);
+  const [dangNghiQuyen, setDangNghiQuyen] = useState(false);
+
+  useEffect(() => {
+    if (!currentCourtId) return;
+    setDangNghiDoiKhang(getCourtResting(currentCourtId, "doi_khang"));
+    return subscribeCourtResting(
+      currentCourtId,
+      "doi_khang",
+      setDangNghiDoiKhang,
+    );
+  }, [currentCourtId]);
+
+  useEffect(() => {
+    if (!currentCourtId) return;
+    setDangNghiQuyen(getCourtResting(currentCourtId, "quyen"));
+    return subscribeCourtResting(currentCourtId, "quyen", setDangNghiQuyen);
+  }, [currentCourtId]);
 
   useEffect(() => {
     const refreshTournament = () =>
@@ -407,6 +430,10 @@ export default function BanThuKy() {
         live?.trangThai === "tam_dung";
       if (dangDienRaThat) return;
     }
+    // Bắt đầu thủ công từ tab Lịch thi đấu — dù sân đang để nghỉ cũng cho
+    // qua luôn (BTC chủ động chọn trận cụ thể), chỉ tự tắt cờ nghỉ bên
+    // đối kháng lại cho khỏi mâu thuẫn (đang nghỉ mà lại có trận).
+    if (dangNghiDoiKhang) publishCourtResting(currentCourtId, "doi_khang", false);
     const match = bracketsByEvent[eventId]?.find((m) => m.id === matchId);
     const event = eventOf(eventId);
     if (!match || !event) return;
@@ -642,6 +669,9 @@ export default function BanThuKy() {
   const startQuyenPerformance = (item: QuyenItem) => {
     if (!currentCourtId) return;
     if (!chuyenActiveMode(currentCourtId, "quyen")) return;
+    // Cùng lý do bên đối kháng — bắt đầu thủ công thì tự tắt cờ nghỉ bên
+    // quyền.
+    if (dangNghiQuyen) publishCourtResting(currentCourtId, "quyen", false);
     const photoUrl = item.athleteId ? athletePhoto(item.athleteId) : null;
     const coGioiHan = item.event.thoiGianBaiGiay != null;
     const state: LiveQuyenState = {
@@ -667,7 +697,7 @@ export default function BanThuKy() {
   };
 
   useEffect(() => {
-    if (tab !== "dieu_hanh_dk" || activeOnMyCourt) return;
+    if (tab !== "dieu_hanh_dk" || activeOnMyCourt || dangNghiDoiKhang) return;
     // Trước đây tìm trận "cho_thi" kế tiếp trong TOÀN BỘ danh sách trận,
     // không phân biệt sân — nên nếu sân này xong trận trước, mà trận kế
     // tiếp trong danh sách lại đang định dành cho sân KHÁC (chưa kịp bắt
@@ -676,18 +706,30 @@ export default function BanThuKy() {
     // k (0-based) trong N sân chỉ nhận trận có (so - 1) % N === k — với
     // đúng 2 sân thì ra chính xác lẻ/chẵn như quy ước đang dùng.
     const courtIndex = courts.findIndex((c) => c.id === currentCourtId);
+    const dungPhanCuaSan = (so: number) =>
+      courtIndex < 0 || courts.length === 0
+        ? true
+        : (so - 1) % courts.length === courtIndex;
+
+    // Lỡ phải thi trận số lớn hơn TRƯỚC (VD trận 5 trước trận 1, cùng
+    // phần của sân này) thì next không lùi lại nhận trận 1 nữa — đi tiếp
+    // lên trận 6. Trận bị bỏ qua (1) chờ xếp lại thủ công riêng ở tab
+    // "Lịch thi đấu đối kháng", không tự động chen vào giữa chừng.
+    const soCaoNhatDaThi = numbered
+      .filter((x) => dungPhanCuaSan(x.so) && x.match.trangThai !== "cho_thi")
+      .reduce((max, x) => Math.max(max, x.so), 0);
+
     const next = numbered.find(
       ({ match, so }) =>
         match.trangThai === "cho_thi" &&
         match.athleteRedId &&
         match.athleteBlueId &&
-        (courtIndex < 0 || courts.length === 0
-          ? true
-          : (so - 1) % courts.length === courtIndex),
+        so > soCaoNhatDaThi &&
+        dungPhanCuaSan(so),
     );
     if (next) openIntoCourt(next.event.id, next.match.id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, activeOnMyCourt, numbered, courts, currentCourtId]);
+  }, [tab, activeOnMyCourt, dangNghiDoiKhang, numbered, courts, currentCourtId]);
 
   // "Đã xong" giờ theo đúng dữ liệu lưu thật (quyenLuotHoanThanh) — không
   // chỉ suy từ đủ 5/5 điểm nữa, vì luật cho phép 1 lượt kết thúc ngay mà
@@ -716,25 +758,66 @@ export default function BanThuKy() {
     );
   }, [currentCourtId]);
 
+  // Nút "X — Bỏ, cho sân nghỉ" trong DieuHanhDoiKhangTab chỉ hiện đúng
+  // lúc "cho_bat_dau" (đã gán vào sân, hiện tên 2 VĐV, nhưng CHƯA bấm
+  // giờ bắt đầu) nên không cần tự kiểm tra lại ở đây — trả trận đó về
+  // lại "cho_thi" trong DB (không thì DB vẫn nghĩ sân này đang giữ 1
+  // trận, còn UI thì trống, lệch nhau), xoá state sống, rồi báo tạm
+  // ngưng tự nhận trận kế tiếp cho ĐÚNG bên đối kháng.
+  const boTranChoBatDauDoiKhang = () => {
+    const current = activeOfCourt(currentCourtId);
+    if (!current) return;
+    const eventId = Object.keys(bracketsByEvent).find((eid) =>
+      bracketsByEvent[eid].some((m) => m.id === current.id),
+    );
+    const match = eventId
+      ? bracketsByEvent[eventId].find((m) => m.id === current.id)
+      : undefined;
+    if (!match || !eventId) return;
+
+    const updated: Match = { ...match, trangThai: "cho_thi", courtId: null };
+    setBracketsByEvent((prev) => ({
+      ...prev,
+      [eventId]: (prev[eventId] ?? []).map((m) =>
+        m.id === updated.id ? updated : m,
+      ),
+    }));
+    clearMatchState(currentCourtId);
+    publishCourtResting(currentCourtId, "doi_khang", true);
+    updateMatch(updated.id, updated).catch(() => {});
+  };
+
   useEffect(() => {
-    if (tab !== "dieu_hanh_quyen" || !currentCourtId) return;
+    if (tab !== "dieu_hanh_quyen" || !currentCourtId || dangNghiQuyen) return;
     if (getQuyenSnapshot(currentCourtId)) return;
     // Cùng lý do như bên đối kháng — trước đây không lọc theo sân, có
     // thể cướp mất lượt thi đang định dành cho sân khác. Cùng cách chia
     // vòng tròn theo N sân.
     const courtIndex = courts.findIndex((c) => c.id === currentCourtId);
+    const dungPhanCuaSan = (so: number) =>
+      courtIndex < 0 || courts.length === 0
+        ? true
+        : (so - 1) % courts.length === courtIndex;
+
+    // Cùng logic bên đối kháng: lượt nào đã xong rồi (kể cả thi sớm hơn
+    // dự kiến) thì next không lùi lại nhận lượt nhỏ hơn còn chờ trong
+    // cùng phần của sân này nữa — đi tiếp lên từ số lớn nhất đã xong.
+    const soCaoNhatDaXong = quyenNumbered
+      .filter((item) => dungPhanCuaSan(item.so) && daHoanThanhQuyen(item))
+      .reduce((max, item) => Math.max(max, item.so), 0);
+
     const next = quyenNumbered.find(
       (item) =>
         !daHoanThanhQuyen(item) &&
-        (courtIndex < 0 || courts.length === 0
-          ? true
-          : (item.so - 1) % courts.length === courtIndex),
+        item.so > soCaoNhatDaXong &&
+        dungPhanCuaSan(item.so),
     );
     if (next) startQuyenPerformance(next);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     tab,
     currentCourtId,
+    dangNghiQuyen,
     quyenNumbered,
     quyenJudgeScores,
     quyenLuotHoanThanh,
@@ -856,9 +939,18 @@ export default function BanThuKy() {
       {tab === "dieu_hanh_dk" &&
         (!activeOnMyCourt || !activeEvent ? (
           <div className={styles.noMatch}>
-            Sân đang trống — hiện chưa có trận nào đủ 2 VĐV và sẵn sàng để tự
-            động bắt đầu. Xem tab "Lịch thi đấu đối kháng" để biết đang chờ gì,
-            hoặc bấm "Bắt đầu" thủ công ở 1 trận cụ thể.
+            {dangNghiDoiKhang ? (
+              <p>
+                Sân đang được cho nghỉ — nên chọn 1 trận đấu trong danh sách
+                nếu muốn bắt đầu.
+              </p>
+            ) : (
+              <p>
+                Sân đang trống — hiện chưa có trận nào đủ 2 VĐV và sẵn sàng để
+                tự động bắt đầu. Xem tab "Lịch thi đấu đối kháng" để biết đang
+                chờ gì, hoặc bấm "Bắt đầu" thủ công ở 1 trận cụ thể.
+              </p>
+            )}
           </div>
         ) : (
           <DieuHanhDoiKhangTab
@@ -871,6 +963,7 @@ export default function BanThuKy() {
             onEndMatch={(lyDo, thang) =>
               finishMatch(activeOnMyCourt, activeEvent.id, lyDo, thang)
             }
+            onGoTranChoBatDau={boTranChoBatDauDoiKhang}
             choPhepHiepPhu={tournament?.choPhepHiepPhu ?? false}
           />
         ))}

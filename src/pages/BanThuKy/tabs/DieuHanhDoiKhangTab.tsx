@@ -12,6 +12,7 @@ import {
   RotateCcw,
   Award,
   Check,
+  X,
 } from "lucide-react";
 import type { LiveMatchState, LyDoKetThuc, Match } from "../../../types";
 import {
@@ -46,6 +47,7 @@ export default function DieuHanhDoiKhangTab({
   athleteName,
   athleteTeam,
   onEndMatch,
+  onGoTranChoBatDau,
   choPhepHiepPhu,
 }: {
   match: Match;
@@ -54,6 +56,7 @@ export default function DieuHanhDoiKhangTab({
   athleteName: (id: string | null) => string | null;
   athleteTeam: (id: string | null) => string;
   onEndMatch: (lyDo: LyDoKetThuc, thang: "do" | "xanh") => void;
+  onGoTranChoBatDau: () => void;
   choPhepHiepPhu: boolean;
 }) {
   const courtId = match.courtId!;
@@ -394,9 +397,17 @@ export default function DieuHanhDoiKhangTab({
                 {formatMmSs(remaining)}
               </span>
               {live.trangThai === "cho_bat_dau" && (
-                <button className={styles.timerBtn} onClick={batDauHiep}>
-                  <Play size={15} /> Bắt đầu hiệp 1
-                </button>
+                <div className={styles.timerBtnRow}>
+                  <button className={styles.timerBtn} onClick={batDauHiep}>
+                    <Play size={15} /> Bắt đầu hiệp 1
+                  </button>
+                  <button
+                    className={styles.dropMatchBtn}
+                    onClick={onGoTranChoBatDau}
+                    title="Gỡ trận này khỏi sân, cho sân nghỉ">
+                    <X size={15} /> Bỏ, cho sân nghỉ
+                  </button>
+                </div>
               )}
               {dangChay && !hetGio && (
                 <div className={styles.timerBtnRow}>

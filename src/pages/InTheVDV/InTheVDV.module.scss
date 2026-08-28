@@ -1,0 +1,229 @@
+@use '../../styles/variables' as *;
+
+.page {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: $space-5;
+}
+
+.hint {
+    color: $color-text-muted;
+    font-size: 14px;
+}
+
+.toolbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: $space-4;
+    margin-bottom: $space-5;
+}
+
+.searchBox {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    height: $control-height;
+    padding: 0 $space-4;
+    border: 1px solid $color-border;
+    border-radius: $radius-sm;
+    background: $color-surface;
+    color: $color-text-soft;
+
+    input {
+        min-width: 220px;
+        border: none;
+        outline: none;
+        background: transparent;
+        color: $color-text;
+        font-size: 14px;
+    }
+}
+
+.sizeBox {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    height: $control-height;
+    padding: 0 $space-4;
+    border: 1px solid $color-border;
+    border-radius: $radius-sm;
+    background: $color-surface;
+    color: $color-text-muted;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.sizeInput {
+    width: 56px;
+    padding: $space-1 $space-2;
+    border: 1px solid $color-border;
+    border-radius: $radius-xs;
+    color: $color-text;
+    font-size: 14px;
+    text-align: center;
+
+    &:focus {
+        outline: none;
+        border-color: $color-do;
+        box-shadow: $focus-ring;
+    }
+}
+
+.sizeHint {
+    color: $color-text-soft;
+    font-size: 12px;
+}
+
+.exportBtn {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    padding: $space-3 $space-5;
+    border: none;
+    border-radius: $radius-sm;
+    background: $color-do;
+    color: white;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+}
+
+.exportLoi {
+    flex-basis: 100%;
+    color: $color-danger;
+    font-size: 13px;
+}
+
+.cardGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: $space-6 $space-5;
+}
+
+.cardWrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $space-2;
+}
+
+.cardCaption {
+    margin: 0;
+    color: $color-text-muted;
+    font-size: 13px;
+    text-align: center;
+}
+
+// Khung thẻ đúng tỉ lệ file gốc (921 x 1298px, ~ khổ A4 đứng) — mọi vị
+// trí bên dưới tính theo % của khung này nên phóng to/thu nhỏ thế nào
+// vẫn đúng chỗ. container-type để .card tự set 1 đơn vị "cqw" dùng
+// chung cho cỡ chữ, khỏi phải quy đổi riêng lúc thẻ hiện nhỏ (xem trước)
+// hay lúc html2canvas chụp lại để xuất PDF.
+.cardWrap {
+    container-type: inline-size;
+}
+
+.card {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 921 / 1298;
+    overflow: hidden;
+    border-radius: $radius-sm;
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    box-shadow: $shadow-card;
+    font-size: 3cqw;
+}
+
+// Đo trực tiếp trên file mẫu: viền đen ô ảnh ở x 310-610 / y 435-843
+// trên nền 921x1298 — trừ hao viền còn lại vùng dán ảnh 313-607 / 438-840.
+.photoBox {
+    position: absolute;
+    top: 33.75%;
+    left: 33.98%;
+    width: 31.92%;
+    height: 30.97%;
+    overflow: hidden;
+    background: $color-bg;
+}
+
+.photoImg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.photoFallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    color: $color-text-soft;
+    font-size: 4.8em;
+    font-weight: 800;
+}
+
+// 3 dòng "Họ và tên / Lứa tuổi / Đơn vị" — top/height đo theo đúng dải
+// chữ in sẵn trên thẻ (896-930 / 974-1009 / 1053-1088 trên nền cao
+// 1298px), left canh sau chữ nhãn dài nhất ("Họ và tên:") để 3 giá trị
+// thẳng hàng với nhau.
+.field {
+    position: absolute;
+    left: 32.6%;
+    right: 6%;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    color: #1a1a1a;
+    font-weight: 700;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.fieldHoTen {
+    top: 69.03%;
+    height: 2.62%;
+}
+
+.fieldNhomTuoi {
+    top: 75.04%;
+    height: 2.70%;
+}
+
+.fieldDonVi {
+    top: 81.13%;
+    height: 2.70%;
+}
+
+@media (max-width: 560px) {
+    .page {
+        padding: $space-3;
+    }
+
+    .searchBox input {
+        min-width: 140px;
+    }
+
+    .sizeBox {
+        flex-wrap: wrap;
+        height: auto;
+        padding: $space-2 $space-3;
+    }
+
+    .sizeHint {
+        flex-basis: 100%;
+    }
+
+    .exportBtn {
+        width: 100%;
+        justify-content: center;
+    }
+}
