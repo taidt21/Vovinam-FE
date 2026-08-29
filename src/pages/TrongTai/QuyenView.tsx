@@ -170,7 +170,9 @@ function QuyenScoringPanel({
           </div>
           <div className={styles.performerSub}>{live?.performerSub ?? ""}</div>
           {live?.thanhVien && live.thanhVien.length > 0 && (
-            <div className={styles.thanhVien}>{live.thanhVien.join(" - ")}</div>
+            <div className={styles.thanhVien}>
+              {live.thanhVien.map((t) => t.hoTen).join(" - ")}
+            </div>
           )}
         </div>
       </div>

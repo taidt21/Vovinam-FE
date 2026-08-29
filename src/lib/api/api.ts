@@ -54,6 +54,17 @@ export function apiPut<T>(path: string, body: unknown): Promise<T> {
   }).then((r) => handle<T>(r));
 }
 
+// Upload file (multipart/form-data) — KHÔNG tự set Content-Type như
+// apiPost, để trình duyệt tự thêm đúng boundary; set tay vào là hỏng
+// luôn request.
+export function apiUpload<T>(path: string, formData: FormData): Promise<T> {
+  return fetch(`${BASE}${path}`, {
+    method: 'POST',
+    headers: authHeaders(),
+    body: formData,
+  }).then((r) => handle<T>(r));
+}
+
 export function apiDelete(path: string): Promise<void> {
   return fetch(`${BASE}${path}`, { method: 'DELETE', headers: authHeaders() }).then((r) => handle<void>(r));
 }

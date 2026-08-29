@@ -6,8 +6,8 @@ import styles from "./AthleteAvatar.module.scss";
 // Người Việt xưng hô bằng TÊN (từ cuối cùng trong họ tên đầy đủ), nên lấy
 // chữ cái đầu của từ cuối làm avatar mặc định — ví dụ "Nguyễn Minh Khang"
 // → "K", chứ không phải "N".
-function initialsOf(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
+function initialsOf(name: string | null | undefined): string {
+  const parts = (name ?? "").trim().split(/\s+/).filter(Boolean);
   const last = parts[parts.length - 1] ?? "";
   return last.slice(0, 1).toUpperCase() || "?";
 }

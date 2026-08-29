@@ -120,11 +120,11 @@
     text-align: center;
 }
 
-// Khung thẻ đúng tỉ lệ file gốc (921 x 1298px, ~ khổ A4 đứng) — mọi vị
-// trí bên dưới tính theo % của khung này nên phóng to/thu nhỏ thế nào
-// vẫn đúng chỗ. container-type để .card tự set 1 đơn vị "cqw" dùng
-// chung cho cỡ chữ, khỏi phải quy đổi riêng lúc thẻ hiện nhỏ (xem trước)
-// hay lúc html2canvas chụp lại để xuất PDF.
+// Khung thẻ đúng tỉ lệ file gốc (3329 x 4616px, mẫu chính thức — trước
+// là bản demo 921 x 1298px) — mọi vị trí bên dưới tính theo % của khung
+// này nên phóng to/thu nhỏ thế nào vẫn đúng chỗ. container-type để .card
+// tự set 1 đơn vị "cqw" dùng chung cho cỡ chữ, khỏi phải quy đổi riêng
+// lúc thẻ hiện nhỏ (xem trước) hay lúc html2canvas chụp lại để xuất PDF.
 .cardWrap {
     container-type: inline-size;
 }
@@ -132,24 +132,82 @@
 .card {
     position: relative;
     width: 100%;
-    aspect-ratio: 921 / 1298;
+    aspect-ratio: 3329 / 4616;
     overflow: hidden;
     border-radius: $radius-sm;
-    background-repeat: no-repeat;
-    background-size: 100% 100%;
     box-shadow: $shadow-card;
     font-size: 3cqw;
 }
 
-// Đo trực tiếp trên file mẫu: viền đen ô ảnh ở x 310-610 / y 435-843
-// trên nền 921x1298 — trừ hao viền còn lại vùng dán ảnh 313-607 / 438-840.
+// Ảnh nền dùng thẻ <img> thật thay vì CSS background-image — html2canvas
+// (chụp lại thẻ lúc xuất PDF) vẽ background-image kém nét hẳn ở scale
+// cao so với <img> thật, dù trên màn hình xem trước cả 2 kiểu trông y
+// hệt nhau. object-fit: fill để giữ đúng hành vi "phủ kín, đúng tỉ lệ
+// khung" như background-size: 100% 100% trước đó — khung card đã đúng
+// tỉ lệ ảnh gốc (3329/4616) nên không bị méo.
+.cardBg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: fill;
+}
+
+// Tiêu đề + logo do BTC tự nhập ở Thiết lập giải (mẫu gốc không in cứng
+// tên giải/logo nào) — đặt trong khoảng trống phía trên khung ảnh (khung
+// ảnh bắt đầu từ 33.92%), không đụng gì tới hoạ tiết trống đồng nền gốc.
+// Không nhập tiêu đề/logo thì 2 khối này không render (xem InTheVDV.tsx),
+// thẻ trông y hệt lúc chưa có tính năng này.
+.tieuDe {
+    position: absolute;
+    top: 3%;
+    left: 8%;
+    right: 8%;
+    height: 13%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    color: #fff;
+    font-size: 1.5em;
+    font-weight: 800;
+    line-height: 1.25;
+    text-align: center;
+    text-shadow:
+        0 0 0.15em rgba(0, 20, 80, 0.9),
+        0 0.05em 0.1em rgba(0, 0, 0, 0.6);
+    white-space: pre-line;
+}
+
+.logoRow {
+    position: absolute;
+    top: 17%;
+    left: 8%;
+    right: 8%;
+    height: 13%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3%;
+}
+
+.logoAnh {
+    height: 100%;
+    flex: 0 1 auto;
+    min-width: 0;
+    object-fit: contain;
+}
+
+// Đo trực tiếp trên file mẫu chính thức: vùng dán ảnh (bên trong khung
+// vàng) ở x 1069-2269 / y 1566-3171 trên nền 3329x4616.
 .photoBox {
     position: absolute;
-    top: 33.75%;
-    left: 33.98%;
-    width: 31.92%;
-    height: 30.97%;
+    top: 33.92%;
+    left: 32.11%;
+    width: 36.05%;
+    height: 34.77%;
     overflow: hidden;
+    border-radius: 4%;
     background: $color-bg;
 }
 
@@ -158,6 +216,7 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+    border-radius: 4%;
 }
 
 .photoFallback {
@@ -169,38 +228,41 @@
     color: $color-text-soft;
     font-size: 4.8em;
     font-weight: 800;
+    border-radius: 4%;
 }
 
-// 3 dòng "Họ và tên / Lứa tuổi / Đơn vị" — top/height đo theo đúng dải
-// chữ in sẵn trên thẻ (896-930 / 974-1009 / 1053-1088 trên nền cao
-// 1298px), left canh sau chữ nhãn dài nhất ("Họ và tên:") để 3 giá trị
-// thẳng hàng với nhau.
+// 3 dòng "Họ và tên / Lứa tuổi / Đơn vị" — đo theo đúng 3 ô trắng in sẵn
+// trên thẻ (y 3275-3534 / 3575-3834 / 3872-4134 trên nền cao 4616px),
+// left canh sau chữ nhãn dài nhất ("Họ và tên :") để 3 giá trị thẳng
+// hàng với nhau. Mẫu mới đặt nhãn + giá trị trên NỀN TRẮNG (khác bản demo
+// cũ là nền tối) nên đổi màu chữ giá trị sang đúng màu xanh navy của
+// nhãn in sẵn (#00268B) thay vì đen, để đồng bộ.
 .field {
     position: absolute;
-    left: 32.6%;
-    right: 6%;
+    left: 43.56%;
+    right: 13.5%;
     display: flex;
     align-items: center;
     overflow: hidden;
-    color: #1a1a1a;
+    color: #00268b;
     font-weight: 700;
     white-space: nowrap;
     text-overflow: ellipsis;
 }
 
 .fieldHoTen {
-    top: 69.03%;
-    height: 2.62%;
+    top: 70.94%;
+    height: 5.61%;
 }
 
 .fieldNhomTuoi {
-    top: 75.04%;
-    height: 2.70%;
+    top: 77.44%;
+    height: 5.61%;
 }
 
 .fieldDonVi {
-    top: 81.13%;
-    height: 2.70%;
+    top: 83.88%;
+    height: 5.68%;
 }
 
 @media (max-width: 560px) {

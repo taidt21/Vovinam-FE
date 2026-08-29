@@ -296,6 +296,11 @@ function QuyenScreen({
   const timeLabel = `${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`;
   const daKetThuc = live.trangThai === "da_ket_thuc";
   const dangThi = live.trangThai === "dang_thi";
+  // Nội dung đồng đội đông người thì hiện từng avatar sẽ rối màn hình —
+  // từ 4 VĐV trở lên chỉ hiện tên, không hiện avatar; từ 3 VĐV trở xuống
+  // vẫn hiện avatar riêng từng người như bình thường.
+  const laDoiHinh = !!live.thanhVien && live.thanhVien.length > 0;
+  const hienAvatarTungNguoi = laDoiHinh && live.thanhVien!.length <= 3;
 
   return (
     <div className={styles.screen}>
@@ -317,11 +322,26 @@ function QuyenScreen({
       </div>
 
       <div className={styles.quyenPerformerBig}>
-        <AthleteAvatar
-          name={live.performerLabel}
-          photoUrl={live.photoUrl}
-          size={220}
-        />
+        {!laDoiHinh ? (
+          <AthleteAvatar
+            name={live.performerLabel}
+            photoUrl={live.photoUrl}
+            size={220}
+          />
+        ) : (
+          hienAvatarTungNguoi && (
+            <div className={styles.quyenTeamAvatars}>
+              {live.thanhVien!.map((tv, i) => (
+                <AthleteAvatar
+                  key={i}
+                  name={tv.hoTen}
+                  photoUrl={tv.anhDaiDien}
+                  size={150}
+                />
+              ))}
+            </div>
+          )
+        )}
         <div className={styles.athName}>{live.performerLabel}</div>
         <div className={styles.athUnit}>{live.performerSub}</div>
         {!daKetThuc && live.trangThai !== "cho_bat_dau" && (

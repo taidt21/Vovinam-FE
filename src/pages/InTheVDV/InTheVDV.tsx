@@ -4,7 +4,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Download, Search } from "lucide-react";
 import type { AthleteRecord } from "../../types";
 import { apiGet } from "../../lib/api/api";
-import theVdvBg from "../../assets/the-vdv-quocoai.png";
+import {
+  fetchTheVdvLogos,
+  type TheVdvLogoWire,
+} from "../../lib/api/theVdvLogosApi";
+import theVdvBg from "../../assets/the-vdv.jpg";
 import styles from "./InTheVDV.module.scss";
 
 interface TeamLite {
@@ -22,12 +26,15 @@ const A4_CAO_MM = 297;
 const KHE_HO_MM = 5;
 const LE_TOI_THIEU_MM = 8;
 const THE_RONG_MAC_DINH = 94.5;
-const THE_CAO_MAC_DINH = 138;
+// Cao mặc định tính lại theo đúng tỉ lệ ảnh mẫu mới (94.5 / (3329/4616))
+// — trước là 138, khớp tỉ lệ bản demo cũ, giờ lệch nếu để nguyên.
+const THE_CAO_MAC_DINH = 131;
 const THE_KICH_THUOC_MIN = 20;
-// Tỉ lệ đo trực tiếp trên file the-vdv-quocoai.png hiện tại (921 x
-// 1298px, rộng:cao) — dùng làm giá trị khởi động để bấm là chạy đúng
-// ngay, không phải đợi ảnh tải xong xử lý bất đồng bộ mới có tỉ lệ.
-const TY_LE_THE_MAC_DINH = 921 / 1298;
+// Tỉ lệ đo trực tiếp trên file the-vdv.jpg hiện tại (3329 x 4616px, mẫu
+// chính thức — trước là bản demo 921 x 1298px) — dùng làm giá trị khởi
+// động để bấm là chạy đúng ngay, không phải đợi ảnh tải xong xử lý bất
+// đồng bộ mới có tỉ lệ.
+const TY_LE_THE_MAC_DINH = 3329 / 4616;
 
 function clamp(v: number, lo: number, hi: number): number {
   if (!Number.isFinite(v)) return lo;
@@ -129,6 +136,20 @@ export default function InTheVDV() {
   const [cardWmm, setCardWmm] = useState(THE_RONG_MAC_DINH);
   const [cardHmm, setCardHmm] = useState(THE_CAO_MAC_DINH);
   const [tyLeThe, setTyLeThe] = useState(TY_LE_THE_MAC_DINH);
+  const [tieuDeThe, setTieuDeThe] = useState("");
+  const [logos, setLogos] = useState<TheVdvLogoWire[]>([]);
+
+  // Tiêu đề + logo lấy riêng, không chung Promise.all với athletes/teams
+  // bên dưới — lỗi ở đây (backend cũ chưa có bảng logo chẳng hạn) không
+  // được phép chặn mất chức năng chính (in thẻ).
+  useEffect(() => {
+    apiGet<{ tieuDeThe: string }>("/tournament")
+      .then((t) => setTieuDeThe(t.tieuDeThe ?? ""))
+      .catch(() => {});
+    fetchTheVdvLogos()
+      .then(setLogos)
+      .catch(() => {});
+  }, []);
 
   // Đo lại tỉ lệ THẬT lúc ảnh tải xong, để tự cập nhật khi sau này đổi
   // sang ảnh mẫu chính thức (tỉ lệ có thể khác) — nhưng khởi động đã
@@ -223,8 +244,19 @@ export default function InTheVDV() {
           veKeCat(doc, pageW, pageH, marginX, marginY, cardW, cardH, cols, rows);
         }
 
+        // Trước đây scale cố định x3 nhân với đúng kích thước đang HIỂN
+        // THỊ trên màn hình (ô xem trước nhỏ gọn cho dễ lướt danh sách,
+        // tầm 260-400px) — nên ảnh chụp ra chỉ tầm 900-1200px, quy ra
+        // chưa tới 120 DPI khi in, rõ mờ dù ảnh mẫu gốc tới 3329x4616px.
+        // Giờ tính lại scale để LUÔN đạt đúng 300 DPI theo đúng kích
+        // thước MM đang chọn để in (cardW), không phụ thuộc màn hình
+        // đang hiện to hay nhỏ — cỡ nào cũng ra đúng chất lượng in thật.
+        const rongHienThiPx = el.getBoundingClientRect().width || 1;
+        const rongMucTieuPx = (cardW / 25.4) * 300; // 300 DPI
+        const scale = Math.min(10, Math.max(1, rongMucTieuPx / rongHienThiPx));
+
         const canvas = await html2canvas(el, {
-          scale: 3,
+          scale,
           backgroundColor: "#ffffff",
           useCORS: true,
         });
@@ -343,8 +375,23 @@ export default function InTheVDV() {
               ref={(el) => {
                 if (el) cardRefs.current.set(a.id, el);
               }}
-              className={styles.card}
-              style={{ backgroundImage: `url(${theVdvBg})` }}>
+              className={styles.card}>
+              <img src={theVdvBg} alt="" className={styles.cardBg} />
+              {tieuDeThe.trim() && (
+                <div className={styles.tieuDe}>{tieuDeThe}</div>
+              )}
+              {logos.length > 0 && (
+                <div className={styles.logoRow}>
+                  {logos.map((logo) => (
+                    <img
+                      key={logo.id}
+                      src={logo.duongDan}
+                      alt=""
+                      className={styles.logoAnh}
+                    />
+                  ))}
+                </div>
+              )}
               <div className={styles.photoBox}>
                 <CardPhoto name={a.hoTen} photoUrl={a.anhDaiDien} />
               </div>

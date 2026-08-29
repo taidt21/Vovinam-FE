@@ -20,6 +20,8 @@ import {
 import {
   subscribeConnectionState,
   ensureJoinedCourt,
+  ensureStarted,
+  getConnection,
 } from "../../lib/realtime/matchHubConnection";
 import { fetchTrongTai, type TrongTaiWire } from "../../lib/api/trongTaiApi";
 import type { LiveMatchState } from "../../types/live";
@@ -51,12 +53,67 @@ function saveIdentity(id: Identity) {
     // bỏ qua — vẫn hoạt động trong phiên hiện tại, chỉ mất khi F5
   }
 }
+function clearIdentity() {
+  try {
+    localStorage.removeItem(IDENTITY_KEY);
+  } catch {
+    // bỏ qua
+  }
+}
 
 export default function TrongTai() {
   const { courts, loadingCourts } = useCourts();
   const [identity, setIdentity] = useState<Identity | null>(() =>
     loadIdentity(),
   );
+  const [list, setList] = useState<TrongTaiWire[] | null>(null);
+  const [fetchError, setFetchError] = useState(false);
+  const [bienMatKhoiDanhSach, setBienMatKhoiDanhSach] = useState(false);
+
+  // Tải danh sách trọng tài đã được Bàn thư ký gán. Tải ngay lúc mở trang,
+  // rồi tải lại NGAY khi có ai (Bàn thư ký) thêm/sửa/xoá — nghe qua đúng
+  // SignalR hub đang dùng chung cho cả app, khớp với cách "MatchesChanged"
+  // đã làm cho danh sách trận, thay vì bắt trọng tài tự bấm tải lại trang.
+  // Vẫn giữ thêm vòng lặp 20 giây làm lưới an toàn, phòng lúc lỡ mất đúng
+  // tín hiệu đó (rớt mạng ngay lúc BTC vừa thêm xong chẳng hạn).
+  useEffect(() => {
+    const load = () =>
+      fetchTrongTai()
+        .then((data) => {
+          setList(data.filter((t) => t.thuTuGiamDinh !== null));
+          setFetchError(false);
+        })
+        .catch(() => setFetchError(true));
+    load();
+    const conn = getConnection();
+    conn.on("TrongTaiChanged", load);
+    ensureStarted().catch(() => {});
+    const id = setInterval(load, 20_000);
+    return () => {
+      conn.off("TrongTaiChanged", load);
+      clearInterval(id);
+    };
+  }, []);
+
+  // Thiết lập (tên + sân) đã lưu sẵn trên MÁY NÀY từ lần chọn trước — lưu
+  // trong localStorage, hoàn toàn không liên quan gì tới CSDL ở server.
+  // Trước đây cứ có sẵn là dùng luôn, không kiểm tra lại có còn đúng
+  // không — nên đổi CSDL (hoặc BTC gỡ/đổi gán) ở server thì máy này vẫn
+  // "nhớ" trọng tài cũ, dù danh sách thật ở Bàn thư ký đã trống/khác rồi.
+  // Giờ hễ tải xong danh sách mới là đối chiếu lại: không còn thấy đúng
+  // người + đúng sân đó nữa thì coi thiết lập cũ hết hiệu lực, quay về
+  // màn chọn lại thay vì tin mãi vào dữ liệu cũ trên máy.
+  useEffect(() => {
+    if (!identity || list === null) return;
+    const conCoTrongDanhSach = list.some(
+      (t) => t.id === identity.trongTaiId && t.courtId === identity.courtId,
+    );
+    if (!conCoTrongDanhSach) {
+      clearIdentity();
+      setIdentity(null);
+      setBienMatKhoiDanhSach(true);
+    }
+  }, [identity, list]);
 
   if (loadingCourts)
     return <p className={styles.hint}>Đang tải danh sách sân...</p>;
@@ -65,9 +122,13 @@ export default function TrongTai() {
     return (
       <SetupScreen
         courts={courts}
+        list={list}
+        error={fetchError}
+        canhBaoHetHan={bienMatKhoiDanhSach}
         onDone={(id) => {
           saveIdentity(id);
           setIdentity(id);
+          setBienMatKhoiDanhSach(false);
         }}
       />
     );
@@ -76,27 +137,27 @@ export default function TrongTai() {
     <MainScreen
       identity={identity}
       courts={courts}
-      onChangeSetup={() => setIdentity(null)}
+      onChangeSetup={() => {
+        clearIdentity();
+        setIdentity(null);
+      }}
     />
   );
 }
 
 function SetupScreen({
   courts,
+  list,
+  error,
+  canhBaoHetHan,
   onDone,
 }: {
   courts: CourtBasic[];
+  list: TrongTaiWire[] | null;
+  error: boolean;
+  canhBaoHetHan: boolean;
   onDone: (id: Identity) => void;
 }) {
-  const [list, setList] = useState<TrongTaiWire[] | null>(null);
-  const [error, setError] = useState(false);
-
-  useEffect(() => {
-    fetchTrongTai()
-      .then((data) => setList(data.filter((t) => t.thuTuGiamDinh !== null)))
-      .catch(() => setError(true));
-  }, []);
-
   const tenSan = (courtId: string | null) =>
     courts.find((c) => c.id === courtId)?.ten ?? courtId ?? "—";
 
@@ -110,6 +171,12 @@ function SetupScreen({
       <h1 className={styles.setupTitle}>Trọng tài</h1>
       <p className={styles.hint}>Chọn đúng tên của bạn trong danh sách</p>
 
+      {canhBaoHetHan && !error && (
+        <p className={styles.hint}>
+          Thiết lập cũ trên máy này không còn hợp lệ (đã bị gỡ hoặc đổi gán
+          bên Bàn thư ký) — chọn lại tên của bạn.
+        </p>
+      )}
       {error && (
         <p className={styles.hint}>
           Không tải được danh sách — kiểm tra mạng rồi thử lại.

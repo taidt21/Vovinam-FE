@@ -371,3 +371,11 @@ $text-muted-arena: rgba(255, 255, 255, 0.55);
     flex: 1;
     justify-content: center;
 }
+
+.quyenTeamAvatars {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+}

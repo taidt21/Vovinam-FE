@@ -8,6 +8,7 @@ export interface Tournament {
   heSoDong: number;
   choPhepDongHangBaQuyen: boolean;
   cuaSoDongThuanGiay: number;
+  tieuDeThe: string;
 }
 
 export interface Team {

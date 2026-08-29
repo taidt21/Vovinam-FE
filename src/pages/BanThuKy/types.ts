@@ -1,4 +1,5 @@
 import type { CompetitionEvent } from "../../types";
+import type { ThanhVienQuyen } from "../../types/liveQuyen";
 
 export interface QuyenItem {
   event: CompetitionEvent;
@@ -8,5 +9,5 @@ export interface QuyenItem {
   sub: string;
   isTeam: boolean;
   so: number;
-  thanhVien?: string[];
+  thanhVien?: ThanhVienQuyen[];
 }

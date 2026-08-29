@@ -636,6 +636,10 @@ export default function BanThuKy() {
               const tenThanhVien = s.athleteIds.map(
                 (id) => athleteName(id) ?? "—",
               );
+              const thanhVien = s.athleteIds.map((id) => ({
+                hoTen: athleteName(id) ?? "—",
+                anhDaiDien: athletePhoto(id),
+              }));
               return {
                 event: e,
                 athleteId: null,
@@ -643,7 +647,7 @@ export default function BanThuKy() {
                 label: tenThanhVien.join(", "),
                 sub: "",
                 isTeam: true,
-                thanhVien: tenThanhVien,
+                thanhVien,
               };
             },
           );

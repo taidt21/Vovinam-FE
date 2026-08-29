@@ -18,6 +18,7 @@ import {
 } from "../../lib/utils/nhomTuoi";
 import ImportEventsExcelModal from "../../components/ImportEventsExcelModal/ImportEventsExcelModal";
 import BanThuKyAccountsSection from "../../components/BanThuKyAccountsSection/BanThuKyAccountsSection";
+import TheVdvLogosSection from "../../components/TheVdvLogosSection/TheVdvLogosSection";
 import type { EventImportRow } from "../../lib/excel/eventExcelImport";
 import styles from "./ThietLapGiai.module.scss";
 
@@ -44,6 +45,7 @@ export default function ThietLapGiai() {
     heSoDong: 10,
     choPhepDongHangBaQuyen: true,
     cuaSoDongThuanGiay: 1.5,
+    tieuDeThe: "",
   });
   const [savingTournament, setSavingTournament] = useState(false);
 
@@ -75,6 +77,7 @@ export default function ThietLapGiai() {
           heSoDong: t.heSoDong,
           choPhepDongHangBaQuyen: t.choPhepDongHangBaQuyen,
           cuaSoDongThuanGiay: t.cuaSoDongThuanGiay,
+          tieuDeThe: t.tieuDeThe,
         });
       })
       .catch(() =>
@@ -540,6 +543,31 @@ export default function ThietLapGiai() {
               </strong>
             </div>
           </section>
+
+          <section className={styles.settingSection}>
+            <div className={styles.settingSectionHead}>
+              <div>
+                <span className={styles.settingIndex}>04</span>
+                <div>
+                  <h3>Tiêu đề in trên thẻ VĐV</h3>
+                  <p>
+                    Hiện phía trên mẫu thẻ (trang In thẻ VĐV) — để trống thì
+                    không in dòng nào. Gõ nhiều dòng nếu cần, ví dụ tên đơn vị
+                    tổ chức + tên giải.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <textarea
+              className={styles.tieuDeTheInput}
+              rows={3}
+              placeholder={"GIẢI VOVINAM HOÀ BÌNH MỞ RỘNG 2026"}
+              value={form.tieuDeThe}
+              onChange={(e) =>
+                setForm({ ...form, tieuDeThe: e.target.value })
+              }
+            />
+          </section>
         </div>
 
         <div className={styles.tournamentFooter}>
@@ -567,6 +595,8 @@ export default function ThietLapGiai() {
       </form>
 
       <BanThuKyAccountsSection soSan={form.soSan} />
+
+      <TheVdvLogosSection />
 
       <section className={`${styles.card} ${styles.eventsCard}`}>
         <div className={styles.eventsHead}>

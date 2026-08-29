@@ -68,7 +68,7 @@ export default function QuyenScheduleTab({
         formatEventNhomTuoi(item.event.nhomTuoi),
         item.label,
         item.sub,
-        ...(item.thanhVien ?? []),
+        ...(item.thanhVien ?? []).map((t) => t.hoTen),
       ]
         .join(" ")
         .toLocaleLowerCase("vi");
