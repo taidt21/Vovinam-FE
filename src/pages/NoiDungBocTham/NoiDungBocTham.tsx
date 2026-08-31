@@ -19,6 +19,7 @@ import BracketView from "../../components/BracketView/BracketView";
 import { fetchEvents } from "../../lib/api/eventsApi";
 import { formatEventNhomTuoi, compareNhomTuoi } from "../../lib/utils/nhomTuoi";
 import styles from "./NoiDungBocTham.module.scss";
+import FullscreenButton from "../../components/FullscreenButton/FullscreenButton";
 
 interface PerformanceOrder {
   id: string;
@@ -472,6 +473,7 @@ export default function NoiDungBocTham() {
 
   return (
     <div className={styles.page}>
+      <FullscreenButton />
       <header className={styles.pageHeader}>
         <div className={styles.pageIntro}>
           <span className={styles.pageEyebrow}>Quản lý nội dung thi đấu</span>

@@ -29,6 +29,7 @@ import TongSapTab from "./tabs/TongSapTab";
 import DoiKhangResultView from "./tabs/DoiKhangResultView";
 import QuyenResultView from "./tabs/QuyenResultView";
 import styles from "./KetQua.module.scss";
+import FullscreenButton from "../../components/FullscreenButton/FullscreenButton";
 import { buildReport } from "./export/reportData";
 import { exportKetQuaWord } from "./export/exportWord";
 import { exportKetQuaPdf } from "./export/exportPdf";
@@ -268,6 +269,7 @@ export default function KetQua() {
 
   return (
     <div className={styles.page}>
+      <FullscreenButton />
       <header className={styles.pageHeader}>
         <div className={styles.headerIntro}>
           <span className={styles.eyebrow}>Kết quả thi đấu</span>

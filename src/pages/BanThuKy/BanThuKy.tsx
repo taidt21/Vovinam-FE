@@ -62,6 +62,7 @@ import DieuHanhQuyenTab from "./tabs/DieuHanhQuyenTab";
 import TrongTaiTab from "./tabs/TrongTaiTab";
 
 import styles from "./BanThuKy.module.scss";
+import FullscreenButton from "../../components/FullscreenButton/FullscreenButton";
 
 interface PerformanceOrderWire {
   id: string;
@@ -862,6 +863,7 @@ export default function BanThuKy() {
   };
   return (
     <div className={styles.page}>
+      <FullscreenButton />
       <div className={styles.topbar}>
         <div className={styles.topbarIdentity}>
           <span className={styles.pageEyebrow}>Điều hành thi đấu</span>

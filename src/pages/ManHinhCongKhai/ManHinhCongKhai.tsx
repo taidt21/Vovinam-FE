@@ -22,6 +22,7 @@ import type { LiveMatchState } from "../../types";
 import AthleteAvatar from "../../components/AthleteAvatar/AthleteAvatar";
 import LightBoxes from "../../components/LightBoxes/LightBoxes";
 import styles from "./ManHinhCongKhai.module.scss";
+import FullscreenButton from "../../components/FullscreenButton/FullscreenButton";
 
 export default function ManHinhCongKhai() {
   const { courts, loadingCourts } = useCourts();
@@ -118,16 +119,19 @@ function CourtScreen({ court }: { court: CourtBasic }) {
   }, []);
   const pressed = usePressedLights(court.id);
   const header = (
-    <header className={styles.header}>
-      <span className={styles.brand}>VECTOR SPORT</span>
-      <span className={styles.courtNameHeader}>{court.ten}</span>
-      <span className={styles.wallClock}>
-        {new Date().toLocaleTimeString("vi-VN", {
-          hour: "2-digit",
-          minute: "2-digit",
-        })}
-      </span>
-    </header>
+    <>
+      <FullscreenButton />
+      <header className={styles.header}>
+        <span className={styles.brand}>VECTOR SPORT</span>
+        <span className={styles.courtNameHeader}>{court.ten}</span>
+        <span className={styles.wallClock}>
+          {new Date().toLocaleTimeString("vi-VN", {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
+        </span>
+      </header>
+    </>
   );
 
   if (!live && liveQuyen) {
