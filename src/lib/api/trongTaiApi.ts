@@ -1,16 +1,19 @@
-import { apiGet, apiPost, apiPut, apiDelete } from './api';
+import { apiGet, apiPost, apiPut, apiDelete, apiUpload } from './api';
 
 export interface TrongTaiWire {
   id: string;
   hoTen: string;
   courtId: string | null;
   thuTuGiamDinh: number | null;
+  donVi: string | null;
+  anhDaiDien: string | null;
 }
 
 export interface TrongTaiUpsertPayload {
   hoTen: string;
   courtId: string | null;
   thuTuGiamDinh: number | null;
+  donVi: string | null;
 }
 
 export function fetchTrongTai(): Promise<TrongTaiWire[]> {
@@ -27,4 +30,10 @@ export function updateTrongTai(id: string, payload: TrongTaiUpsertPayload): Prom
 
 export function deleteTrongTai(id: string): Promise<void> {
   return apiDelete(`/trong-tai/${id}`);
+}
+
+export function uploadTrongTaiAnh(id: string, file: File): Promise<TrongTaiWire> {
+  const formData = new FormData();
+  formData.append('file', file);
+  return apiUpload<TrongTaiWire>(`/trong-tai/${id}/anh`, formData);
 }

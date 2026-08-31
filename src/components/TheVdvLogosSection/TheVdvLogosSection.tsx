@@ -56,7 +56,7 @@ export default function TheVdvLogosSection() {
   return (
     <section className={styles.card}>
       <div className={styles.eventsHead}>
-        <h2 className={styles.cardTitle}>Logo trên thẻ VĐV</h2>
+        <h2 className={styles.cardTitle}>Logo trên thẻ</h2>
         <button
           className={styles.btnPrimary}
           onClick={chonFile}
@@ -73,9 +73,10 @@ export default function TheVdvLogosSection() {
       </div>
 
       <p className={styles.hint}>
-        Logo liên đoàn, logo nhà tài trợ... hiện thành 1 hàng phía trên thẻ,
-        theo đúng thứ tự thêm vào. Không giới hạn số lượng, nhưng thêm nhiều
-        quá thì mỗi logo sẽ tự co nhỏ lại cho vừa 1 hàng.
+        Logo liên đoàn, logo nhà tài trợ... hiện thành 1 hàng phía trên MỌI
+        loại thẻ (VĐV, trọng tài...), theo đúng thứ tự thêm vào. Không giới
+        hạn số lượng, nhưng thêm nhiều quá thì mỗi logo sẽ tự co nhỏ lại cho
+        vừa 1 hàng.
       </p>
 
       {loading ? (

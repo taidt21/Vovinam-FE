@@ -1,12 +1,10 @@
 /** @format */
 
 import { useMemo, useState } from "react";
-import { CheckCircle2, Plus, Search, Users, X } from "lucide-react";
+import { CheckCircle2, Search, Users, X } from "lucide-react";
 import type { CourtBasic } from "../../../lib/utils/courts";
 import {
-  createTrongTai,
   updateTrongTai,
-  deleteTrongTai,
   type TrongTaiWire,
 } from "../../../lib/api/trongTaiApi";
 import styles from "../BanThuKy.module.scss";
@@ -29,28 +27,7 @@ export default function TrongTaiTab({
   trongTaiList: TrongTaiWire[];
   onRefresh: () => void;
 }) {
-  const [hoTenMoi, setHoTenMoi] = useState("");
-  const [courtMoi, setCourtMoi] = useState(courts[0]?.id ?? "");
-  const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
-
-  const themTrongTai = async () => {
-    if (!hoTenMoi.trim()) return;
-    setSaving(true);
-    try {
-      await createTrongTai({
-        hoTen: hoTenMoi.trim(),
-        courtId: courtMoi || null,
-        thuTuGiamDinh: null,
-      });
-      setHoTenMoi("");
-      onRefresh();
-    } catch {
-      window.alert("Thêm trọng tài thất bại.");
-    } finally {
-      setSaving(false);
-    }
-  };
 
   const doiViTri = async (t: TrongTaiWire, thuTu: number | null) => {
     try {
@@ -58,6 +35,7 @@ export default function TrongTaiTab({
         hoTen: t.hoTen,
         courtId: t.courtId,
         thuTuGiamDinh: thuTu,
+        donVi: t.donVi,
       });
       onRefresh();
     } catch (e) {
@@ -65,28 +43,19 @@ export default function TrongTaiTab({
     }
   };
 
+  // courtId === "" nghĩa là trả về hồ chưa gán sân — reset luôn cả vị
+  // trí giám định, số cũ gắn với sân cũ không còn ý nghĩa gì nữa.
   const doiSan = async (t: TrongTaiWire, courtId: string) => {
     try {
-      // Đổi sân thì reset về dự bị luôn — số Giám định cũ gắn với sân cũ,
-      // mang qua sân mới dễ đụng người khác đang giữ đúng số đó.
       await updateTrongTai(t.id, {
         hoTen: t.hoTen,
-        courtId,
+        courtId: courtId || null,
         thuTuGiamDinh: null,
+        donVi: t.donVi,
       });
       onRefresh();
     } catch {
       window.alert("Đổi sân thất bại.");
-    }
-  };
-
-  const xoa = async (t: TrongTaiWire) => {
-    if (!window.confirm(`Xoá "${t.hoTen}" khỏi danh sách trọng tài?`)) return;
-    try {
-      await deleteTrongTai(t.id);
-      onRefresh();
-    } catch {
-      window.alert("Xoá thất bại.");
     }
   };
 
@@ -116,7 +85,8 @@ export default function TrongTaiTab({
           <h2 className={styles.trongTaiPageTitle}>Trọng tài & giám định</h2>
           <p className={styles.trongTaiPageDesc}>
             Mỗi sân có tối đa 5 vị trí giám định. Người chưa được xếp số sẽ nằm
-            ở danh sách dự bị của sân đó.
+            ở danh sách dự bị của sân đó. Thêm/sửa/xoá trọng tài thực hiện ở
+            Thiết lập giải.
           </p>
         </div>
 
@@ -133,52 +103,6 @@ export default function TrongTaiTab({
             <span>Dự bị</span>
             <strong>{soDuBi}</strong>
           </div>
-        </div>
-      </section>
-
-      <section className={styles.trongTaiToolbarCard}>
-        <div className={styles.trongTaiAddHeader}>
-          <div>
-            <strong>Thêm trọng tài</strong>
-            <span>Thêm vào sân trước, sau đó xếp vị trí giám định bên dưới.</span>
-          </div>
-        </div>
-
-        <div className={styles.trongTaiAddFormV2}>
-          <label className={styles.trongTaiAddField}>
-            <span>Họ và tên</span>
-            <input
-              value={hoTenMoi}
-              onChange={(e) => setHoTenMoi(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  void themTrongTai();
-                }
-              }}
-              placeholder="VD: Nguyễn Văn A"
-            />
-          </label>
-
-          <label className={styles.trongTaiAddField}>
-            <span>Sân / thảm</span>
-            <select
-              value={courtMoi}
-              onChange={(e) => setCourtMoi(e.target.value)}>
-              {courts.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.ten}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <button
-            className={styles.btnPrimary}
-            disabled={saving || !hoTenMoi.trim() || !courtMoi}
-            onClick={themTrongTai}>
-            <Plus size={16} /> {saving ? "Đang thêm..." : "Thêm trọng tài"}
-          </button>
         </div>
       </section>
 
@@ -303,7 +227,6 @@ export default function TrongTaiTab({
                             courts={courts}
                             onPositionChange={doiViTri}
                             onCourtChange={doiSan}
-                            onDelete={xoa}
                           />
                         ))}
                       </div>
@@ -329,7 +252,6 @@ export default function TrongTaiTab({
                             courts={courts}
                             onPositionChange={doiViTri}
                             onCourtChange={doiSan}
-                            onDelete={xoa}
                           />
                         ))}
                       </div>
@@ -350,13 +272,11 @@ function TrongTaiRow({
   courts,
   onPositionChange,
   onCourtChange,
-  onDelete,
 }: {
   t: TrongTaiWire;
   courts: CourtBasic[];
   onPositionChange: (t: TrongTaiWire, thuTu: number | null) => void;
   onCourtChange: (t: TrongTaiWire, courtId: string) => void;
-  onDelete: (t: TrongTaiWire) => void;
 }) {
   const assigned = t.thuTuGiamDinh !== null;
 
@@ -405,15 +325,6 @@ function TrongTaiRow({
             ))}
           </select>
         </label>
-
-        <button
-          type="button"
-          className={styles.trongTaiDeleteV2}
-          onClick={() => onDelete(t)}
-          aria-label={`Xoá ${t.hoTen}`}
-          title={`Xoá ${t.hoTen}`}>
-          <X size={15} />
-        </button>
       </div>
     </div>
   );

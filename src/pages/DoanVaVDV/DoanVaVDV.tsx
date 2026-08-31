@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import {
   Plus,
   FileSpreadsheet,
+  FileDown,
   Search,
   Pencil,
   Trash2,
@@ -351,6 +352,11 @@ export default function DoanVaVDV() {
         </div>
 
         <div className={styles.headerActions}>
+          <button
+            className={styles.btnGhost}
+            onClick={() => window.open("/dashboard/in-the-vdv", "_blank")}>
+            <FileDown size={17} /> In thẻ VĐV
+          </button>
           {coQuyenSua && (
             <>
               <button

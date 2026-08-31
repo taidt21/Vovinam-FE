@@ -1,40 +1,34 @@
 /** @format */
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Download, Search } from "lucide-react";
-import type { AthleteRecord } from "../../types";
+import { Download, Plus, Search, Trash2, Upload } from "lucide-react";
 import { apiGet } from "../../lib/api/api";
+import {
+  fetchTrongTai,
+  createTrongTai,
+  updateTrongTai,
+  deleteTrongTai,
+  uploadTrongTaiAnh,
+  type TrongTaiWire,
+} from "../../lib/api/trongTaiApi";
 import {
   fetchTheVdvLogos,
   type TheVdvLogoWire,
 } from "../../lib/api/theVdvLogosApi";
-import theVdvBg from "../../assets/the-vdv.jpg";
+import theTrongTaiBg from "../../assets/the-trong-tai.jpg";
 import sharedStyles from "../../styles/theCard.module.scss";
-import styles from "./InTheVDV.module.scss";
+import styles from "./InTheTrongTai.module.scss";
 
-interface TeamLite {
-  id: string;
-  ten: string;
-}
-
-// Ghép nhiều thẻ / trang A4 theo đúng kích thước thẻ tự nhập (rộng x
-// cao, mm) — không cố định số cột/hàng nữa, mà tính ngược lại nhét vừa
-// bao nhiêu thẻ theo kích thước đó rồi canh giữa trang. Nhờ vậy không
-// phụ thuộc mẫu thẻ nào: có mẫu chính thức thì chỉ đổi ảnh nền + toạ độ
-// overlay trong file scss, còn phần ghép trang này vẫn dùng nguyên.
+// Y hệt các hằng số/hàm ghép trang ở InTheVDV.tsx — xem comment bên đó,
+// không lặp lại ở đây. Cố tình KHÔNG dùng chung 1 file vì 2 trang có thể
+// cần tách rời độc lập sau này (đổi mẫu 1 bên không đụng bên kia).
 const A4_RONG_MM = 210;
 const A4_CAO_MM = 297;
 const KHE_HO_MM = 5;
 const LE_TOI_THIEU_MM = 8;
 const THE_RONG_MAC_DINH = 94.5;
-// Cao mặc định tính lại theo đúng tỉ lệ ảnh mẫu mới (94.5 / (3329/4616))
-// — trước là 138, khớp tỉ lệ bản demo cũ, giờ lệch nếu để nguyên.
 const THE_CAO_MAC_DINH = 131;
 const THE_KICH_THUOC_MIN = 20;
-// Tỉ lệ đo trực tiếp trên file the-vdv.jpg hiện tại (3329 x 4616px, mẫu
-// chính thức — trước là bản demo 921 x 1298px) — dùng làm giá trị khởi
-// động để bấm là chạy đúng ngay, không phải đợi ảnh tải xong xử lý bất
-// đồng bộ mới có tỉ lệ.
 const TY_LE_THE_MAC_DINH = 3329 / 4616;
 
 function clamp(v: number, lo: number, hi: number): number {
@@ -42,8 +36,6 @@ function clamp(v: number, lo: number, hi: number): number {
   return Math.min(hi, Math.max(lo, v));
 }
 
-// Nhét vừa bao nhiêu ô kích thước "dodaiThe" trên 1 trang dài "dodaiTrang",
-// chừa ít nhất "leToiThieu" mỗi đầu và "khe" giữa các ô.
 function soLuongVua(
   dodaiTrang: number,
   dodaiThe: number,
@@ -54,7 +46,6 @@ function soLuongVua(
   return Math.max(1, n);
 }
 
-// Đường kẻ đứt ở đúng giữa khe hở — cắt theo đó là đều tay, không cần đo.
 function veKeCat(
   doc: import("jspdf").jsPDF,
   pageW: number,
@@ -80,15 +71,6 @@ function veKeCat(
   doc.setLineDashPattern([], 0);
 }
 
-// "Nhóm 1"/"Nhóm 2"... — đúng cách DoanVaVDV đang hiện nhóm tuổi, để
-// khớp với chữ "Lứa tuổi:" đã in sẵn trên thẻ.
-function formatNhom(n: number) {
-  return `Nhóm ${n}`;
-}
-
-// Avatar/ảnh đại diện xưng hô theo TÊN (từ cuối), giống hệt quy ước của
-// AthleteAvatar — dùng khi VĐV chưa có ảnh để khỏi in thẻ với ô ảnh trống
-// trơn, dễ nhận ra thiếu ảnh trước khi in hàng loạt.
 function khoiTen(hoTen: string): string {
   const parts = hoTen.trim().split(/\s+/).filter(Boolean);
   const last = parts[parts.length - 1] ?? "";
@@ -123,9 +105,8 @@ function CardPhoto({
   return <div className={sharedStyles.photoFallback}>{khoiTen(name)}</div>;
 }
 
-export default function InTheVDV() {
-  const [athletes, setAthletes] = useState<AthleteRecord[]>([]);
-  const [teams, setTeams] = useState<TeamLite[]>([]);
+export default function InTheTrongTai() {
+  const [list, setList] = useState<TrongTaiWire[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -139,10 +120,10 @@ export default function InTheVDV() {
   const [tyLeThe, setTyLeThe] = useState(TY_LE_THE_MAC_DINH);
   const [tieuDeThe, setTieuDeThe] = useState("");
   const [logos, setLogos] = useState<TheVdvLogoWire[]>([]);
+  const [uploadingId, setUploadingId] = useState<string | null>(null);
+  const [hoTenMoi, setHoTenMoi] = useState("");
+  const [dangThem, setDangThem] = useState(false);
 
-  // Tiêu đề + logo lấy riêng, không chung Promise.all với athletes/teams
-  // bên dưới — lỗi ở đây (backend cũ chưa có bảng logo chẳng hạn) không
-  // được phép chặn mất chức năng chính (in thẻ).
   useEffect(() => {
     apiGet<{ tieuDeThe: string }>("/tournament")
       .then((t) => setTieuDeThe(t.tieuDeThe ?? ""))
@@ -152,20 +133,23 @@ export default function InTheVDV() {
       .catch(() => {});
   }, []);
 
-  // Đo lại tỉ lệ THẬT lúc ảnh tải xong, để tự cập nhật khi sau này đổi
-  // sang ảnh mẫu chính thức (tỉ lệ có thể khác) — nhưng khởi động đã
-  // đúng sẵn nên không cần đợi bước này mới đổi Rộng/Cao được.
   useEffect(() => {
     const img = new Image();
     img.onload = () => setTyLeThe(img.naturalWidth / img.naturalHeight);
-    img.src = theVdvBg;
+    img.src = theTrongTaiBg;
+  }, []);
+
+  useEffect(() => {
+    fetchTrongTai()
+      .then(setList)
+      .catch(() =>
+        setLoadError("Không tải được dữ liệu — kiểm tra backend đã chạy chưa"),
+      )
+      .finally(() => setLoading(false));
   }, []);
 
   const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
-  // Giá trị "an toàn" dùng để tính toán/xuất — ô nhập được gõ tự do
-  // (kể cả xoá trắng, số lẻ...), chỉ chặn khi thực sự dùng tới, để
-  // không giật lại con số đang gõ dở giữa chừng.
   const cardW = clamp(
     cardWmm,
     THE_KICH_THUOC_MIN,
@@ -180,38 +164,75 @@ export default function InTheVDV() {
   const rows = soLuongVua(A4_CAO_MM, cardH, KHE_HO_MM, LE_TOI_THIEU_MM);
   const moiTrang = cols * rows;
 
-  useEffect(() => {
-    Promise.all([
-      apiGet<AthleteRecord[]>("/dashboard/athletes"),
-      apiGet<TeamLite[]>("/dashboard/teams"),
-    ])
-      .then(([athletesData, teamsData]) => {
-        setAthletes(athletesData);
-        setTeams(teamsData);
-      })
-      .catch(() =>
-        setLoadError("Không tải được dữ liệu — kiểm tra backend đã chạy chưa"),
-      )
-      .finally(() => setLoading(false));
-  }, []);
-
-  const teamNameOf = useMemo(() => {
-    const map = new Map(teams.map((t) => [t.id, t.ten]));
-    return (teamId: string) => map.get(teamId) ?? "—";
-  }, [teams]);
-
-  // Xếp theo đơn vị rồi tên — để in xong chia chồng thẻ theo từng đoàn
-  // luôn, khỏi phải lọc lại bằng tay.
   const sorted = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return [...athletes]
-      .filter((a) => !q || a.hoTen.toLowerCase().includes(q))
-      .sort(
-        (a, b) =>
-          teamNameOf(a.teamId).localeCompare(teamNameOf(b.teamId), "vi") ||
-          a.hoTen.localeCompare(b.hoTen, "vi"),
-      );
-  }, [athletes, search, teamNameOf]);
+    return [...list]
+      .filter((t) => !q || t.hoTen.toLowerCase().includes(q))
+      .sort((a, b) => a.hoTen.localeCompare(b.hoTen, "vi"));
+  }, [list, search]);
+
+  // Sửa Đơn vị ngay tại đây (không có màn nào khác để nhập) — cập nhật
+  // state trước cho gõ mượt, lưu thật xuống server lúc rời khỏi ô (blur)
+  // thay vì gọi API theo từng phím gõ.
+  const suaDonVi = (id: string, donVi: string) => {
+    setList((prev) => prev.map((t) => (t.id === id ? { ...t, donVi } : t)));
+  };
+  const luuDonVi = async (t: TrongTaiWire) => {
+    try {
+      await updateTrongTai(t.id, {
+        hoTen: t.hoTen,
+        courtId: t.courtId,
+        thuTuGiamDinh: t.thuTuGiamDinh,
+        donVi: t.donVi,
+      });
+    } catch {
+      window.alert("Lưu đơn vị thất bại — thử lại.");
+    }
+  };
+
+  const chonAnh = async (t: TrongTaiWire, file: File) => {
+    setUploadingId(t.id);
+    try {
+      const updated = await uploadTrongTaiAnh(t.id, file);
+      setList((prev) => prev.map((x) => (x.id === t.id ? updated : x)));
+    } catch {
+      window.alert("Tải ảnh thất bại — thử lại.");
+    } finally {
+      setUploadingId(null);
+    }
+  };
+
+  // Sân gán tự động ở BACKEND (chia đều vòng tròn qua các sân hiện có)
+  // — xem TrongTaiController.Create, không tự đoán ở đây nữa để tránh
+  // race condition (bấm "Thêm" trước khi trang tải xong danh sách sân).
+  const themMoi = async () => {
+    if (!hoTenMoi.trim()) return;
+    setDangThem(true);
+    try {
+      const created = await createTrongTai({
+        hoTen: hoTenMoi.trim(),
+        courtId: null,
+        thuTuGiamDinh: null,
+        donVi: null,
+      });
+      setList((prev) => [...prev, created]);
+      setHoTenMoi("");
+    } catch {
+      window.alert("Thêm trọng tài thất bại — thử lại.");
+    } finally {
+      setDangThem(false);
+    }
+  };
+
+  const xoa = async (t: TrongTaiWire) => {
+    if (!window.confirm(`Xoá "${t.hoTen}" khỏi danh sách trọng tài?`)) return;
+    try {
+      await deleteTrongTai(t.id);
+      setList((prev) => prev.filter((x) => x.id !== t.id));
+    } catch {
+      window.alert("Xoá thất bại — thử lại.");
+    }
+  };
 
   const xuatPDF = async () => {
     setExportLoi(null);
@@ -226,17 +247,14 @@ export default function InTheVDV() {
       const pageW = doc.internal.pageSize.getWidth();
       const pageH = doc.internal.pageSize.getHeight();
 
-      // Canh giữa cả khối thẻ trên trang — nhét được bao nhiêu cột/hàng
-      // theo đúng kích thước thẻ thì phần lề dư ra chia đều 2 bên, thay
-      // vì dồn hết về 1 góc.
       const contentW = cols * cardW + (cols - 1) * KHE_HO_MM;
       const marginX = (pageW - contentW) / 2;
       const contentH = rows * cardH + (rows - 1) * KHE_HO_MM;
       const marginY = (pageH - contentH) / 2;
 
       for (let i = 0; i < sorted.length; i++) {
-        const a = sorted[i];
-        const el = cardRefs.current.get(a.id);
+        const t = sorted[i];
+        const el = cardRefs.current.get(t.id);
         if (!el) continue;
 
         const viTri = i % moiTrang;
@@ -245,15 +263,8 @@ export default function InTheVDV() {
           veKeCat(doc, pageW, pageH, marginX, marginY, cardW, cardH, cols, rows);
         }
 
-        // Trước đây scale cố định x3 nhân với đúng kích thước đang HIỂN
-        // THỊ trên màn hình (ô xem trước nhỏ gọn cho dễ lướt danh sách,
-        // tầm 260-400px) — nên ảnh chụp ra chỉ tầm 900-1200px, quy ra
-        // chưa tới 120 DPI khi in, rõ mờ dù ảnh mẫu gốc tới 3329x4616px.
-        // Giờ tính lại scale để LUÔN đạt đúng 300 DPI theo đúng kích
-        // thước MM đang chọn để in (cardW), không phụ thuộc màn hình
-        // đang hiện to hay nhỏ — cỡ nào cũng ra đúng chất lượng in thật.
         const rongHienThiPx = el.getBoundingClientRect().width || 1;
-        const rongMucTieuPx = (cardW / 25.4) * 300; // 300 DPI
+        const rongMucTieuPx = (cardW / 25.4) * 300;
         const scale = Math.min(10, Math.max(1, rongMucTieuPx / rongHienThiPx));
 
         const canvas = await html2canvas(el, {
@@ -267,19 +278,12 @@ export default function InTheVDV() {
         const hang = Math.floor(viTri / cols);
         const oX = marginX + cot * (cardW + KHE_HO_MM);
         const oY = marginY + hang * (cardH + KHE_HO_MM);
-
-        // Rộng x Cao nhập ở trên LÀ kích thước của cả thẻ, không phải 1
-        // khung ngoài chứa thẻ nhỏ hơn bên trong — nên phủ kín đúng ô,
-        // không canh-giữa-chừa-trắng theo tỉ lệ ảnh nữa. Đổi Rộng thì
-        // Cao đã tự tính đúng tỉ lệ nên bình thường không méo; nếu tự
-        // sửa riêng Cao lệch tỉ lệ thì đây là lúc thẻ co giãn theo đúng
-        // số đã nhập, không còn phần thừa/thiếu nào.
         doc.addImage(imgData, "PNG", oX, oY, cardW, cardH, undefined, "FAST");
 
         setExportTien({ da: i + 1, tong: sorted.length });
       }
 
-      doc.save("the-vdv.pdf");
+      doc.save("the-trong-tai.pdf");
     } catch {
       setExportLoi(
         "Xuất PDF thất bại — thử lại, hoặc báo lỗi này lại nếu vẫn không được.",
@@ -306,10 +310,30 @@ export default function InTheVDV() {
   return (
     <div className={sharedStyles.page}>
       <div className={sharedStyles.toolbar}>
+        <div className={sharedStyles.addBox}>
+          <input
+            placeholder="Họ và tên trọng tài mới..."
+            value={hoTenMoi}
+            onChange={(e) => setHoTenMoi(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                void themMoi();
+              }
+            }}
+          />
+          <button
+            className={sharedStyles.btnPrimary}
+            onClick={themMoi}
+            disabled={dangThem || !hoTenMoi.trim()}>
+            <Plus size={16} /> {dangThem ? "Đang thêm..." : "Thêm"}
+          </button>
+        </div>
+
         <div className={sharedStyles.searchBox}>
           <Search size={14} />
           <input
-            placeholder="Tìm theo tên VĐV..."
+            placeholder="Tìm theo tên trọng tài..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -327,9 +351,6 @@ export default function InTheVDV() {
             onChange={(e) => {
               const v = Number(e.target.value);
               setCardWmm(v);
-              // Đổi Rộng thì tính lại Cao theo đúng tỉ lệ ảnh mẫu (nhân
-              // theo tỉ lệ, không phải cộng thêm bằng đúng số Rộng vừa
-              // tăng) — khỏi nhẩm tay.
               setCardHmm(Math.round((v / tyLeThe) * 10) / 10);
             }}
             aria-label="Chiều rộng thẻ (mm)"
@@ -366,18 +387,18 @@ export default function InTheVDV() {
       </div>
 
       {sorted.length === 0 && (
-        <p className={sharedStyles.hint}>Không có VĐV nào khớp.</p>
+        <p className={sharedStyles.hint}>Chưa có trọng tài nào trong danh sách.</p>
       )}
 
       <div className={sharedStyles.cardGrid}>
-        {sorted.map((a) => (
-          <div key={a.id} className={sharedStyles.cardWrap}>
+        {sorted.map((t) => (
+          <div key={t.id} className={sharedStyles.cardWrap}>
             <div
               ref={(el) => {
-                if (el) cardRefs.current.set(a.id, el);
+                if (el) cardRefs.current.set(t.id, el);
               }}
               className={sharedStyles.card}>
-              <img src={theVdvBg} alt="" className={sharedStyles.cardBg} />
+              <img src={theTrongTaiBg} alt="" className={sharedStyles.cardBg} />
               {tieuDeThe.trim() && (
                 <div className={sharedStyles.tieuDe}>{tieuDeThe}</div>
               )}
@@ -394,19 +415,46 @@ export default function InTheVDV() {
                 </div>
               )}
               <div className={styles.photoBox}>
-                <CardPhoto name={a.hoTen} photoUrl={a.anhDaiDien} />
+                <CardPhoto name={t.hoTen} photoUrl={t.anhDaiDien} />
               </div>
               <div className={`${sharedStyles.field} ${styles.fieldHoTen}`}>
-                {a.hoTen}
-              </div>
-              <div className={`${sharedStyles.field} ${styles.fieldNhomTuoi}`}>
-                {formatNhom(a.nhomTuoi)}
+                {t.hoTen}
               </div>
               <div className={`${sharedStyles.field} ${styles.fieldDonVi}`}>
-                {teamNameOf(a.teamId)}
+                {t.donVi}
               </div>
             </div>
-            <p className={sharedStyles.cardCaption}>{a.hoTen}</p>
+
+            <input
+              className={sharedStyles.textInput}
+              placeholder="Đơn vị..."
+              value={t.donVi ?? ""}
+              onChange={(e) => suaDonVi(t.id, e.target.value)}
+              onBlur={() => luuDonVi(t)}
+            />
+            <div className={sharedStyles.cardActions}>
+              <label className={sharedStyles.uploadAnhBtn}>
+                <Upload size={13} />
+                {uploadingId === t.id ? "Đang tải..." : "Đổi ảnh"}
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  hidden
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    e.target.value = "";
+                    if (file) chonAnh(t, file);
+                  }}
+                />
+              </label>
+              <button
+                className={sharedStyles.deleteBtn}
+                onClick={() => xoa(t)}
+                aria-label={`Xoá ${t.hoTen}`}
+                title={`Xoá ${t.hoTen}`}>
+                <Trash2 size={13} />
+              </button>
+            </div>
           </div>
         ))}
       </div>

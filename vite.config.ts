@@ -14,18 +14,18 @@ export default defineConfig({
             "/api": {
                 // Đổi đúng cổng HTTP (không phải HTTPS) backend đang chạy khi bạn
                 // gõ "dotnet run" — xem lại dòng "Now listening on: http://..."
-                target: "http://localhost:5267",
+                target: "http://localhost:2004",
                 changeOrigin: true,
             },
             "/hubs": {
-                target: "http://localhost:5267",
+                target: "http://localhost:2004",
                 changeOrigin: true,
                 ws: true,
             },
             // Ảnh VĐV được backend lưu tại wwwroot/uploads. Khi dev,
-            // trình duyệt đang ở Vite :5173 nên phải proxy về backend :5267.
+            // trình duyệt đang ở Vite :5173 nên phải proxy về backend :2004.
             "/uploads": {
-                target: "http://localhost:5267",
+                target: "http://localhost:2004",
                 changeOrigin: true,
             },
         },

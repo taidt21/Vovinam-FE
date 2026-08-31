@@ -1,0 +1,379 @@
+@use './variables'as *;
+
+// Style DÙNG CHUNG cho mọi trang in thẻ (VĐV, trọng tài, và sau này
+// trưởng đoàn/HLV) — mỗi trang chỉ còn giữ lại đúng phần TOẠ ĐỘ riêng
+// của mẫu thẻ đó (photoBox/field...) trong file .module.scss của
+// riêng nó, import thêm file này để lấy phần khung/toolbar/nút bấm.
+// Xem InTheVDV.tsx hoặc InTheTrongTai.tsx để biết cách import cả 2.
+
+.page {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: $space-5;
+}
+
+.hint {
+    color: $color-text-muted;
+    font-size: 14px;
+}
+
+.toolbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: $space-4;
+    margin-bottom: $space-5;
+}
+
+.addBox {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+
+    input {
+        height: $control-height;
+        min-width: 220px;
+        padding: 0 $space-4;
+        border: 1px solid $color-border;
+        border-radius: $radius-sm;
+        background: $color-surface;
+        color: $color-text;
+        font-size: 14px;
+
+        &:focus {
+            outline: none;
+            border-color: $color-do;
+            box-shadow: $focus-ring;
+        }
+    }
+}
+
+.btnPrimary {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: $control-height;
+    padding: 0 $space-4;
+    border: none;
+    border-radius: $radius-sm;
+    background: $color-do;
+    color: white;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+}
+
+.searchBox {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    height: $control-height;
+    padding: 0 $space-4;
+    border: 1px solid $color-border;
+    border-radius: $radius-sm;
+    background: $color-surface;
+    color: $color-text-soft;
+
+    input {
+        min-width: 220px;
+        border: none;
+        outline: none;
+        background: transparent;
+        color: $color-text;
+        font-size: 14px;
+    }
+}
+
+.sizeBox {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    height: $control-height;
+    padding: 0 $space-4;
+    border: 1px solid $color-border;
+    border-radius: $radius-sm;
+    background: $color-surface;
+    color: $color-text-muted;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.sizeInput {
+    width: 56px;
+    padding: $space-1 $space-2;
+    border: 1px solid $color-border;
+    border-radius: $radius-xs;
+    color: $color-text;
+    font-size: 14px;
+    text-align: center;
+
+    &:focus {
+        outline: none;
+        border-color: $color-do;
+        box-shadow: $focus-ring;
+    }
+}
+
+.sizeHint {
+    color: $color-text-soft;
+    font-size: 12px;
+}
+
+.exportBtn {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    padding: $space-3 $space-5;
+    border: none;
+    border-radius: $radius-sm;
+    background: $color-do;
+    color: white;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+}
+
+.exportLoi {
+    flex-basis: 100%;
+    color: $color-danger;
+    font-size: 13px;
+}
+
+.cardGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: $space-6 $space-5;
+}
+
+// container-type để .card tự set 1 đơn vị "cqw" dùng chung cho cỡ chữ,
+// khỏi phải quy đổi riêng lúc thẻ hiện nhỏ (xem trước) hay lúc
+// html2canvas chụp lại để xuất PDF.
+.cardWrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $space-2;
+    container-type: inline-size;
+}
+
+.cardCaption {
+    margin: 0;
+    color: $color-text-muted;
+    font-size: 13px;
+    text-align: center;
+}
+
+// 2 điều khiển nhanh dưới mỗi thẻ (đơn vị/ảnh/xoá) — dùng ở trang nào
+// có chỉnh sửa hồ sơ ngay tại chỗ (như trọng tài), trang chỉ xem/in
+// (như VĐV, dữ liệu tới từ nơi khác) thì không cần dùng tới.
+.textInput {
+    width: 100%;
+    padding: $space-1 $space-2;
+    border: 1px solid $color-border;
+    border-radius: $radius-xs;
+    background: $color-surface;
+    color: $color-text;
+    font-size: 13px;
+    text-align: center;
+
+    &:focus {
+        outline: none;
+        border-color: $color-do;
+        box-shadow: $focus-ring;
+    }
+}
+
+.cardActions {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+}
+
+.uploadAnhBtn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: $space-1 $space-3;
+    border: 1px solid $color-border;
+    border-radius: 999px;
+    background: $color-surface;
+    color: $color-text-muted;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+
+    &:hover {
+        background: $color-bg;
+    }
+}
+
+.deleteBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border: 1px solid $color-border;
+    border-radius: 999px;
+    background: $color-surface;
+    color: $color-danger;
+    cursor: pointer;
+
+    &:hover {
+        background: $color-bg;
+    }
+}
+
+// Khung thẻ đúng tỉ lệ file gốc (3329 x 4616px — cả 4 vai trò × 2 kiểu
+// dáng mẫu thẻ hiện có đều cùng kích thước này). Lỡ sau này có mẫu khác
+// tỉ lệ thì override lại đúng "aspect-ratio" này trong file riêng của
+// trang đó là đủ, không cần sửa gì ở đây.
+.card {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 3329 / 4616;
+    overflow: hidden;
+    border-radius: $radius-sm;
+    box-shadow: $shadow-card;
+    font-size: 3cqw;
+}
+
+// Ảnh nền dùng thẻ <img> thật thay vì CSS background-image — html2canvas
+// (chụp lại thẻ lúc xuất PDF) vẽ background-image kém nét hẳn ở scale
+// cao so với <img> thật, dù trên màn hình xem trước cả 2 kiểu trông y
+// hệt nhau. object-fit: fill để giữ đúng hành vi "phủ kín, đúng tỉ lệ
+// khung" như background-size: 100% 100% trước đó.
+.cardBg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: fill;
+}
+
+// Tiêu đề + logo do BTC tự nhập ở Thiết lập giải, DÙNG CHUNG cho mọi
+// loại thẻ (không riêng VĐV) — đặt trong khoảng trống phía trên khung
+// ảnh, không đụng gì tới hoạ tiết nền gốc của bất kỳ mẫu nào (cả 4 vai
+// trò đều chừa trống đúng vùng này). Không nhập tiêu đề/logo thì 2 khối
+// này không render (xem từng file .tsx), thẻ trông y hệt lúc chưa có
+// tính năng này. text-shadow dùng màu đen trung tính để đọc được trên
+// MỌI màu nền (xanh, đỏ, vàng...), không cần đổi theo từng mẫu.
+.tieuDe {
+    position: absolute;
+    top: 3%;
+    left: 8%;
+    right: 8%;
+    height: 13%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    color: #fff;
+    font-size: 1.5em;
+    font-weight: 800;
+    line-height: 1.25;
+    text-align: center;
+    text-shadow:
+        0 0 0.15em rgba(0, 0, 0, 0.85),
+        0 0.05em 0.1em rgba(0, 0, 0, 0.6);
+    white-space: pre-line;
+}
+
+.logoRow {
+    position: absolute;
+    top: 17%;
+    left: 8%;
+    right: 8%;
+    height: 13%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3%;
+}
+
+.logoAnh {
+    height: 100%;
+    flex: 0 1 auto;
+    min-width: 0;
+    object-fit: contain;
+}
+
+.photoImg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 4%;
+}
+
+.photoFallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    color: $color-text-soft;
+    font-size: 4.8em;
+    font-weight: 800;
+    border-radius: 4%;
+}
+
+// left/right/màu/font giống hệt nhau ở mọi loại thẻ hiện có — chỉ riêng
+// top/height (đúng vị trí từng dòng) khác nhau, để trong file riêng
+// từng trang (.fieldHoTen/.fieldDonVi/...). Font-size đặt riêng, LỚN
+// HƠN font-size gốc của .card (3cqw), thay vì để thừa kế mặc định.
+// left KHÔNG đặt chung ở đây nữa — mỗi dòng nhãn dài ngắn khác nhau
+// ("Họ và tên :" dài hơn "Đơn vị :") nên giá trị phải bắt đầu ngay sau
+// ĐÚNG dấu ":" của dòng đó, không dồn về 1 mép cố định như trước. Set
+// left riêng ở từng field (.fieldHoTen/.fieldDonVi/...) trong file của
+// từng trang.
+.field {
+    position: absolute;
+    right: 13.5%;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    color: #00268b;
+    font-size: 4cqw;
+    font-weight: 700;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    padding-top: 3px;
+}
+
+@media (max-width: 560px) {
+    .page {
+        padding: $space-3;
+    }
+
+    .searchBox input {
+        min-width: 140px;
+    }
+
+    .sizeBox {
+        flex-wrap: wrap;
+        height: auto;
+        padding: $space-2 $space-3;
+    }
+
+    .sizeHint {
+        flex-basis: 100%;
+    }
+
+    .exportBtn {
+        width: 100%;
+        justify-content: center;
+    }
+}

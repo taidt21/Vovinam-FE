@@ -514,11 +514,6 @@ export default function NoiDungBocTham() {
           onClick={() => window.open("/dashboard/in-so-do-doi-khang", "_blank")}>
           <FileDown size={14} /> Xuất sơ đồ đối kháng (PDF)
         </button>
-        <button
-          className={styles.exportBtn}
-          onClick={() => window.open("/dashboard/in-the-vdv", "_blank")}>
-          <FileDown size={14} /> In thẻ VĐV (PDF)
-        </button>
       </div>
 
       <div className={styles.body}>

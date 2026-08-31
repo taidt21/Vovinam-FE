@@ -549,11 +549,11 @@ export default function ThietLapGiai() {
               <div>
                 <span className={styles.settingIndex}>04</span>
                 <div>
-                  <h3>Tiêu đề in trên thẻ VĐV</h3>
+                  <h3>Tiêu đề in trên thẻ</h3>
                   <p>
-                    Hiện phía trên mẫu thẻ (trang In thẻ VĐV) — để trống thì
-                    không in dòng nào. Gõ nhiều dòng nếu cần, ví dụ tên đơn vị
-                    tổ chức + tên giải.
+                    Hiện phía trên MỌI loại thẻ (VĐV, trọng tài...) — để trống
+                    thì không in dòng nào. Gõ nhiều dòng nếu cần, ví dụ tên
+                    đơn vị tổ chức + tên giải.
                   </p>
                 </div>
               </div>
@@ -597,6 +597,22 @@ export default function ThietLapGiai() {
       <BanThuKyAccountsSection soSan={form.soSan} />
 
       <TheVdvLogosSection />
+
+      <section className={styles.card}>
+        <div className={styles.eventsHead}>
+          <h2 className={styles.cardTitle}>Trọng tài</h2>
+        </div>
+        <p className={styles.hint}>
+          Thêm/sửa/xoá trọng tài (họ tên, đơn vị, ảnh) và in thẻ trọng tài đều
+          thực hiện ở trang riêng — gán trọng tài vào từng sân lúc vận hành
+          giải thì làm ở tab "Trọng tài" bên Bàn thư ký như bình thường.
+        </p>
+        <button
+          className={styles.publicScreenLink}
+          onClick={() => window.open("/dashboard/in-the-trong-tai", "_blank")}>
+          Quản lý & in thẻ trọng tài <span aria-hidden="true">↗</span>
+        </button>
+      </section>
 
       <section className={`${styles.card} ${styles.eventsCard}`}>
         <div className={styles.eventsHead}>

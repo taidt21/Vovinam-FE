@@ -1,0 +1,35 @@
+@use '../../styles/variables' as *;
+
+// Phần khung/toolbar/nút bấm dùng chung cho mọi trang in thẻ nằm ở
+// src/styles/theCard.module.scss — file này chỉ còn đúng toạ độ riêng
+// của mẫu thẻ trọng tài (the-trong-tai.jpg). Xem InTheTrongTai.tsx để
+// biết cách gộp class từ 2 file.
+
+// Đo trực tiếp trên file the-trong-tai.jpg (3329x4616) — cùng khung ảnh
+// x 1069-2268 như thẻ VĐV, chỉ khác y vì thẻ này chỉ có 2 ô chữ (không
+// có "Lứa tuổi") nên cả khối dồn lên cao hơn 1 chút.
+.photoBox {
+    position: absolute;
+    top: 32.67%;
+    left: 32.11%;
+    width: 36.02%;
+    height: 34.77%;
+    overflow: hidden;
+    border-radius: 4%;
+    background: $color-bg;
+}
+
+// left của mỗi dòng đo riêng, ngay sau đúng dấu ":" của dòng đó — y hệt
+// cách đo bên thẻ VĐV, cùng font/cùng label "Họ và tên :"/"Đơn vị :"
+// nên ra đúng cùng 1 giá trị.
+.fieldHoTen {
+    top: 72.05%;
+    height: 5.48%;
+    left: 43.65%;
+}
+
+.fieldDonVi {
+    top: 79.03%;
+    height: 5.48%;
+    left: 38.33%;
+}
