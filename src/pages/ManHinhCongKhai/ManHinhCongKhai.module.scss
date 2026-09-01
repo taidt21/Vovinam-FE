@@ -216,7 +216,7 @@ $text-muted-arena: rgba(255, 255, 255, 0.55);
 
 .scoreNum {
     font-family: $font-mono;
-    font-size: 6vw;
+    font-size: 10vw;
     font-weight: 800;
     line-height: 1;
     color: $color-vang;
@@ -378,4 +378,29 @@ $text-muted-arena: rgba(255, 255, 255, 0.55);
     align-items: center;
     justify-content: center;
     gap: 20px;
+}
+
+// Nút nổi cạnh nút toàn màn hình (FullscreenButton, đã tự chiếm góc
+// dưới-phải) — đặt cạnh nó, cùng độ cao, lệch sang trái 1 khoảng bằng
+// đúng 1 nút + khoảng cách.
+.openScreen2Btn {
+    position: fixed;
+    bottom: 20px;
+    right: 72px;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border: none;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+
+    &:hover {
+        background: rgba(0, 0, 0, 0.75);
+    }
 }

@@ -24,6 +24,11 @@ import {
 } from "../../lib/api/quyenJudgeScoreApi";
 import { fetchTrongTai, type TrongTaiWire } from "../../lib/api/trongTaiApi";
 import {
+  layTrangThaiManHinhCongKhai,
+  moManHinhCongKhai,
+  dongManHinhCongKhai,
+} from "../../lib/api/manHinhCongKhaiLauncherApi";
+import {
   fetchQuyenLuotHoanThanh,
   type QuyenLuotHoanThanhWire,
 } from "../../lib/api/quyenLuotApi";
@@ -434,7 +439,8 @@ export default function BanThuKy() {
     // Bắt đầu thủ công từ tab Lịch thi đấu — dù sân đang để nghỉ cũng cho
     // qua luôn (BTC chủ động chọn trận cụ thể), chỉ tự tắt cờ nghỉ bên
     // đối kháng lại cho khỏi mâu thuẫn (đang nghỉ mà lại có trận).
-    if (dangNghiDoiKhang) publishCourtResting(currentCourtId, "doi_khang", false);
+    if (dangNghiDoiKhang)
+      publishCourtResting(currentCourtId, "doi_khang", false);
     const match = bracketsByEvent[eventId]?.find((m) => m.id === matchId);
     const event = eventOf(eventId);
     if (!match || !event) return;
@@ -734,7 +740,14 @@ export default function BanThuKy() {
     );
     if (next) openIntoCourt(next.event.id, next.match.id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, activeOnMyCourt, dangNghiDoiKhang, numbered, courts, currentCourtId]);
+  }, [
+    tab,
+    activeOnMyCourt,
+    dangNghiDoiKhang,
+    numbered,
+    courts,
+    currentCourtId,
+  ]);
 
   // "Đã xong" giờ theo đúng dữ liệu lưu thật (quyenLuotHoanThanh) — không
   // chỉ suy từ đủ 5/5 điểm nữa, vì luật cho phép 1 lượt kết thúc ngay mà
@@ -830,6 +843,22 @@ export default function BanThuKy() {
     courts,
   ]);
 
+  // Việc "tìm màn hình mở rộng + mở trình duyệt kiosk" giờ để backend lo
+  // hết (xem ManHinhCongKhaiLauncher.cs) — ở đây chỉ gọi API rồi hiện
+  // đúng kết quả. Lý do đổi: Window Management API (getScreenDetails)
+  // dùng trước đây bắt buộc HTTPS mới chạy được, mà app chạy HTTP thuần
+  // trên LAN nên gần như không dùng được — backend chạy như 1 tiến
+  // trình Windows thật thì không bị giới hạn đó. Đặt 3 hook này TRƯỚC 2
+  // early-return dưới đây — hook không được phép chạy có điều kiện.
+  const [dangMoManHinh, setDangMoManHinh] = useState(false);
+  const [manHinhCKDangChay, setManHinhCKDangChay] = useState(false);
+
+  useEffect(() => {
+    layTrangThaiManHinhCongKhai()
+      .then((s) => setManHinhCKDangChay(s.dangChay))
+      .catch(() => {});
+  }, []);
+
   if (loading || loadingCourts)
     return (
       <div className={styles.page}>
@@ -846,20 +875,26 @@ export default function BanThuKy() {
   const courtName = courts.find((c) => c.id === currentCourtId)?.ten ?? "";
   const currentTabLabel = TABS.find((item) => item.id === tab)?.label ?? "";
 
-  // Mở màn hình công khai, tự đặt vị trí bắt đầu ngay tại mép phải màn
-  // hình chính đang dùng — rơi đúng vào màn hình mở rộng liền kề (đúng
-  // cách Windows sắp xếp mặc định khi cắm thêm màn hình, không cần biết
-  // trước độ phân giải màn phụ là bao nhiêu).
-  const openPublicScreenExtended = () => {
-    const url = `/man-hinh-cong-khai?san=${currentCourtId}`;
-    const left = window.screen.width;
-    const width = window.screen.availWidth;
-    const height = window.screen.availHeight;
-    window.open(
-      url,
-      "_blank",
-      `left=${left},top=0,width=${width},height=${height}`,
-    );
+  const openPublicScreenExtended = async () => {
+    if (!currentCourtId || dangMoManHinh) return;
+    setDangMoManHinh(true);
+    try {
+      const ket = await moManHinhCongKhai(currentCourtId);
+      setManHinhCKDangChay(ket.dangChay);
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : "Mở màn hình công khai thất bại.");
+    } finally {
+      setDangMoManHinh(false);
+    }
+  };
+
+  const closePublicScreenExtended = async () => {
+    try {
+      const ket = await dongManHinhCongKhai();
+      setManHinhCKDangChay(ket.dangChay);
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : "Đóng màn hình công khai thất bại.");
+    }
   };
   return (
     <div className={styles.page}>
@@ -894,13 +929,25 @@ export default function BanThuKy() {
           </div>
           <button
             className={styles.publicScreenLink}
-            onClick={openPublicScreenExtended}>
-            Mở màn hình công khai <span aria-hidden="true">↗</span>
+            onClick={openPublicScreenExtended}
+            disabled={dangMoManHinh}>
+            {dangMoManHinh ? "Đang mở..." : "Mở màn hình công khai"}{" "}
+            <span aria-hidden="true">↗</span>
           </button>
+          {manHinhCKDangChay && (
+            <button
+              className={styles.publicScreenLink}
+              onClick={closePublicScreenExtended}>
+              Đóng màn hình công khai
+            </button>
+          )}
         </div>
       </div>
 
-      <div className={styles.tabsBar} role="tablist" aria-label="Chức năng bàn thư ký">
+      <div
+        className={styles.tabsBar}
+        role="tablist"
+        aria-label="Chức năng bàn thư ký">
         {TABS.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
@@ -911,7 +958,10 @@ export default function BanThuKy() {
             onClick={() => handleTabClick(id)}>
             <Icon size={16} /> <span>{label}</span>
             {id === "dieu_hanh_dk" && activeOnMyCourt && (
-              <span className={styles.tabDot} title="Sân đang có trận đối kháng" />
+              <span
+                className={styles.tabDot}
+                title="Sân đang có trận đối kháng"
+              />
             )}
           </button>
         ))}
@@ -947,8 +997,8 @@ export default function BanThuKy() {
           <div className={styles.noMatch}>
             {dangNghiDoiKhang ? (
               <p>
-                Sân đang được cho nghỉ — nên chọn 1 trận đấu trong danh sách
-                nếu muốn bắt đầu.
+                Sân đang được cho nghỉ — nên chọn 1 trận đấu trong danh sách nếu
+                muốn bắt đầu.
               </p>
             ) : (
               <p>

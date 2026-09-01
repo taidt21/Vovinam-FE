@@ -12,17 +12,21 @@ import {
   subscribeMatchState,
   tinhThoiGianConLai,
 } from "../../lib/realtime/liveMatchStore";
-import { ensureJoinedCourt } from "../../lib/realtime/matchHubConnection";
+import {
+  ensureJoinedCourt,
+  subscribeConnectionState,
+} from "../../lib/realtime/matchHubConnection";
 import {
   getQuyenSnapshot,
   subscribeQuyenState,
 } from "../../lib/realtime/liveQuyenStore";
 import type { LiveQuyenState } from "../../types/liveQuyen";
 import type { LiveMatchState } from "../../types";
+import { fetchQuyenJudgeScores } from "../../lib/api/quyenJudgeScoreApi";
+import { tinhDiemQuyenTongHop } from "../../lib/domain/quyenScoring";
 import AthleteAvatar from "../../components/AthleteAvatar/AthleteAvatar";
 import LightBoxes from "../../components/LightBoxes/LightBoxes";
 import styles from "./ManHinhCongKhai.module.scss";
-import FullscreenButton from "../../components/FullscreenButton/FullscreenButton";
 
 export default function ManHinhCongKhai() {
   const { courts, loadingCourts } = useCourts();
@@ -40,7 +44,13 @@ export default function ManHinhCongKhai() {
 
   const court = courts.find((c) => c.id === searchParams.get("san"));
   if (!court) return <CourtChooser courts={courts} />;
-  return <CourtScreen court={court} />;
+
+  return (
+    <CourtScreen
+      court={court}
+      autoFullscreen={searchParams.get("autoFullscreen") === "1"}
+    />
+  );
 }
 
 function CourtChooser({ courts }: { courts: CourtBasic[] }) {
@@ -72,7 +82,13 @@ function CourtChooser({ courts }: { courts: CourtBasic[] }) {
   );
 }
 
-function CourtScreen({ court }: { court: CourtBasic }) {
+function CourtScreen({
+  court,
+  autoFullscreen,
+}: {
+  court: CourtBasic;
+  autoFullscreen: boolean;
+}) {
   const [live, setLive] = useState<LiveMatchState | null>(() =>
     getMatchSnapshot(court.id),
   );
@@ -81,6 +97,18 @@ function CourtScreen({ court }: { court: CourtBasic }) {
   useEffect(() => {
     setLive(getMatchSnapshot(court.id));
     const unsub = subscribeMatchState(court.id, setLive);
+
+    // Trước đây watchdog chỉ kiểm tra "có snapshot nào chưa" — nếu đã
+    // từng nhận dữ liệu rồi MỚI mất kết nối, dữ liệu cũ đó vẫn còn
+    // (không rỗng), nên watchdog tưởng vẫn ổn, không bao giờ thử nối
+    // lại — đúng nguyên nhân màn hình bị "đơ", điểm/giờ đứng im dù trận
+    // vẫn đang diễn ra thật ở Bàn thư ký. Giờ theo dõi thẳng TRẠNG THÁI
+    // KẾT NỐI thật — hễ vừa nối lại được là tự rejoin ngay đúng sân này,
+    // không đợi watchdog phát hiện gián tiếp qua dữ liệu nữa.
+    const unsubConn = subscribeConnectionState((connected) => {
+      if (connected) ensureJoinedCourt(court.id).catch(() => {});
+    });
+
     const watchdog = setInterval(() => {
       if (!getMatchSnapshot(court.id)) {
         ensureJoinedCourt(court.id).catch(() => {});
@@ -88,6 +116,7 @@ function CourtScreen({ court }: { court: CourtBasic }) {
     }, 3000);
     return () => {
       unsub();
+      unsubConn();
       clearInterval(watchdog);
     };
   }, [court.id]);
@@ -96,42 +125,67 @@ function CourtScreen({ court }: { court: CourtBasic }) {
   );
   useEffect(() => {
     setLiveQuyen(getQuyenSnapshot(court.id));
-    return subscribeQuyenState(court.id, setLiveQuyen);
+    const unsub = subscribeQuyenState(court.id, setLiveQuyen);
+
+    // Y hệt lý do ở effect đối kháng bên trên — bên quyền trước đây còn
+    // chưa có watchdog nào cả, dễ bị "đơ" hơn nữa nếu mất kết nối.
+    const unsubConn = subscribeConnectionState((connected) => {
+      if (connected) ensureJoinedCourt(court.id).catch(() => {});
+    });
+    return () => {
+      unsub();
+      unsubConn();
+    };
   }, [court.id]);
   useEffect(() => {
     const id = setInterval(() => setTick((n) => n + 1), 1000);
     return () => clearInterval(id);
   }, []);
   useEffect(() => {
+    const enterFullscreen = async () => {
+      if (document.fullscreenElement) return;
+
+      try {
+        await document.documentElement.requestFullscreen({
+          navigationUI: "hide",
+        });
+      } catch {
+        // Nếu Chrome chưa được cấp Automatic Fullscreen, API sẽ bị chặn.
+        // Khi đó vẫn giữ nguyên cơ chế double-click đã có để vào fullscreen.
+      }
+    };
+
     const toggleFullscreen = () => {
       if (document.fullscreenElement) {
         document.exitFullscreen().catch(() => {});
       } else {
-        document.documentElement.requestFullscreen().catch(() => {});
+        enterFullscreen();
       }
     };
-    document.addEventListener("dblclick", toggleFullscreen);
-    return () => document.removeEventListener("dblclick", toggleFullscreen);
-  }, []);
 
-  useEffect(() => {
-    document.documentElement.requestFullscreen().catch(() => {});
-  }, []);
+    document.addEventListener("dblclick", toggleFullscreen);
+
+    // Chỉ tự request fullscreen khi cửa sổ được mở từ nút Bàn thư ký.
+    // Với Chrome đã allow Automatic Fullscreen cho origin này, request sẽ
+    // thành công ngay sau khi trang load mà không cần click lần 2.
+    if (autoFullscreen) {
+      enterFullscreen();
+    }
+
+    return () => document.removeEventListener("dblclick", toggleFullscreen);
+  }, [autoFullscreen]);
   const pressed = usePressedLights(court.id);
   const header = (
-    <>
-      <FullscreenButton />
-      <header className={styles.header}>
-        <span className={styles.brand}>VECTOR SPORT</span>
-        <span className={styles.courtNameHeader}>{court.ten}</span>
-        <span className={styles.wallClock}>
-          {new Date().toLocaleTimeString("vi-VN", {
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
-        </span>
-      </header>
-    </>
+    <header className={styles.header}>
+      <span className={styles.brand}>VECTOR SPORT</span>
+      <span className={styles.courtNameHeader}>{court.ten}</span>
+      <span className={styles.wallClock}>
+        {new Date().toLocaleTimeString("vi-VN", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })}
+      </span>
+    </header>
   );
 
   if (!live && liveQuyen) {
@@ -171,6 +225,7 @@ function CourtScreen({ court }: { court: CourtBasic }) {
               />
               <div className={styles.athName}>{live.tenDo}</div>
               <div className={styles.athUnit}>{live.donViDo}</div>
+              <div className={styles.scoreNum}>{live.diemChinhThucDo}</div>
             </div>
           </div>
           <div className={styles.centerCol}>
@@ -185,6 +240,7 @@ function CourtScreen({ court }: { court: CourtBasic }) {
               />
               <div className={styles.athName}>{live.tenXanh}</div>
               <div className={styles.athUnit}>{live.donViXanh}</div>
+              <div className={styles.scoreNum}>{live.diemChinhThucXanh}</div>
             </div>
             <LightBoxes presses={[]} className={styles.lightBoxesArena} />
           </div>
@@ -300,11 +356,40 @@ function QuyenScreen({
   const timeLabel = `${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`;
   const daKetThuc = live.trangThai === "da_ket_thuc";
   const dangThi = live.trangThai === "dang_thi";
-  // Nội dung đồng đội đông người thì hiện từng avatar sẽ rối màn hình —
-  // từ 4 VĐV trở lên chỉ hiện tên, không hiện avatar; từ 3 VĐV trở xuống
-  // vẫn hiện avatar riêng từng người như bình thường.
-  const laDoiHinh = !!live.thanhVien && live.thanhVien.length > 0;
-  const hienAvatarTungNguoi = laDoiHinh && live.thanhVien!.length <= 3;
+
+  // Đúng lúc kết thúc mới có ý nghĩa để lấy điểm — trong lúc đang thi
+  // chưa có điểm chính thức nào cả (quyền chấm SAU khi thi xong, không
+  // chấm dần từng giây như đối kháng). Vẫn dò lại vài giây 1 lần TRONG
+  // LÚC đã kết thúc, phòng lúc giám định cuối cùng gửi điểm chậm hơn 1
+  // nhịp so với lúc trạng thái chuyển "đã kết thúc".
+  const [diemTongHop, setDiemTongHop] = useState<number | null>(null);
+  useEffect(() => {
+    if (!daKetThuc) {
+      setDiemTongHop(null);
+      return;
+    }
+    let huy = false;
+    const taiDiem = () => {
+      fetchQuyenJudgeScores()
+        .then((all) => {
+          if (huy) return;
+          const cuaLuotNay = all.filter(
+            (s) =>
+              s.eventId === live.eventId &&
+              s.athleteId === live.athleteId &&
+              s.teamId === live.teamId,
+          );
+          setDiemTongHop(tinhDiemQuyenTongHop(cuaLuotNay.map((s) => s.diem)));
+        })
+        .catch(() => {});
+    };
+    taiDiem();
+    const id = setInterval(taiDiem, 3000);
+    return () => {
+      huy = true;
+      clearInterval(id);
+    };
+  }, [daKetThuc, live.eventId, live.athleteId, live.teamId]);
 
   return (
     <div className={styles.screen}>
@@ -326,30 +411,18 @@ function QuyenScreen({
       </div>
 
       <div className={styles.quyenPerformerBig}>
-        {!laDoiHinh ? (
-          <AthleteAvatar
-            name={live.performerLabel}
-            photoUrl={live.photoUrl}
-            size={220}
-          />
-        ) : (
-          hienAvatarTungNguoi && (
-            <div className={styles.quyenTeamAvatars}>
-              {live.thanhVien!.map((tv, i) => (
-                <AthleteAvatar
-                  key={i}
-                  name={tv.hoTen}
-                  photoUrl={tv.anhDaiDien}
-                  size={150}
-                />
-              ))}
-            </div>
-          )
-        )}
+        <AthleteAvatar
+          name={live.performerLabel}
+          photoUrl={live.photoUrl}
+          size={220}
+        />
         <div className={styles.athName}>{live.performerLabel}</div>
         <div className={styles.athUnit}>{live.performerSub}</div>
         {!daKetThuc && live.trangThai !== "cho_bat_dau" && (
           <span className={styles.clock}>{timeLabel}</span>
+        )}
+        {daKetThuc && diemTongHop !== null && (
+          <div className={styles.scoreNum}>{diemTongHop.toFixed(2)}</div>
         )}
       </div>
     </div>
