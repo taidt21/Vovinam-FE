@@ -23,7 +23,8 @@ import {
   tinhThoiGianConLai,
 } from "../../../lib/realtime/liveMatchStore";
 import { serverNow } from "../../../lib/realtime/serverClock";
-import { usePressedLights } from "../../../lib/realtime/usePressedLights";
+import { usePressedLights, toPositionedPresses } from "../../../lib/realtime/usePressedLights";
+import { fetchTrongTai } from "../../../lib/api/trongTaiApi";
 import Modal from "../../../components/Modal/Modal";
 import AthleteAvatar from "../../../components/AthleteAvatar/AthleteAvatar";
 import MatchLogPanel from "../../../components/MatchLogPanel/MatchLogPanel";
@@ -64,6 +65,41 @@ export default function DieuHanhDoiKhangTab({
     getMatchSnapshot(courtId),
   );
   const pressed = usePressedLights(courtId);
+
+  // id -> thuTuGiamDinh (1-5) — xem đúng comment ở toPositionedPresses
+  // (usePressedLights.ts): việc bấm đèn chỉ gửi kèm giamDinhId, số thứ
+  // tự phải tự khớp riêng qua dữ liệu Trọng tài. Trang này trước giờ
+  // gọi thẳng presses.map(p => p.diem) vào LightBoxes — coi "thứ tự
+  // đang bấm" là "vị trí giám định", sai y hệt lỗi đã sửa bên màn hình
+  // công khai.
+  const [judgePositions, setJudgePositions] = useState<Record<string, number>>(
+    {},
+  );
+  useEffect(() => {
+    let cancelled = false;
+    const load = () => {
+      fetchTrongTai()
+        .then((list) => {
+          if (cancelled) return;
+          const map: Record<string, number> = {};
+          for (const t of list) {
+            if (t.courtId === courtId && t.thuTuGiamDinh !== null) {
+              map[t.id] = t.thuTuGiamDinh;
+            }
+          }
+          setJudgePositions(map);
+        })
+        .catch(() => {
+          // Giữ nguyên bản đồ cũ nếu tải lỗi tạm thời.
+        });
+    };
+    load();
+    const id = setInterval(load, 5000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, [courtId]);
   const [, setTick] = useState(0);
   const diemVangBaseline = useRef<{ do: number; xanh: number } | null>(null);
 
@@ -302,7 +338,9 @@ export default function DieuHanhDoiKhangTab({
           ]
             .filter(Boolean)
             .join(" ")}>
-          {!daKetThuc && <LightBoxes presses={pressed.do.map((p) => p.diem)} />}
+          {!daKetThuc && (
+            <LightBoxes presses={toPositionedPresses(pressed.do, judgePositions)} />
+          )}
           <div className={styles.cornerMain}>
             <span className={styles.cornerLabelDo}>ĐỎ</span>
             <AthleteAvatar
@@ -523,7 +561,7 @@ export default function DieuHanhDoiKhangTab({
             )}
           </div>
           {!daKetThuc && (
-            <LightBoxes presses={pressed.xanh.map((p) => p.diem)} />
+            <LightBoxes presses={toPositionedPresses(pressed.xanh, judgePositions)} />
           )}
         </div>
       </div>

@@ -6,7 +6,7 @@ export default function LightBoxes({
   presses,
   className,
 }: {
-  presses: number[];
+  presses: (number | undefined)[];
   className?: string;
 }) {
   return (

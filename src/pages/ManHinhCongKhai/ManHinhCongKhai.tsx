@@ -5,7 +5,7 @@ import { Link, useSearchParams } from "react-router";
 import { Award, Swords } from "lucide-react";
 import { useCourts } from "../../lib/utils/useCourts";
 import type { CourtBasic } from "../../lib/utils/courts";
-import { usePressedLights } from "../../lib/realtime/usePressedLights";
+import { usePressedLights, toPositionedPresses } from "../../lib/realtime/usePressedLights";
 import {
   formatMmSs,
   getMatchSnapshot,
@@ -33,6 +33,7 @@ import { fetchMatches } from "../../lib/api/matchesApi";
 import { numberDoiKhangMatches } from "../../lib/domain/bracket";
 import { fetchQuyenJudgeScores } from "../../lib/api/quyenJudgeScoreApi";
 import { tinhDiemQuyenTongHop } from "../../lib/domain/quyenScoring";
+import { fetchTrongTai } from "../../lib/api/trongTaiApi";
 import AthleteAvatar from "../../components/AthleteAvatar/AthleteAvatar";
 import styles from "./ManHinhCongKhai.module.scss";
 
@@ -94,57 +95,6 @@ function AutoFitTournamentTitle({ text }: { text: string }) {
       {text}
     </h1>
   );
-}
-
-type JudgePress = {
-  diem: number;
-  [key: string]: unknown;
-};
-
-/**
- * Giữ đúng hàng của Giám định 1..5. Realtime hiện có thể kèm vị trí
- * dưới các tên field khác nhau tùy phiên bản; ưu tiên thuTuGiamDinh.
- * Nếu payload cũ chưa có metadata vị trí thì mới fallback theo thứ tự mảng.
- */
-function judgePositionOf(press: JudgePress, fallbackIndex: number): number {
-  const oneBasedKeys = [
-    "thuTuGiamDinh",
-    "viTriGiamDinh",
-    "giamDinhThuTu",
-    "giamDinhSo",
-    "judgeNumber",
-    "judgeNo",
-    "viTri",
-    "thuTu",
-    "position",
-  ];
-
-  for (const key of oneBasedKeys) {
-    const value = press[key];
-    if (
-      typeof value === "number" &&
-      Number.isInteger(value) &&
-      value >= 1 &&
-      value <= 5
-    ) {
-      return value;
-    }
-  }
-
-  const zeroBasedKeys = ["judgeIndex", "giamDinhIndex", "index"];
-  for (const key of zeroBasedKeys) {
-    const value = press[key];
-    if (
-      typeof value === "number" &&
-      Number.isInteger(value) &&
-      value >= 0 &&
-      value <= 4
-    ) {
-      return value + 1;
-    }
-  }
-
-  return Math.min(5, fallbackIndex + 1);
 }
 
 function responsiveAthleteAvatarSize(): number {
@@ -320,6 +270,47 @@ function CourtScreen({
     };
   }, [court.id, matchNumberFallback]);
 
+  // id -> thuTuGiamDinh (1-5) — MỖI LẦN BẤM ĐÈN chỉ gửi lên đúng
+  // giamDinhId (GUID của trọng tài) + điểm, KHÔNG hề kèm số thứ tự 1-5
+  // nào (xem PressedLights type). Không có bản đồ này thì không cách
+  // nào biết đèn cần sáng ĐÚNG HÀNG nào — số thứ tự chỉ nằm ở dữ liệu
+  // TrongTai (do Bàn thư ký gán sân/vị trí), phải tải riêng và tự khớp
+  // theo id, không được đoán/suy diễn từ tên field lạ trên payload bấm
+  // đèn (payload đó không có, và cũng không nên có — tách đúng 2 việc:
+  // "ai vừa bấm" và "người đó đang ở vị trí nào" là 2 dữ liệu khác nhau).
+  const [judgePositions, setJudgePositions] = useState<Record<string, number>>(
+    {},
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadJudgePositions = () => {
+      fetchTrongTai()
+        .then((list) => {
+          if (cancelled) return;
+          const map: Record<string, number> = {};
+          for (const t of list) {
+            if (t.courtId === court.id && t.thuTuGiamDinh !== null) {
+              map[t.id] = t.thuTuGiamDinh;
+            }
+          }
+          setJudgePositions(map);
+        })
+        .catch(() => {
+          // Giữ nguyên bản đồ cũ nếu tải lỗi tạm thời — còn hơn xoá
+          // trắng khiến đèn đang sáng đúng bỗng tắt hết.
+        });
+    };
+
+    loadJudgePositions();
+    const id = setInterval(loadJudgePositions, 5000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, [court.id]);
+
   useEffect(() => {
     const enterFullscreen = async () => {
       if (document.fullscreenElement) return;
@@ -411,7 +402,8 @@ function CourtScreen({
 
       <JudgePanel
         side="do"
-        presses={choBatDau ? [] : (pressed.do as JudgePress[])}
+        presses={choBatDau ? [] : pressed.do}
+        judgePositions={judgePositions}
       />
 
       <main className={styles.fightStage}>
@@ -442,7 +434,8 @@ function CourtScreen({
 
       <JudgePanel
         side="xanh"
-        presses={choBatDau ? [] : (pressed.xanh as JudgePress[])}
+        presses={choBatDau ? [] : pressed.xanh}
+        judgePositions={judgePositions}
       />
     </div>
   );
@@ -485,17 +478,14 @@ function PublicTopHeader({
 function JudgePanel({
   side,
   presses,
+  judgePositions,
 }: {
   side: "do" | "xanh";
-  presses: readonly JudgePress[];
+  presses: readonly { id: string; diem: number }[];
+  judgePositions: Record<string, number>;
 }) {
   const isRed = side === "do";
-  const fiveJudges: Array<number | undefined> = Array(5).fill(undefined);
-
-  presses.forEach((press, fallbackIndex) => {
-    const judgePosition = judgePositionOf(press, fallbackIndex);
-    fiveJudges[judgePosition - 1] = press.diem;
-  });
+  const fiveJudges = toPositionedPresses(presses, judgePositions);
 
   return (
     <aside
