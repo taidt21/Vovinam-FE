@@ -34,6 +34,7 @@ import { numberDoiKhangMatches } from "../../lib/domain/bracket";
 import { fetchQuyenJudgeScores } from "../../lib/api/quyenJudgeScoreApi";
 import { tinhDiemQuyenTongHop } from "../../lib/domain/quyenScoring";
 import { fetchTrongTai } from "../../lib/api/trongTaiApi";
+import { useMatchStartBell } from "../../lib/audio/matchBell";
 import AthleteAvatar from "../../components/AthleteAvatar/AthleteAvatar";
 import styles from "./ManHinhCongKhai.module.scss";
 
@@ -338,6 +339,7 @@ function CourtScreen({
   }, [autoFullscreen]);
 
   const pressed = usePressedLights(court.id);
+  useMatchStartBell(live?.trangThai);
 
   const compactHeader = (
     <header className={styles.compactHeader}>

@@ -25,6 +25,7 @@ import {
 import { serverNow } from "../../../lib/realtime/serverClock";
 import { usePressedLights, toPositionedPresses } from "../../../lib/realtime/usePressedLights";
 import { fetchTrongTai } from "../../../lib/api/trongTaiApi";
+import { useMatchStartBell } from "../../../lib/audio/matchBell";
 import Modal from "../../../components/Modal/Modal";
 import AthleteAvatar from "../../../components/AthleteAvatar/AthleteAvatar";
 import MatchLogPanel from "../../../components/MatchLogPanel/MatchLogPanel";
@@ -124,6 +125,7 @@ export default function DieuHanhDoiKhangTab({
     return () => clearTimeout(t);
   }, [live, courtId]);
   const remaining = live ? tinhThoiGianConLai(live) : 0;
+  useMatchStartBell(live?.trangThai);
   const dangChay = live?.trangThai === "dang_thi";
   const dangNghi = live?.trangThai === "nghi_giua_hiep";
   const laHiepCuoi = live ? live.hiepHienTai >= live.tongSoHiep : false;
