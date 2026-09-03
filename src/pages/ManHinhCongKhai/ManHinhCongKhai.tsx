@@ -1,8 +1,8 @@
 /** @format */
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router";
-import { Swords, Award } from "lucide-react";
+import { Award, Swords } from "lucide-react";
 import { useCourts } from "../../lib/utils/useCourts";
 import type { CourtBasic } from "../../lib/utils/courts";
 import { usePressedLights } from "../../lib/realtime/usePressedLights";
@@ -21,25 +21,149 @@ import {
   subscribeQuyenState,
 } from "../../lib/realtime/liveQuyenStore";
 import type { LiveQuyenState } from "../../types/liveQuyen";
-import type { LiveMatchState } from "../../types";
+import type {
+  CompetitionEvent,
+  LiveMatchState,
+  Match,
+  Tournament,
+} from "../../types";
+import { apiGet } from "../../lib/api/api";
+import { fetchEvents } from "../../lib/api/eventsApi";
+import { fetchMatches } from "../../lib/api/matchesApi";
+import { numberDoiKhangMatches } from "../../lib/domain/bracket";
 import { fetchQuyenJudgeScores } from "../../lib/api/quyenJudgeScoreApi";
 import { tinhDiemQuyenTongHop } from "../../lib/domain/quyenScoring";
 import AthleteAvatar from "../../components/AthleteAvatar/AthleteAvatar";
-import LightBoxes from "../../components/LightBoxes/LightBoxes";
 import styles from "./ManHinhCongKhai.module.scss";
+
+const DEFAULT_TOURNAMENT_NAME = "GIẢI VOVINAM";
+
+function AutoFitTournamentTitle({ text }: { text: string }) {
+  const ref = useRef<HTMLHeadingElement>(null);
+
+  useLayoutEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+
+    const fit = () => {
+      // Cho phép title tự xuống tối đa 3 dòng.
+      // Chỉ thu nhỏ font khi nội dung vẫn vượt quá 3 dòng hoặc vượt bề ngang.
+      const maxFontSize = Math.min(
+        52,
+        window.innerWidth * 0.03,
+        window.innerHeight * 0.052,
+      );
+      const minFontSize = 18;
+
+      let low = minFontSize;
+      let high = Math.max(minFontSize, maxFontSize);
+      let best = minFontSize;
+
+      for (let i = 0; i < 12; i += 1) {
+        const mid = (low + high) / 2;
+        element.style.fontSize = `${mid}px`;
+
+        const computed = window.getComputedStyle(element);
+        const lineHeight = Number.parseFloat(computed.lineHeight);
+        const maxHeight = lineHeight * 3 + 2;
+
+        const fitsWidth = element.scrollWidth <= element.clientWidth + 1;
+        const fitsThreeLines = element.scrollHeight <= maxHeight;
+
+        if (fitsWidth && fitsThreeLines) {
+          best = mid;
+          low = mid;
+        } else {
+          high = mid;
+        }
+      }
+
+      element.style.fontSize = `${Math.floor(best)}px`;
+    };
+
+    fit();
+    window.addEventListener("resize", fit);
+
+    document.fonts?.ready.then(fit).catch(() => {});
+
+    return () => window.removeEventListener("resize", fit);
+  }, [text]);
+
+  return (
+    <h1 ref={ref} className={styles.tournamentTitle} title={text}>
+      {text}
+    </h1>
+  );
+}
+
+type JudgePress = {
+  diem: number;
+  [key: string]: unknown;
+};
+
+/**
+ * Giữ đúng hàng của Giám định 1..5. Realtime hiện có thể kèm vị trí
+ * dưới các tên field khác nhau tùy phiên bản; ưu tiên thuTuGiamDinh.
+ * Nếu payload cũ chưa có metadata vị trí thì mới fallback theo thứ tự mảng.
+ */
+function judgePositionOf(press: JudgePress, fallbackIndex: number): number {
+  const oneBasedKeys = [
+    "thuTuGiamDinh",
+    "viTriGiamDinh",
+    "giamDinhThuTu",
+    "giamDinhSo",
+    "judgeNumber",
+    "judgeNo",
+    "viTri",
+    "thuTu",
+    "position",
+  ];
+
+  for (const key of oneBasedKeys) {
+    const value = press[key];
+    if (
+      typeof value === "number" &&
+      Number.isInteger(value) &&
+      value >= 1 &&
+      value <= 5
+    ) {
+      return value;
+    }
+  }
+
+  const zeroBasedKeys = ["judgeIndex", "giamDinhIndex", "index"];
+  for (const key of zeroBasedKeys) {
+    const value = press[key];
+    if (
+      typeof value === "number" &&
+      Number.isInteger(value) &&
+      value >= 0 &&
+      value <= 4
+    ) {
+      return value + 1;
+    }
+  }
+
+  return Math.min(5, fallbackIndex + 1);
+}
+
+function responsiveAthleteAvatarSize(): number {
+  if (typeof window === "undefined") return 80;
+
+  return Math.round(
+    Math.max(
+      58,
+      Math.min(112, window.innerWidth * 0.055, window.innerHeight * 0.095),
+    ),
+  );
+}
 
 export default function ManHinhCongKhai() {
   const { courts, loadingCourts } = useCourts();
   const [searchParams] = useSearchParams();
 
   if (loadingCourts) {
-    return (
-      <div className={styles.screen}>
-        <header className={styles.header}>
-          <span className={styles.brand}>VECTOR SPORT</span>
-        </header>
-      </div>
-    );
+    return <div className={styles.screen} />;
   }
 
   const court = courts.find((c) => c.id === searchParams.get("san"));
@@ -49,6 +173,9 @@ export default function ManHinhCongKhai() {
     <CourtScreen
       court={court}
       autoFullscreen={searchParams.get("autoFullscreen") === "1"}
+      matchNumberFallback={
+        searchParams.get("tran") ?? searchParams.get("soTran")
+      }
     />
   );
 }
@@ -56,16 +183,12 @@ export default function ManHinhCongKhai() {
 function CourtChooser({ courts }: { courts: CourtBasic[] }) {
   return (
     <div className={styles.screen}>
-      <header className={styles.header}>
-        <span className={styles.brand}>
-          <img
-            src="/src/assets/VECTOR-SPORT-_5_.svg"
-            alt="VECTOR SPORT"
-            width="200"
-          />
-        </span>
-      </header>
       <div className={styles.chooser}>
+        <img
+          className={styles.chooserLogo}
+          src="/src/assets/VECTOR-SPORT-_5_.svg"
+          alt="VECTOR SPORT"
+        />
         <p className={styles.chooserHint}>Màn hình này chiếu cho sân nào?</p>
         <div className={styles.chooserGrid}>
           {courts.map((c) => (
@@ -85,26 +208,29 @@ function CourtChooser({ courts }: { courts: CourtBasic[] }) {
 function CourtScreen({
   court,
   autoFullscreen,
+  matchNumberFallback,
 }: {
   court: CourtBasic;
   autoFullscreen: boolean;
+  matchNumberFallback: string | null;
 }) {
   const [live, setLive] = useState<LiveMatchState | null>(() =>
     getMatchSnapshot(court.id),
   );
+  const [liveQuyen, setLiveQuyen] = useState<LiveQuyenState | null>(() =>
+    getQuyenSnapshot(court.id),
+  );
   const [, setTick] = useState(0);
+  const [tournamentName, setTournamentName] = useState(DEFAULT_TOURNAMENT_NAME);
+  const [matchNumber, setMatchNumber] = useState<number | null>(() => {
+    if (!matchNumberFallback) return null;
+    const n = Number(matchNumberFallback);
+    return Number.isFinite(n) && n > 0 ? n : null;
+  });
 
   useEffect(() => {
     setLive(getMatchSnapshot(court.id));
     const unsub = subscribeMatchState(court.id, setLive);
-
-    // Trước đây watchdog chỉ kiểm tra "có snapshot nào chưa" — nếu đã
-    // từng nhận dữ liệu rồi MỚI mất kết nối, dữ liệu cũ đó vẫn còn
-    // (không rỗng), nên watchdog tưởng vẫn ổn, không bao giờ thử nối
-    // lại — đúng nguyên nhân màn hình bị "đơ", điểm/giờ đứng im dù trận
-    // vẫn đang diễn ra thật ở Bàn thư ký. Giờ theo dõi thẳng TRẠNG THÁI
-    // KẾT NỐI thật — hễ vừa nối lại được là tự rejoin ngay đúng sân này,
-    // không đợi watchdog phát hiện gián tiếp qua dữ liệu nữa.
     const unsubConn = subscribeConnectionState((connected) => {
       if (connected) ensureJoinedCourt(court.id).catch(() => {});
     });
@@ -114,21 +240,17 @@ function CourtScreen({
         ensureJoinedCourt(court.id).catch(() => {});
       }
     }, 3000);
+
     return () => {
       unsub();
       unsubConn();
       clearInterval(watchdog);
     };
   }, [court.id]);
-  const [liveQuyen, setLiveQuyen] = useState<LiveQuyenState | null>(() =>
-    getQuyenSnapshot(court.id),
-  );
+
   useEffect(() => {
     setLiveQuyen(getQuyenSnapshot(court.id));
     const unsub = subscribeQuyenState(court.id, setLiveQuyen);
-
-    // Y hệt lý do ở effect đối kháng bên trên — bên quyền trước đây còn
-    // chưa có watchdog nào cả, dễ bị "đơ" hơn nữa nếu mất kết nối.
     const unsubConn = subscribeConnectionState((connected) => {
       if (connected) ensureJoinedCourt(court.id).catch(() => {});
     });
@@ -137,21 +259,76 @@ function CourtScreen({
       unsubConn();
     };
   }, [court.id]);
+
   useEffect(() => {
     const id = setInterval(() => setTick((n) => n + 1), 1000);
     return () => clearInterval(id);
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadPublicMeta = async () => {
+      try {
+        const [tournament, events, matches] = await Promise.all([
+          apiGet<Tournament>("/tournament"),
+          fetchEvents(),
+          fetchMatches(),
+        ]);
+        if (cancelled) return;
+
+        if (tournament.ten?.trim()) {
+          setTournamentName(tournament.ten.trim().toLocaleUpperCase("vi"));
+        }
+
+        const byEvent: Record<string, Match[]> = {};
+        for (const match of matches) {
+          if (!byEvent[match.eventId]) byEvent[match.eventId] = [];
+          byEvent[match.eventId].push(match);
+        }
+
+        const numbered = numberDoiKhangMatches(
+          events as CompetitionEvent[],
+          byEvent,
+        );
+        const current = numbered.find(
+          ({ match }) =>
+            match.courtId === court.id && match.trangThai === "dang_thi",
+        );
+
+        if (current) {
+          setMatchNumber(current.so);
+        } else if (matchNumberFallback) {
+          const fallback = Number(matchNumberFallback);
+          setMatchNumber(
+            Number.isFinite(fallback) && fallback > 0 ? fallback : null,
+          );
+        } else {
+          setMatchNumber(null);
+        }
+      } catch {
+        // Màn hình công khai vẫn tiếp tục chạy bằng realtime ngay cả khi
+        // metadata phụ (tên giải / số trận) tạm thời không tải được.
+      }
+    };
+
+    loadPublicMeta();
+    const id = setInterval(loadPublicMeta, 5000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, [court.id, matchNumberFallback]);
+
   useEffect(() => {
     const enterFullscreen = async () => {
       if (document.fullscreenElement) return;
-
       try {
         await document.documentElement.requestFullscreen({
           navigationUI: "hide",
         });
       } catch {
-        // Nếu Chrome chưa được cấp Automatic Fullscreen, API sẽ bị chặn.
-        // Khi đó vẫn giữ nguyên cơ chế double-click đã có để vào fullscreen.
+        // Chrome có thể chặn request tự động; double-click vẫn dùng được.
       }
     };
 
@@ -164,38 +341,28 @@ function CourtScreen({
     };
 
     document.addEventListener("dblclick", toggleFullscreen);
-
-    // Chỉ tự request fullscreen khi cửa sổ được mở từ nút Bàn thư ký.
-    // Với Chrome đã allow Automatic Fullscreen cho origin này, request sẽ
-    // thành công ngay sau khi trang load mà không cần click lần 2.
-    if (autoFullscreen) {
-      enterFullscreen();
-    }
+    if (autoFullscreen) enterFullscreen();
 
     return () => document.removeEventListener("dblclick", toggleFullscreen);
   }, [autoFullscreen]);
+
   const pressed = usePressedLights(court.id);
-  const header = (
-    <header className={styles.header}>
-      <span className={styles.brand}>VECTOR SPORT</span>
-      <span className={styles.courtNameHeader}>{court.ten}</span>
-      <span className={styles.wallClock}>
-        {new Date().toLocaleTimeString("vi-VN", {
-          hour: "2-digit",
-          minute: "2-digit",
-        })}
-      </span>
+
+  const compactHeader = (
+    <header className={styles.compactHeader}>
+      <span className={styles.compactTournament}>{tournamentName}</span>
+      <span className={styles.compactCourt}>{court.ten}</span>
     </header>
   );
 
   if (!live && liveQuyen) {
-    return <QuyenScreen header={header} live={liveQuyen} />;
+    return <QuyenScreen header={compactHeader} live={liveQuyen} />;
   }
 
   if (!live) {
     return (
       <div className={styles.screen}>
-        {header}
+        {compactHeader}
         <div className={styles.idleState}>
           <Swords size={64} />
           <span>Đang chờ trận tiếp theo</span>
@@ -204,56 +371,11 @@ function CourtScreen({
     );
   }
 
-  if (live.trangThai === "cho_bat_dau") {
-    return (
-      <div className={styles.screen}>
-        {header}
-        <div className={styles.matchMeta}>
-          <span className={styles.eventInfo}>
-            {live.tenNoiDung} - {live.vong}
-          </span>
-          <span className={styles.upcomingBadge}>SẮP THI ĐẤU</span>
-        </div>
-        <div className={styles.matchup}>
-          <div className={styles.sideDo}>
-            <LightBoxes presses={[]} className={styles.lightBoxesArena} />
-            <div className={styles.sideMain}>
-              <AthleteAvatar
-                name={live.tenDo}
-                photoUrl={live.anhDo}
-                size={180}
-              />
-              <div className={styles.athName}>{live.tenDo}</div>
-              <div className={styles.athUnit}>{live.donViDo}</div>
-              <div className={styles.scoreNum}>{live.diemChinhThucDo}</div>
-            </div>
-          </div>
-          <div className={styles.centerCol}>
-            <span className={styles.vsBadge}>VS</span>
-          </div>
-          <div className={styles.sideXanh}>
-            <div className={styles.sideMain}>
-              <AthleteAvatar
-                name={live.tenXanh}
-                photoUrl={live.anhXanh}
-                size={180}
-              />
-              <div className={styles.athName}>{live.tenXanh}</div>
-              <div className={styles.athUnit}>{live.donViXanh}</div>
-              <div className={styles.scoreNum}>{live.diemChinhThucXanh}</div>
-            </div>
-            <LightBoxes presses={[]} className={styles.lightBoxesArena} />
-          </div>
-        </div>
-      </div>
-    );
-  }
   const remaining = tinhThoiGianConLai(live);
-  const dangChay = live.trangThai === "dang_thi";
   const dangNghi = live.trangThai === "nghi_giua_hiep";
   const dangTamDung = live.trangThai === "tam_dung";
   const daKetThuc = live.trangThai === "da_ket_thuc";
-  const dangTrucTiep = dangChay || dangNghi;
+  const choBatDau = live.trangThai === "cho_bat_dau";
 
   const sideClass = (nguoiThang: "do" | "xanh") =>
     !daKetThuc
@@ -261,82 +383,211 @@ function CourtScreen({
       : live.nguoiThang === nguoiThang
         ? styles.sideWinner
         : styles.sideLoser;
+
+  const timerTitle = daKetThuc
+    ? "KẾT THÚC"
+    : dangNghi
+      ? `Nghỉ hiệp ${live.hiepHienTai}`
+      : `Hiệp ${live.hiepHienTai}`;
+
+  const statusLabel = choBatDau
+    ? "SẮP THI ĐẤU"
+    : dangTamDung
+      ? "TẠM DỪNG"
+      : dangNghi
+        ? "NGHỈ GIỮA HIỆP"
+        : null;
+
   return (
-    <div className={styles.screen}>
-      {header}
+    <div className={styles.combatScreen}>
+      <PublicTopHeader
+        tournamentName={tournamentName}
+        courtName={court.ten}
+        matchNumber={matchNumber}
+        roundLabel={timerTitle}
+        timeLabel={daKetThuc ? "--:--" : formatMmSs(remaining)}
+        statusLabel={statusLabel}
+      />
 
-      <div className={styles.matchMeta}>
-        <span className={styles.eventInfo}>
-          {live.tenNoiDung} - {live.vong}
-        </span>
-        {dangTrucTiep && (
-          <span className={styles.liveBadge}>
-            <span className={styles.liveDot} /> TRỰC TIẾP
-          </span>
-        )}
-        {dangTamDung && <span className={styles.pausedBadge}>TẠM DỪNG</span>}
-      </div>
+      <JudgePanel
+        side="do"
+        presses={choBatDau ? [] : (pressed.do as JudgePress[])}
+      />
 
-      <div className={styles.matchup}>
-        <div className={`${styles.sideDo} ${sideClass("do")}`}>
-          <LightBoxes
-            presses={pressed.do.map((p) => p.diem)}
-            className={styles.lightBoxesArena}
+      <main className={styles.fightStage}>
+        <section
+          className={`${styles.fighterSide} ${styles.redSide} ${sideClass("do")}`}>
+          <div className={styles.scoreValue}>{live.diemChinhThucDo}</div>
+          <AthleteBar
+            side="do"
+            name={live.tenDo}
+            unit={live.donViDo}
+            photoUrl={live.anhDo}
+            winner={daKetThuc && live.nguoiThang === "do"}
           />
-          <div className={styles.sideMain}>
-            <AthleteAvatar name={live.tenDo} photoUrl={live.anhDo} size={180} />
-            <div className={styles.athName}>{live.tenDo}</div>
-            <div className={styles.athUnit}>{live.donViDo}</div>
-            <div className={styles.scoreNum}>{live.diemChinhThucDo}</div>
-            {daKetThuc && live.nguoiThang === "do" && (
-              <div className={styles.winnerTag}>
-                <Award size={22} /> THẮNG
-              </div>
-            )}
-          </div>
-        </div>
+        </section>
 
-        <div className={styles.centerCol}>
-          <span className={styles.vsBadge}>VS</span>
-          {daKetThuc ? (
-            <span className={styles.endedLabel}>KẾT THÚC</span>
-          ) : (
-            <>
-              <span className={styles.roundLabel}>
-                {dangNghi
-                  ? `Nghỉ giữa hiệp ${live.hiepHienTai}`
-                  : `Hiệp ${live.hiepHienTai}/${live.tongSoHiep}`}
-              </span>
-              <span className={styles.clock}>{formatMmSs(remaining)}</span>
-            </>
-          )}
-        </div>
-
-        <div className={`${styles.sideXanh} ${sideClass("xanh")}`}>
-          <div className={styles.sideMain}>
-            <AthleteAvatar
-              name={live.tenXanh}
-              photoUrl={live.anhXanh}
-              size={180}
-            />
-            <div className={styles.athName}>{live.tenXanh}</div>
-            <div className={styles.athUnit}>{live.donViXanh}</div>
-            <div className={styles.scoreNum}>{live.diemChinhThucXanh}</div>
-            {daKetThuc && live.nguoiThang === "xanh" && (
-              <div className={styles.winnerTag}>
-                <Award size={22} /> THẮNG
-              </div>
-            )}
-          </div>
-          <LightBoxes
-            presses={pressed.xanh.map((p) => p.diem)}
-            className={styles.lightBoxesArena}
+        <section
+          className={`${styles.fighterSide} ${styles.blueSide} ${sideClass("xanh")}`}>
+          <div className={styles.scoreValue}>{live.diemChinhThucXanh}</div>
+          <AthleteBar
+            side="xanh"
+            name={live.tenXanh}
+            unit={live.donViXanh}
+            photoUrl={live.anhXanh}
+            winner={daKetThuc && live.nguoiThang === "xanh"}
           />
-        </div>
-      </div>
+        </section>
+      </main>
+
+      <JudgePanel
+        side="xanh"
+        presses={choBatDau ? [] : (pressed.xanh as JudgePress[])}
+      />
     </div>
   );
 }
+
+function PublicTopHeader({
+  tournamentName,
+  courtName,
+  matchNumber,
+  roundLabel,
+  timeLabel,
+  statusLabel,
+}: {
+  tournamentName: string;
+  courtName: string;
+  matchNumber: number | null;
+  roundLabel: string;
+  timeLabel: string;
+  statusLabel: string | null;
+}) {
+  return (
+    <header className={styles.publicHeader}>
+      <AutoFitTournamentTitle text={tournamentName} />
+
+      <div className={styles.courtMeta}>
+        <strong>{courtName}</strong>
+        <span>Trận số : {matchNumber ?? "—"}</span>
+      </div>
+
+      <div className={styles.timerCard}>
+        <span className={styles.timerRound}>{roundLabel}</span>
+        <strong className={styles.timerValue}>{timeLabel}</strong>
+      </div>
+
+      {statusLabel && <span className={styles.statusPill}>{statusLabel}</span>}
+    </header>
+  );
+}
+
+function JudgePanel({
+  side,
+  presses,
+}: {
+  side: "do" | "xanh";
+  presses: readonly JudgePress[];
+}) {
+  const isRed = side === "do";
+  const fiveJudges: Array<number | undefined> = Array(5).fill(undefined);
+
+  presses.forEach((press, fallbackIndex) => {
+    const judgePosition = judgePositionOf(press, fallbackIndex);
+    fiveJudges[judgePosition - 1] = press.diem;
+  });
+
+  return (
+    <aside
+      className={`${styles.judgePanel} ${
+        isRed ? styles.judgePanelRed : styles.judgePanelBlue
+      }`}>
+      <div className={styles.judgeTitle}>GIÁM ĐỊNH</div>
+      <div className={styles.judgeHead}>
+        <span />
+      </div>
+      <div className={styles.judgeGrid}>
+        {fiveJudges.map((score, index) => {
+          // +1: sáng ô 1. +2: sáng CẢ ô 1 và ô 2.
+          const firstLightOn = typeof score === "number" && score >= 1;
+          const secondLightOn = typeof score === "number" && score >= 2;
+
+          return (
+            <div className={styles.judgeRow} key={index}>
+              <strong className={styles.judgeIndex}>{index + 1}</strong>
+              <span
+                className={`${styles.judgeLight} ${
+                  firstLightOn ? styles.judgeLightOn : ""
+                }`}
+              />
+              <span
+                className={`${styles.judgeLight} ${
+                  secondLightOn ? styles.judgeLightOn : ""
+                }`}
+              />
+            </div>
+          );
+        })}
+      </div>
+    </aside>
+  );
+}
+
+function AthleteBar({
+  side,
+  name,
+  unit,
+  photoUrl,
+  winner,
+}: {
+  side: "do" | "xanh";
+  name: string;
+  unit: string;
+  photoUrl: string | null | undefined;
+  winner: boolean;
+}) {
+  const avatar = (
+    <div className={styles.athleteAvatarWrap}>
+      <AthleteAvatar
+        name={name}
+        photoUrl={photoUrl}
+        size={responsiveAthleteAvatarSize()}
+      />
+    </div>
+  );
+
+  const info = (
+    <div className={styles.athleteInfo}>
+      <div className={styles.athleteName}>{name}</div>
+      <div className={styles.athleteUnit}>{unit}</div>
+      {winner && (
+        <div className={styles.winnerTag}>
+          <Award size={18} /> THẮNG
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <footer
+      className={`${styles.athleteBar} ${
+        side === "do" ? styles.athleteBarRed : styles.athleteBarBlue
+      }`}>
+      {side === "do" ? (
+        <>
+          {avatar}
+          {info}
+        </>
+      ) : (
+        <>
+          {info}
+          {avatar}
+        </>
+      )}
+    </footer>
+  );
+}
+
 function QuyenScreen({
   header,
   live,
@@ -357,11 +608,6 @@ function QuyenScreen({
   const daKetThuc = live.trangThai === "da_ket_thuc";
   const dangThi = live.trangThai === "dang_thi";
 
-  // Đúng lúc kết thúc mới có ý nghĩa để lấy điểm — trong lúc đang thi
-  // chưa có điểm chính thức nào cả (quyền chấm SAU khi thi xong, không
-  // chấm dần từng giây như đối kháng). Vẫn dò lại vài giây 1 lần TRONG
-  // LÚC đã kết thúc, phòng lúc giám định cuối cùng gửi điểm chậm hơn 1
-  // nhịp so với lúc trạng thái chuyển "đã kết thúc".
   const [diemTongHop, setDiemTongHop] = useState<number | null>(null);
   useEffect(() => {
     if (!daKetThuc) {
@@ -394,35 +640,27 @@ function QuyenScreen({
   return (
     <div className={styles.screen}>
       {header}
-      <div className={styles.matchMeta}>
-        <span className={styles.eventInfo}>{live.eventTen}</span>
-        {dangThi && (
-          <span className={styles.liveBadge}>
-            <span className={styles.liveDot} /> TRỰC TIẾP
-          </span>
-        )}
-        {live.trangThai === "tam_dung" && (
-          <span className={styles.pausedBadge}>TẠM DỪNG</span>
-        )}
-        {live.trangThai === "cho_bat_dau" && (
-          <span className={styles.upcomingBadge}>SẮP THI ĐẤU</span>
-        )}
-        {daKetThuc && <span className={styles.endedLabel}>KẾT THÚC</span>}
-      </div>
-
+      <div className={styles.quyenEvent}>{live.eventTen}</div>
       <div className={styles.quyenPerformerBig}>
         <AthleteAvatar
           name={live.performerLabel}
           photoUrl={live.photoUrl}
-          size={220}
+          size={150}
         />
-        <div className={styles.athName}>{live.performerLabel}</div>
-        <div className={styles.athUnit}>{live.performerSub}</div>
+        <div className={styles.quyenName}>{live.performerLabel}</div>
+        <div className={styles.quyenUnit}>{live.performerSub}</div>
         {!daKetThuc && live.trangThai !== "cho_bat_dau" && (
-          <span className={styles.clock}>{timeLabel}</span>
+          <span className={styles.quyenClock}>{timeLabel}</span>
         )}
+        {live.trangThai === "tam_dung" && (
+          <span className={styles.quyenStatus}>TẠM DỪNG</span>
+        )}
+        {live.trangThai === "cho_bat_dau" && (
+          <span className={styles.quyenStatus}>SẮP THI ĐẤU</span>
+        )}
+        {dangThi && <span className={styles.quyenLive}>TRỰC TIẾP</span>}
         {daKetThuc && diemTongHop !== null && (
-          <div className={styles.scoreNum}>{diemTongHop.toFixed(2)}</div>
+          <div className={styles.quyenScore}>{diemTongHop.toFixed(2)}</div>
         )}
       </div>
     </div>

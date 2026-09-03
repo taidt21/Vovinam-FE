@@ -420,7 +420,17 @@ export default function DieuHanhDoiKhangTab({
                 </div>
               )}
               {live.trangThai === "tam_dung" &&
-                !(laHiepCuoi && live.hiepHienTai > 0) && (
+                // Trạng thái "tam_dung" dùng chung cho 2 việc: (1) BTK bấm
+                // tạm dừng thật sự giữa hiệp (còn giờ), và (2) hết giờ
+                // hiệp CUỐI, đang chờ BTK chọn người thắng bên dưới (giờ
+                // đã về 0 — patch trong ketThucHiep() set thoiGianConLaiGiay
+                // = 0 đúng lúc này). Trước đây chỉ so laHiepCuoi (luôn
+                // đúng ở hiệp cuối, kể cả lúc CÒN GIỜ), lỡ ẩn mất nút
+                // "Tiếp tục" cả khi BTK tạm dừng thật sự giữa hiệp cuối —
+                // đúng lỗi đã gặp. So thẳng theo giờ còn lại mới đúng: hết
+                // giờ (=0) mới ẩn, còn giờ thì hiệp nào cũng phải tiếp tục
+                // được.
+                !(laHiepCuoi && live.thoiGianConLaiGiay <= 0) && (
                   <button className={styles.timerBtn} onClick={tiepTuc}>
                     <Play size={15} /> Tiếp tục
                   </button>
