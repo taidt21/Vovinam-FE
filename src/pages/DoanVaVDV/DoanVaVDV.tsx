@@ -357,6 +357,11 @@ export default function DoanVaVDV() {
             onClick={() => window.open("/dashboard/in-the-vdv", "_blank")}>
             <FileDown size={17} /> In thẻ VĐV
           </button>
+          <button
+            className={styles.btnGhost}
+            onClick={() => window.open("/dashboard/in-the-can-bo-doan", "_blank")}>
+            <FileDown size={17} /> In thẻ Trưởng đoàn/HLV
+          </button>
           {coQuyenSua && (
             <>
               <button

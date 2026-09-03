@@ -27,6 +27,7 @@ const InLichThiDauQuyen = lazy(
 );
 const InTheVDV = lazy(() => import("./pages/InTheVDV/InTheVDV"));
 const InTheTrongTai = lazy(() => import("./pages/InTheTrongTai/InTheTrongTai"));
+const InTheCanBoDoan = lazy(() => import("./pages/InTheCanBoDoan/InTheCanBoDoan"));
 const BanThuKy = lazy(() => import("./pages/BanThuKy/BanThuKy"));
 const KetQua = lazy(() => import("./pages/KetQua/KetQua"));
 const TrongTai = lazy(() => import("./pages/TrongTai/TrongTai"));
@@ -110,6 +111,14 @@ export default function App() {
           element={
             <RequireAdmin>
               <InTheTrongTai />
+            </RequireAdmin>
+          }
+        />
+        <Route
+          path="/dashboard/in-the-can-bo-doan"
+          element={
+            <RequireAdmin>
+              <InTheCanBoDoan />
             </RequireAdmin>
           }
         />

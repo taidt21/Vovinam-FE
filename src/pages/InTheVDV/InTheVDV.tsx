@@ -9,6 +9,7 @@ import {
   type TheVdvLogoWire,
 } from "../../lib/api/theVdvLogosApi";
 import theVdvBg from "../../assets/the-vdv.jpg";
+import FittedName from "../../components/FittedName/FittedName";
 import sharedStyles from "../../styles/theCard.module.scss";
 import styles from "./InTheVDV.module.scss";
 
@@ -396,15 +397,17 @@ export default function InTheVDV() {
               <div className={styles.photoBox}>
                 <CardPhoto name={a.hoTen} photoUrl={a.anhDaiDien} />
               </div>
-              <div className={`${sharedStyles.field} ${styles.fieldHoTen}`}>
-                {a.hoTen}
-              </div>
+              <FittedName
+                name={a.hoTen}
+                className={`${sharedStyles.field} ${styles.fieldHoTen}`}
+              />
               <div className={`${sharedStyles.field} ${styles.fieldNhomTuoi}`}>
                 {formatNhom(a.nhomTuoi)}
               </div>
-              <div className={`${sharedStyles.field} ${styles.fieldDonVi}`}>
-                {teamNameOf(a.teamId)}
-              </div>
+              <FittedName
+                name={teamNameOf(a.teamId)}
+                className={`${sharedStyles.field} ${styles.fieldDonVi}`}
+              />
             </div>
             <p className={sharedStyles.cardCaption}>{a.hoTen}</p>
           </div>

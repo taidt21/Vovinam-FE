@@ -16,6 +16,7 @@ import {
   type TheVdvLogoWire,
 } from "../../lib/api/theVdvLogosApi";
 import theTrongTaiBg from "../../assets/the-trong-tai.jpg";
+import FittedName from "../../components/FittedName/FittedName";
 import sharedStyles from "../../styles/theCard.module.scss";
 import styles from "./InTheTrongTai.module.scss";
 
@@ -417,12 +418,14 @@ export default function InTheTrongTai() {
               <div className={styles.photoBox}>
                 <CardPhoto name={t.hoTen} photoUrl={t.anhDaiDien} />
               </div>
-              <div className={`${sharedStyles.field} ${styles.fieldHoTen}`}>
-                {t.hoTen}
-              </div>
-              <div className={`${sharedStyles.field} ${styles.fieldDonVi}`}>
-                {t.donVi}
-              </div>
+              <FittedName
+                name={t.hoTen}
+                className={`${sharedStyles.field} ${styles.fieldHoTen}`}
+              />
+              <FittedName
+                name={t.donVi ?? ""}
+                className={`${sharedStyles.field} ${styles.fieldDonVi}`}
+              />
             </div>
 
             <input

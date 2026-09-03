@@ -51,7 +51,11 @@ import {
   publishCourtResting,
   subscribeCourtResting,
 } from "../../lib/realtime/courtRestingStore";
-import { getConnection } from "../../lib/realtime/matchHubConnection";
+import {
+  getConnection,
+  subscribeConnectionState,
+  ensureJoinedCourt,
+} from "../../lib/realtime/matchHubConnection";
 
 import {
   TABS,
@@ -139,6 +143,19 @@ export default function BanThuKy() {
     return subscribeCourtResting(currentCourtId, "quyen", setDangNghiQuyen);
   }, [currentCourtId]);
 
+  // Y hệt lỗi vừa sửa ở màn hình công khai/trọng tài: các state sống
+  // (dangNghi*, activeModeLocal, dữ liệu đọc qua getMatchSnapshot/
+  // getQuyenSnapshot bên dưới...) chỉ tự cập nhật MỘT LẦN lúc mount —
+  // nếu kết nối rớt rồi nối lại giữa chừng, dữ liệu cũ vẫn còn (không
+  // rỗng) nên không có gì tự báo "cần đọc lại". Hễ kết nối vừa nối lại
+  // là rejoin ngay đúng sân đang mở, kéo về CourtSnapshot mới nhất.
+  useEffect(() => {
+    if (!currentCourtId) return;
+    return subscribeConnectionState((connected) => {
+      if (connected) ensureJoinedCourt(currentCourtId).catch(() => {});
+    });
+  }, [currentCourtId]);
+
   useEffect(() => {
     const refreshTournament = () =>
       apiGet<Tournament>("/tournament")
@@ -149,6 +166,18 @@ export default function BanThuKy() {
     conn.on("TournamentChanged", refreshTournament);
     return () => {
       conn.off("TournamentChanged", refreshTournament);
+    };
+  }, []);
+
+  // Trước đây chỉ tải đúng 1 lần lúc vào trang (trong Promise.all bên
+  // dưới) — trọng tài tự chọn/đổi tên/bị reset từ đúng MÁY CỦA HỌ
+  // (không phải từ trang này) không có gì báo cho Bàn thư ký biết để
+  // tải lại, phải F5 mới thấy đúng cập nhật.
+  useEffect(() => {
+    const conn = getConnection();
+    conn.on("TrongTaiChanged", refreshTrongTai);
+    return () => {
+      conn.off("TrongTaiChanged", refreshTrongTai);
     };
   }, []);
 
@@ -882,7 +911,9 @@ export default function BanThuKy() {
       const ket = await moManHinhCongKhai(currentCourtId);
       setManHinhCKDangChay(ket.dangChay);
     } catch (err) {
-      window.alert(err instanceof Error ? err.message : "Mở màn hình công khai thất bại.");
+      window.alert(
+        err instanceof Error ? err.message : "Mở màn hình công khai thất bại.",
+      );
     } finally {
       setDangMoManHinh(false);
     }
@@ -893,7 +924,11 @@ export default function BanThuKy() {
       const ket = await dongManHinhCongKhai();
       setManHinhCKDangChay(ket.dangChay);
     } catch (err) {
-      window.alert(err instanceof Error ? err.message : "Đóng màn hình công khai thất bại.");
+      window.alert(
+        err instanceof Error
+          ? err.message
+          : "Đóng màn hình công khai thất bại.",
+      );
     }
   };
   return (

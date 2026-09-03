@@ -1,0 +1,83 @@
+@use '../../styles/variables' as *;
+
+// Phần khung/toolbar/nút bấm dùng chung nằm ở src/styles/theCard.module.scss
+// — file này chỉ còn toạ độ riêng của 2 mẫu thẻ (Trưởng đoàn/HLV dùng
+// chung khung ảnh, nhưng lệch nhau 1 chút ở vị trí 2 dòng chữ nên tách
+// riêng field cho từng vai trò, không dùng chung như thẻ VĐV/Trọng tài).
+
+// Photo box GIỐNG HỆT nhau cho cả 2 vai trò — đo trên nền 3329x4616.
+.photoBox {
+    position: absolute;
+    top: 32.67%;
+    left: 32.11%;
+    width: 35.99%;
+    height: 34.77%;
+    overflow: hidden;
+    border-radius: 4%;
+    background: $color-bg;
+}
+
+// left GIỐNG HỆT các thẻ khác trong cùng bộ (VĐV/Trọng tài) — đã đo lại
+// và xác nhận đúng cùng 1 giá trị vì cùng font/cùng nhãn "Họ và tên :"/
+// "Đơn vị :". Bên .field dùng chung (theCard.module.scss) không còn đặt
+// left nữa (mỗi trang tự đặt riêng) — quên khai báo ở đây là nguyên nhân
+// giá trị bị dạt hẳn sang phải thay vì bám theo nhãn như thẻ VĐV.
+.fieldHoTenTruongDoan {
+    top: 72.03%;
+    height: 5.5%;
+    left: 43.65%;
+}
+
+.fieldDonViTruongDoan {
+    top: 78.96%;
+    height: 5.5%;
+    left: 38.33%;
+}
+
+.fieldHoTenHlv {
+    top: 71.49%;
+    height: 5.5%;
+    left: 43.65%;
+}
+
+.fieldDonViHlv {
+    top: 78.44%;
+    height: 5.55%;
+    left: 38.33%;
+}
+
+.importBtn {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    height: $control-height;
+    padding: 0 $space-4;
+    border: 1px solid $color-border;
+    border-radius: $radius-sm;
+    background: $color-surface;
+    color: $color-text;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+
+    &:hover {
+        background: $color-bg;
+    }
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+}
+
+.roleBadge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: $color-bg;
+    color: $color-text-muted;
+    font-size: 12px;
+    font-weight: 600;
+}
+

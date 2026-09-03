@@ -58,6 +58,15 @@
     &:hover {
         background: $color-bg;
     }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    &:disabled:hover {
+        background: $color-surface;
+    }
 }
 
 .pickerName {

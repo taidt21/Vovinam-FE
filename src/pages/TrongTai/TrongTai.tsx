@@ -23,7 +23,12 @@ import {
   ensureStarted,
   getConnection,
 } from "../../lib/realtime/matchHubConnection";
-import { fetchTrongTai, type TrongTaiWire } from "../../lib/api/trongTaiApi";
+import {
+  fetchTrongTai,
+  chonTrongTai,
+  boChonTrongTai,
+  type TrongTaiWire,
+} from "../../lib/api/trongTaiApi";
 import type { LiveMatchState } from "../../types/live";
 import type { LiveQuyenState } from "../../types/liveQuyen";
 import DoiKhangView from "./DoiKhangView";
@@ -80,7 +85,7 @@ export default function TrongTai() {
     const load = () =>
       fetchTrongTai()
         .then((data) => {
-          setList(data.filter((t) => t.thuTuGiamDinh !== null));
+          setList(data);
           setFetchError(false);
         })
         .catch(() => setFetchError(true));
@@ -103,10 +108,25 @@ export default function TrongTai() {
   // Giờ hễ tải xong danh sách mới là đối chiếu lại: không còn thấy đúng
   // người + đúng sân đó nữa thì coi thiết lập cũ hết hiệu lực, quay về
   // màn chọn lại thay vì tin mãi vào dữ liệu cũ trên máy.
+  //
+  // CỐ TÌNH chỉ so courtId, KHÔNG so thuTuGiamDinh — list ở đây giờ là
+  // TOÀN BỘ danh sách (kể cả dự bị, không lọc như trước), nên chuyển
+  // dự bị <-> giám định (cùng sân) không còn bị coi là "hết hạn" nữa,
+  // máy vẫn nhận đúng người, chỉ đổi cách MainScreen hiển thị bên dưới.
+  //
+  // CÓ so thêm daChonThietBi === true — đây là tín hiệu để phát hiện lúc
+  // BTC bấm "Reset lựa chọn" bên Bàn thư ký (xem TrongTaiTab.tsx): máy
+  // đang hoạt động không hề biết BTC vừa nhả khoá hộ mình, nếu không so
+  // thêm cờ này thì máy CŨ cứ tưởng vẫn hợp lệ, tiếp tục chạy bình
+  // thường — trong khi 1 máy MỚI cũng đang được phép chọn đúng tên đó,
+  // quay lại đúng vấn đề "2 máy cùng 1 người" ban đầu.
   useEffect(() => {
     if (!identity || list === null) return;
     const conCoTrongDanhSach = list.some(
-      (t) => t.id === identity.trongTaiId && t.courtId === identity.courtId,
+      (t) =>
+        t.id === identity.trongTaiId &&
+        t.courtId === identity.courtId &&
+        t.daChonThietBi,
     );
     if (!conCoTrongDanhSach) {
       clearIdentity();
@@ -129,15 +149,40 @@ export default function TrongTai() {
           saveIdentity(id);
           setIdentity(id);
           setBienMatKhoiDanhSach(false);
+          // Cập nhật NGAY tại đây, không đợi vòng SignalR "TrongTaiChanged"
+          // tự tải lại — nếu không, đúng khoảnh khắc vừa chọn xong, list
+          // cục bộ vẫn còn đang ở bản CŨ (daChonThietBi=false, do đó mới
+          // chọn được), stale-check phía trên sẽ hiểu nhầm là bị reset
+          // ngay lập tức, đá thẳng về màn chọn lại dù vừa chọn thành công.
+          setList((prev) =>
+            prev
+              ? prev.map((t) =>
+                  t.id === id.trongTaiId ? { ...t, daChonThietBi: true } : t,
+                )
+              : prev,
+          );
         }}
       />
     );
   }
+
+  // Đang là dự bị hay giám định active tra CHÍNH XÁC ngay lúc render,
+  // không lưu tĩnh vào identity — BTC đổi qua lại giữa dự bị/active thì
+  // MainScreen tự cập nhật ngay khi list làm mới (qua SignalR), không
+  // cần F5 hay chọn lại gì cả.
+  const banThan = list?.find((t) => t.id === identity.trongTaiId);
+  const dangLaDuBi = banThan ? banThan.thuTuGiamDinh === null : false;
+
   return (
     <MainScreen
       identity={identity}
       courts={courts}
+      dangLaDuBi={dangLaDuBi}
       onChangeSetup={() => {
+        // Nhả tên ra cho người khác chọn lại được — cố gắng hết sức,
+        // không chặn việc đổi thiết lập trên MÁY NÀY dù lỡ gọi lỗi
+        // (mất mạng...), BTC vẫn có thể "reset-all" nếu kẹt lại.
+        boChonTrongTai(identity.trongTaiId).catch(() => {});
         clearIdentity();
         setIdentity(null);
       }}
@@ -158,12 +203,42 @@ function SetupScreen({
   canhBaoHetHan: boolean;
   onDone: (id: Identity) => void;
 }) {
+  const [dangChon, setDangChon] = useState<string | null>(null);
+  const [loiChon, setLoiChon] = useState<string | null>(null);
+
   const tenSan = (courtId: string | null) =>
     courts.find((c) => c.id === courtId)?.ten ?? courtId ?? "—";
 
-  const pick = (t: TrongTaiWire) => {
-    if (!t.courtId) return;
-    onDone({ trongTaiId: t.id, tenTrongTai: t.hoTen, courtId: t.courtId });
+  // Lọc CHỈ giám định đang active để chọn — dự bị chưa có gì để chấm,
+  // không cho chọn ở màn này (list giờ là TOÀN BỘ danh sách, lọc ở đây
+  // thay vì lúc tải như trước, để chỗ khác vẫn cần thấy cả dự bị).
+  const dangActive = (list ?? []).filter((t) => t.thuTuGiamDinh !== null);
+
+  // Sắp theo đúng thứ tự Giám định 1, 2, 3... cho dễ tìm — trước đây
+  // hiện đúng thứ tự thêm vào CSDL, lộn xộn không theo số nào cả.
+  const daSap = [...dangActive].sort(
+    (a, b) => (a.thuTuGiamDinh ?? 0) - (b.thuTuGiamDinh ?? 0),
+  );
+
+  const pick = async (t: TrongTaiWire) => {
+    if (!t.courtId || t.daChonThietBi || dangChon) return;
+    setLoiChon(null);
+    setDangChon(t.id);
+    try {
+      // Xin "khoá" đúng tên này trước — CHỈ khi server xác nhận chưa ai
+      // chọn mới coi là thành công, đúng lúc chọn có thể trùng với 1
+      // thiết bị khác đang bấm cùng lúc.
+      await chonTrongTai(t.id);
+      onDone({ trongTaiId: t.id, tenTrongTai: t.hoTen, courtId: t.courtId });
+    } catch (err) {
+      setLoiChon(
+        err instanceof Error
+          ? err.message
+          : "Chọn tên thất bại — thử lại.",
+      );
+    } finally {
+      setDangChon(null);
+    }
   };
 
   return (
@@ -182,8 +257,9 @@ function SetupScreen({
           Không tải được danh sách — kiểm tra mạng rồi thử lại.
         </p>
       )}
+      {loiChon && <p className={styles.hint}>{loiChon}</p>}
       {list === null && !error && <p className={styles.hint}>Đang tải...</p>}
-      {list !== null && list.length === 0 && (
+      {list !== null && dangActive.length === 0 && (
         <p className={styles.hint}>
           Chưa có ai được Bàn thư ký gán làm giám định. Liên hệ Bàn thư ký trước
           khi vào chấm.
@@ -191,15 +267,17 @@ function SetupScreen({
       )}
 
       <div className={styles.pickerList}>
-        {list?.map((t) => (
+        {daSap.map((t) => (
           <button
             key={t.id}
             type="button"
             className={styles.pickerBtn}
+            disabled={t.daChonThietBi || dangChon !== null}
             onClick={() => pick(t)}>
             <span className={styles.pickerName}>{t.hoTen}</span>
             <span className={styles.pickerSub}>
               Giám định {t.thuTuGiamDinh} - {tenSan(t.courtId)}
+              {t.daChonThietBi && " · đã có người chọn"}
             </span>
           </button>
         ))}
@@ -211,17 +289,32 @@ function SetupScreen({
 function MainScreen({
   identity,
   courts,
+  dangLaDuBi,
   onChangeSetup,
 }: {
   identity: Identity;
   courts: CourtBasic[];
+  dangLaDuBi: boolean;
   onChangeSetup: () => void;
 }) {
   const { tenTrongTai, courtId } = identity;
   const courtName = courts.find((c) => c.id === courtId)?.ten ?? "";
 
   const [connected, setConnected] = useState(true);
-  useEffect(() => subscribeConnectionState(setConnected), []);
+  useEffect(() => {
+    // Y hệt lỗi vừa sửa ở màn hình công khai: watchdog dưới đây (dựa
+    // theo "có dữ liệu hay chưa") không phát hiện được lúc ĐÃ từng có
+    // dữ liệu rồi MỚI mất kết nối — dữ liệu cũ vẫn còn nên watchdog
+    // tưởng ổn, không bao giờ thử nối lại, chấm điểm/xem trận cứ đứng
+    // im dù trận vẫn đang diễn ra thật. Giờ hễ kết nối THẬT vừa nối lại
+    // là rejoin ngay — CourtSnapshot trả về gồm cả matchState/quyenState
+    // /activeMode cùng lúc nên chỉ cần rejoin đúng 1 lần là làm mới lại
+    // cả 3 thứ, không cần tách riêng từng effect.
+    return subscribeConnectionState((c) => {
+      setConnected(c);
+      if (c) ensureJoinedCourt(courtId).catch(() => {});
+    });
+  }, [courtId]);
 
   const [liveMatch, setLiveMatch] = useState<LiveMatchState | null>(() =>
     getMatchSnapshot(courtId),
@@ -283,7 +376,17 @@ function MainScreen({
         </div>
       )}
 
-      {activeMode === "doi_khang" ? (
+      {dangLaDuBi ? (
+        // Đang dự bị — KHÔNG hiện màn chấm điểm (dù vẫn đang có trận diễn
+        // ra ở sân này) để tránh lỡ tay bấm nhầm; backend cũng đã chặn
+        // riêng ở PressLight nếu vẫn lọt qua được. Tự chuyển sang màn
+        // chấm ngay khi Bàn thư ký xếp lại vị trí active, không cần làm
+        // gì thêm ở đây (dangLaDuBi tính lại mỗi khi danh sách làm mới).
+        <div className={styles.noMatch}>
+          <p>Bạn đang là dự bị, chưa được xếp vị trí giám định.</p>
+          <p>Màn hình sẽ tự chuyển sang chấm điểm khi được xếp vào 1 vị trí.</p>
+        </div>
+      ) : activeMode === "doi_khang" ? (
         <DoiKhangView identity={identity} live={liveMatch} />
       ) : activeMode === "quyen" ? (
         <QuyenView identity={identity} live={liveQuyen} />

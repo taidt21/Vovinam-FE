@@ -5,6 +5,7 @@ import { CheckCircle2, Search, Users, X } from "lucide-react";
 import type { CourtBasic } from "../../../lib/utils/courts";
 import {
   updateTrongTai,
+  boChonTrongTai,
   type TrongTaiWire,
 } from "../../../lib/api/trongTaiApi";
 import styles from "../BanThuKy.module.scss";
@@ -56,6 +57,26 @@ export default function TrongTaiTab({
       onRefresh();
     } catch {
       window.alert("Đổi sân thất bại.");
+    }
+  };
+
+  // Dành cho lúc điện thoại trọng tài hết pin/hỏng/đổi máy giữa chừng —
+  // họ không tự bấm "Đổi tên" trên máy cũ được nữa (máy đó không dùng
+  // được), nên BTC cần cách chủ động nhả khoá hộ để họ chọn lại trên
+  // máy khác. Dùng lại đúng API "/bo-chon" (vốn để trọng tài tự gọi),
+  // không cần API riêng.
+  const resetLuaChon = async (t: TrongTaiWire) => {
+    if (
+      !window.confirm(
+        `Cho phép chọn lại tên "${t.hoTen}" trên máy khác? Chỉ làm việc này khi chắc chắn máy cũ của họ không còn dùng được nữa.`,
+      )
+    )
+      return;
+    try {
+      await boChonTrongTai(t.id);
+      onRefresh();
+    } catch {
+      window.alert("Reset thất bại — thử lại.");
     }
   };
 
@@ -227,6 +248,7 @@ export default function TrongTaiTab({
                             courts={courts}
                             onPositionChange={doiViTri}
                             onCourtChange={doiSan}
+                            onResetLuaChon={resetLuaChon}
                           />
                         ))}
                       </div>
@@ -252,6 +274,7 @@ export default function TrongTaiTab({
                             courts={courts}
                             onPositionChange={doiViTri}
                             onCourtChange={doiSan}
+                            onResetLuaChon={resetLuaChon}
                           />
                         ))}
                       </div>
@@ -272,11 +295,13 @@ function TrongTaiRow({
   courts,
   onPositionChange,
   onCourtChange,
+  onResetLuaChon,
 }: {
   t: TrongTaiWire;
   courts: CourtBasic[];
   onPositionChange: (t: TrongTaiWire, thuTu: number | null) => void;
   onCourtChange: (t: TrongTaiWire, courtId: string) => void;
+  onResetLuaChon: (t: TrongTaiWire) => void;
 }) {
   const assigned = t.thuTuGiamDinh !== null;
 
@@ -294,6 +319,15 @@ function TrongTaiRow({
       </div>
 
       <div className={styles.trongTaiPersonControls}>
+        {t.daChonThietBi && (
+          <button
+            type="button"
+            className={styles.trongTaiResetLuaChonBtn}
+            onClick={() => onResetLuaChon(t)}
+            title="Cho phép chọn lại tên này trên máy khác (dùng khi điện thoại của họ hết pin/hỏng)">
+            Reset lựa chọn
+          </button>
+        )}
         <label>
           <span>Vị trí</span>
           <select
