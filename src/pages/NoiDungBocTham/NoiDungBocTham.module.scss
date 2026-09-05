@@ -539,3 +539,455 @@
         overflow-y: auto;
     }
 }
+
+/* ========================================================================== */
+/* Brand polish — chỉ thay presentation, không thay logic/markup              */
+/* ========================================================================== */
+
+.page {
+    width: min(100%, 1560px);
+    gap: 24px;
+}
+
+.pageHeader {
+    position: relative;
+    padding: 22px 26px 22px 30px;
+    border: 1px solid $color-border;
+    border-radius: $radius-lg;
+    background:
+        radial-gradient(circle at 92% 14%, rgba($color-do, .10), transparent 30%),
+        linear-gradient(135deg, rgba($color-do, .045), $color-surface 54%);
+    box-shadow: $shadow-card;
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: 18px;
+        bottom: 18px;
+        left: 0;
+        width: 4px;
+        border-radius: 0 999px 999px 0;
+        background: $color-do;
+    }
+}
+
+.pageEyebrow {
+    margin-bottom: 8px;
+    color: $color-do;
+    letter-spacing: .12em;
+}
+
+.pageTitle {
+    color: $color-text;
+    font-size: clamp(27px, 2.25vw, 34px);
+    font-weight: 800;
+}
+
+.pageSubtitle {
+    max-width: 860px;
+    margin-top: 8px;
+    font-size: 13px;
+    line-height: 1.65;
+}
+
+.tabsBar {
+    min-height: 56px;
+    padding: 5px 6px;
+    border-color: rgba($color-border, .96);
+    background:
+        linear-gradient(180deg, $color-surface 0%, rgba($color-bg, .3) 100%);
+    box-shadow: 0 4px 16px rgba(15, 23, 42, .025);
+}
+
+.tab,
+.tabActive {
+    min-height: 42px;
+    padding-inline: 18px;
+    border-radius: $radius-md;
+    transition:
+        background .15s ease,
+        color .15s ease,
+        box-shadow .15s ease,
+        transform .15s ease;
+}
+
+.tab:hover {
+    background: rgba($color-do, .025);
+    color: $color-text;
+}
+
+.tabActive {
+    background: $color-surface;
+    color: $color-do;
+    box-shadow:
+        0 1px 2px rgba(15, 23, 42, .05),
+        inset 0 0 0 1px rgba($color-do, .12);
+
+    &:hover {
+        color: $color-do;
+    }
+}
+
+.tongSoTran {
+    min-height: 34px;
+    display: inline-flex;
+    align-items: center;
+    padding-inline: 13px;
+    border: 1px solid rgba($color-do, .10);
+    background: rgba($color-do, .045);
+    color: $color-do;
+    font-weight: 750;
+}
+
+.exportBar {
+    margin-top: -4px;
+}
+
+.exportBtn {
+    min-height: 40px;
+    border-color: rgba($color-border, .98);
+    background: $color-surface;
+    transition:
+        border-color .15s ease,
+        background .15s ease,
+        color .15s ease,
+        transform .15s ease,
+        box-shadow .15s ease;
+
+    &:hover {
+        border-color: rgba($color-do, .22);
+        background: rgba($color-do, .035);
+        color: $color-do;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 14px rgba(15, 23, 42, .045);
+    }
+}
+
+.body {
+    gap: 22px;
+}
+
+.sidebar {
+    width: 300px;
+    position: sticky;
+    top: 16px;
+    border-color: rgba($color-border, .96);
+    background: $color-surface;
+    box-shadow:
+        0 1px 2px rgba(15, 23, 42, .025),
+        0 9px 24px rgba(15, 23, 42, .04);
+}
+
+.eventList {
+    gap: 6px;
+    padding: 10px;
+}
+
+.eventItem,
+.eventItemActive,
+.eventItemDrawn {
+    position: relative;
+    min-height: 54px;
+    padding: 10px 12px 10px 14px;
+    border: 1px solid transparent;
+    border-radius: $radius-md;
+    transition:
+        border-color .14s ease,
+        background .14s ease,
+        color .14s ease,
+        transform .14s ease,
+        box-shadow .14s ease;
+
+    &:hover {
+        transform: translateX(2px);
+    }
+}
+
+.eventItem:hover {
+    border-color: rgba($color-do, .10);
+    background: rgba($color-do, .025);
+}
+
+.eventItemActive {
+    border-color: rgba($color-do, .24);
+    background:
+        linear-gradient(90deg, rgba($color-do, .09), rgba($color-do, .025));
+    color: $color-do;
+    box-shadow: inset 3px 0 0 rgba($color-do, .88);
+}
+
+.eventItemDrawn {
+    border-color: rgba($color-success, .12);
+    background:
+        linear-gradient(90deg, rgba($color-success, .07), rgba($color-success, .018));
+
+    &:hover {
+        border-color: rgba($color-success, .22);
+        background: rgba($color-success, .09);
+    }
+}
+
+.eventName {
+    min-width: 0;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.eventMeta {
+    margin-top: 2px;
+    color: $color-text-muted;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.drawnIcon {
+    filter: drop-shadow(0 1px 2px rgba($color-success, .12));
+}
+
+.main {
+    min-height: 420px;
+    padding: 24px;
+    border-color: rgba($color-border, .96);
+    background: $color-surface;
+    box-shadow:
+        0 1px 2px rgba(15, 23, 42, .025),
+        0 10px 28px rgba(15, 23, 42, .045);
+}
+
+.title {
+    margin: 0 0 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid rgba($color-border, .8);
+    color: $color-text;
+    font-size: clamp(20px, 1.6vw, 25px);
+    font-weight: 800;
+
+    small {
+        color: $color-text-muted;
+        font-size: .68em;
+        font-weight: 650;
+    }
+}
+
+.registeredSection {
+    position: relative;
+    padding: 18px;
+    border-color: rgba($color-border, .96);
+    background:
+        linear-gradient(180deg, rgba($color-bg, .34), $color-surface 40%);
+    box-shadow: 0 4px 14px rgba(15, 23, 42, .025);
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: 10px;
+        bottom: 10px;
+        left: 0;
+        width: 3px;
+        border-radius: 0 999px 999px 0;
+        background: rgba($color-do, .72);
+    }
+}
+
+.registeredTitle {
+    margin-bottom: 14px;
+    color: $color-text;
+    font-weight: 800;
+
+    span {
+        color: $color-text-muted;
+        font-weight: 600;
+    }
+}
+
+.actions {
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 16px 0 18px;
+    padding: 12px 14px;
+    border: 1px solid rgba($color-border, .9);
+    border-radius: $radius-md;
+    background: rgba($color-bg, .38);
+}
+
+.btnPrimary {
+    min-height: 40px;
+    border-color: $color-do;
+    background: $color-do;
+    box-shadow: 0 5px 13px rgba($color-do, .14);
+    transition:
+        transform .15s ease,
+        box-shadow .15s ease,
+        opacity .15s ease;
+
+    &:hover:not(:disabled) {
+        opacity: 1;
+        transform: translateY(-1px);
+        box-shadow: 0 8px 18px rgba($color-do, .19);
+    }
+
+    &:active:not(:disabled) {
+        transform: translateY(0);
+    }
+}
+
+.btnReset {
+    min-height: 40px;
+    border-radius: $radius-md;
+    transition:
+        border-color .15s ease,
+        background .15s ease,
+        transform .15s ease,
+        box-shadow .15s ease;
+
+    &:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 7px 16px rgba($color-danger, .10);
+    }
+}
+
+.tableWrap {
+    border-color: rgba($color-border, .96);
+    background: $color-surface;
+    box-shadow: inset 0 0 0 1px rgba(#fff, .35);
+}
+
+.peopleTable {
+    color: $color-text;
+
+    th,
+    td {
+        padding: 11px 13px;
+        border-color: rgba($color-border, .95);
+    }
+
+    thead th {
+        background:
+            linear-gradient(180deg, $color-bg-subtle, rgba($color-bg, .72));
+        color: $color-text-muted;
+        border-bottom-color: rgba($color-border, 1);
+        font-size: 11px;
+        letter-spacing: .055em;
+    }
+
+    tbody tr {
+        background: $color-surface;
+    }
+
+    tbody tr:nth-child(even) {
+        background: rgba($color-bg, .34);
+    }
+
+    tbody tr:hover {
+        background:
+            linear-gradient(90deg, rgba($color-do, .028), transparent 52%);
+    }
+}
+
+.orderCell {
+    color: $color-text-muted;
+}
+
+.nameCell {
+    color: $color-text;
+    font-weight: 700;
+}
+
+.teamCell {
+    color: $color-text-muted;
+}
+
+.groupOrderCell {
+    background: rgba($color-do, .035);
+    color: $color-do;
+}
+
+.mergedTeamCell {
+    background:
+        linear-gradient(135deg, rgba($color-do, .035), rgba($color-do, .012));
+    color: $color-text;
+    font-weight: 750;
+}
+
+.hint,
+.emptyList {
+    line-height: 1.5;
+}
+
+@media (max-width: 1100px) {
+    .sidebar {
+        width: 260px;
+    }
+
+    .main {
+        padding: 20px;
+    }
+}
+
+@media (max-width: 900px) {
+    .pageHeader {
+        padding: 18px 18px 18px 22px;
+
+        &::before {
+            top: 14px;
+            bottom: 14px;
+        }
+    }
+
+    .tabsBar {
+        align-items: stretch;
+        flex-direction: column;
+        padding: 6px;
+    }
+
+    .tabsGroup {
+        width: 100%;
+    }
+
+    .tab,
+    .tabActive {
+        flex: 1;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .tongSoTran {
+        margin: 0;
+        align-self: flex-start;
+    }
+
+    .sidebar {
+        position: static;
+        width: 100%;
+        max-height: 300px;
+    }
+
+    .main {
+        width: 100%;
+    }
+}
+
+@media (max-width: 600px) {
+    .exportBar {
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+
+    .exportBtn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .main {
+        padding: 15px;
+    }
+
+    .registeredSection {
+        padding: 14px;
+    }
+
+    .title {
+        font-size: 20px;
+    }
+}
+

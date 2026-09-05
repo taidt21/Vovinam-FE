@@ -83,6 +83,19 @@ export function getMatchLog(courtId: string): MatchLogEntry[] {
   return logCache.get(courtId) ?? [];
 }
 
+// Bàn thư ký cộng/trừ điểm tay hoặc hoàn tác — chỉ để GHI LOG (điểm số
+// thật vẫn gửi qua publishMatchState như trước, tách riêng đúng ở đây
+// để Nhật ký trận đấu hiện đủ cả thao tác tay lẫn đèn giám định cùng 1
+// nơi). Gửi ngay, không đợi phản hồi — lỗi gửi log không được chặn thao
+// tác điểm chính (đã áp dụng ngay ở phía state cục bộ trước khi gọi
+// hàm này).
+export function ghiLogDieuChinhDiem(courtId: string, noiDung: string): void {
+  ensureHandlersRegistered();
+  ensureStarted()
+    .then((conn) => conn.invoke('GhiLogDieuChinhDiem', courtId, noiDung))
+    .catch(() => {});
+}
+
 export function subscribeMatchLog(courtId: string, onChange: (log: MatchLogEntry[]) => void): () => void {
   ensureHandlersRegistered();
   ensureJoinedCourt(courtId).catch(() => {});

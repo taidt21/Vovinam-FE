@@ -1,6 +1,6 @@
 /** @format */
 
-import { useMemo } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Trophy } from "lucide-react";
 import type { Athlete, Match } from "../../types";
 import { groupByRound, winnerLabel } from "../../lib/domain/bracket";
@@ -18,6 +18,93 @@ const LABEL_H = 32;
 function nhanVong(vong: string | undefined): string {
   if (!vong) return "";
   return vong === "Vòng 32" || vong === "Vòng 16" ? "Vòng loại" : vong;
+}
+
+function rutGonTenVdv(hoTen: string): string {
+  const parts = hoTen.trim().split(/\s+/).filter(Boolean);
+  if (parts.length <= 2) return hoTen.trim();
+
+  const ho = parts[0];
+  const ten = parts[parts.length - 1];
+  const tenDem = parts
+    .slice(1, -1)
+    .map((word) => `${word.charAt(0).toLocaleUpperCase("vi-VN")}.`)
+    .join(" ");
+
+  return `${ho} ${tenDem} ${ten}`;
+}
+
+function AthleteSlot({
+  side,
+  name,
+  team,
+  eliminated,
+}: {
+  side: "do" | "xanh";
+  name: string;
+  team: string | null;
+  eliminated: boolean;
+}) {
+  const rowRef = useRef<HTMLDivElement>(null);
+  const nameRef = useRef<HTMLSpanElement>(null);
+  const [rutGon, setRutGon] = useState(false);
+
+  // Chỉ rút gọn tên khi CHÍNH tên VĐV thực sự không vừa phần không gian
+  // dành cho nó. Không dựa vào số ký tự vì độ rộng từng chữ khác nhau.
+  useLayoutEffect(() => {
+    const el = nameRef.current;
+    if (!el || rutGon) return;
+
+    if (el.scrollWidth > el.clientWidth + 1) {
+      setRutGon(true);
+    }
+  }, [name, team, rutGon]);
+
+  // Khi card/viewport đổi kích thước, thử lại tên đầy đủ trước. Nếu vẫn
+  // không vừa, effect phía trên sẽ tự chuyển lại sang bản rút gọn.
+  useLayoutEffect(() => {
+    const row = rowRef.current;
+    if (!row || typeof ResizeObserver === "undefined") return;
+
+    let lastWidth = row.getBoundingClientRect().width;
+    const observer = new ResizeObserver(() => {
+      const nextWidth = row.getBoundingClientRect().width;
+      if (Math.abs(nextWidth - lastWidth) > 0.5) {
+        lastWidth = nextWidth;
+        setRutGon(false);
+      }
+    });
+
+    observer.observe(row);
+    return () => observer.disconnect();
+  }, []);
+
+  const displayName = rutGon ? rutGonTenVdv(name) : name;
+
+  return (
+    <div
+      ref={rowRef}
+      className={`${styles.slotRow} ${
+        side === "do" ? styles.slotDo : styles.slotXanh
+      }`}>
+      <span
+        ref={nameRef}
+        title={name}
+        className={
+          eliminated
+            ? `${styles.slotName} ${styles.slotNameEliminated}`
+            : styles.slotName
+        }>
+        {displayName}
+      </span>
+
+      {team && (
+        <span className={styles.slotTeam} title={team}>
+          {team}
+        </span>
+      )}
+    </div>
+  );
 }
 
 interface BracketViewProps {
@@ -203,48 +290,30 @@ export default function BracketView({
                   Trận {soByMatchId.get(match.id)}
                 </span>
               )}
-              <div className={`${styles.slotRow} ${styles.slotDo}`}>
-                {match.athleteRedId ? (
-                  <>
-                    <span
-                      className={
-                        doThua
-                          ? `${styles.slotName} ${styles.slotNameEliminated}`
-                          : styles.slotName
-                      }>
-                      {athleteName(match.athleteRedId)}
-                    </span>
-                    {athleteTeam(match.athleteRedId) && (
-                      <span className={styles.slotTeam}>
-                        {athleteTeam(match.athleteRedId)}
-                      </span>
-                    )}
-                  </>
-                ) : (
-                  winnerLabel(matches, soByMatchId, match.id, "do")
-                )}
-              </div>
-              <div className={`${styles.slotRow} ${styles.slotXanh}`}>
-                {match.athleteBlueId ? (
-                  <>
-                    <span
-                      className={
-                        xanhThua
-                          ? `${styles.slotName} ${styles.slotNameEliminated}`
-                          : styles.slotName
-                      }>
-                      {athleteName(match.athleteBlueId)}
-                    </span>
-                    {athleteTeam(match.athleteBlueId) && (
-                      <span className={styles.slotTeam}>
-                        {athleteTeam(match.athleteBlueId)}
-                      </span>
-                    )}
-                  </>
-                ) : (
-                  winnerLabel(matches, soByMatchId, match.id, "xanh")
-                )}
-              </div>
+              {match.athleteRedId ? (
+                <AthleteSlot
+                  side="do"
+                  name={athleteName(match.athleteRedId) ?? "—"}
+                  team={athleteTeam(match.athleteRedId)}
+                  eliminated={doThua}
+                />
+              ) : (
+                <div className={`${styles.slotRow} ${styles.slotDo}`}>
+                  {winnerLabel(matches, soByMatchId, match.id, "do")}
+                </div>
+              )}
+              {match.athleteBlueId ? (
+                <AthleteSlot
+                  side="xanh"
+                  name={athleteName(match.athleteBlueId) ?? "—"}
+                  team={athleteTeam(match.athleteBlueId)}
+                  eliminated={xanhThua}
+                />
+              ) : (
+                <div className={`${styles.slotRow} ${styles.slotXanh}`}>
+                  {winnerLabel(matches, soByMatchId, match.id, "xanh")}
+                </div>
+              )}
             </div>
           );
         })}

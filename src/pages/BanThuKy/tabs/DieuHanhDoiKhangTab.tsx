@@ -10,6 +10,7 @@ import {
   SkipForward,
   Settings,
   RotateCcw,
+  Undo2,
   Award,
   Check,
   X,
@@ -26,6 +27,7 @@ import { serverNow } from "../../../lib/realtime/serverClock";
 import { usePressedLights, toPositionedPresses } from "../../../lib/realtime/usePressedLights";
 import { fetchTrongTai } from "../../../lib/api/trongTaiApi";
 import { useMatchStartBell } from "../../../lib/audio/matchBell";
+import { ghiLogDieuChinhDiem } from "../../../lib/realtime/pressLightClient";
 import Modal from "../../../components/Modal/Modal";
 import AthleteAvatar from "../../../components/AthleteAvatar/AthleteAvatar";
 import MatchLogPanel from "../../../components/MatchLogPanel/MatchLogPanel";
@@ -126,6 +128,15 @@ export default function DieuHanhDoiKhangTab({
   }, [live, courtId]);
   const remaining = live ? tinhThoiGianConLai(live) : 0;
   useMatchStartBell(live?.trangThai);
+  // Lịch sử điều chỉnh tay của TỪNG BÊN riêng biệt — "Hoàn tác" bên nào
+  // chỉ lùi lại đúng thao tác gần nhất của bên đó, không đụng bên kia dù
+  // thao tác sau đó xen giữa 2 bên. Chỉ lưu lúc CÒN ĐANG XEM đúng trận
+  // này (mất khi rời trang) — điểm số thật đã lưu ở nơi khác rồi
+  // (MatchState), đây chỉ là ngăn xếp để biết "lùi lại thế nào". Đặt
+  // TRƯỚC "if (!live) return" bên dưới — xem đúng comment ngay sau đây
+  // giải thích lý do bắt buộc.
+  const [lichSuDo, setLichSuDo] = useState<number[]>([]);
+  const [lichSuXanh, setLichSuXanh] = useState<number[]>([]);
   const dangChay = live?.trangThai === "dang_thi";
   const dangNghi = live?.trangThai === "nghi_giua_hiep";
   const laHiepCuoi = live ? live.hiepHienTai >= live.tongSoHiep : false;
@@ -273,6 +284,38 @@ export default function DieuHanhDoiKhangTab({
       [key]: live[key] + delta,
       diemDaChinhTay: true,
     } as Partial<LiveMatchState>);
+
+    if (side === "do") setLichSuDo((prev) => [...prev, delta]);
+    else setLichSuXanh((prev) => [...prev, delta]);
+
+    const tenBen = side === "do" ? "Đỏ" : "Xanh";
+    const dauSo = delta > 0 ? "+" : "";
+    ghiLogDieuChinhDiem(
+      courtId,
+      `Bàn thư ký ${delta > 0 ? "cộng" : "trừ"} ${tenBen} ${dauSo}${delta}đ`,
+    );
+  };
+
+  const hoanTac = (side: "do" | "xanh") => {
+    const lichSu = side === "do" ? lichSuDo : lichSuXanh;
+    const deltaCuoi = lichSu[lichSu.length - 1];
+    if (deltaCuoi === undefined) return;
+
+    const key = side === "do" ? "diemChinhThucDo" : "diemChinhThucXanh";
+    patch({
+      [key]: live[key] - deltaCuoi,
+      diemDaChinhTay: true,
+    } as Partial<LiveMatchState>);
+
+    if (side === "do") setLichSuDo((prev) => prev.slice(0, -1));
+    else setLichSuXanh((prev) => prev.slice(0, -1));
+
+    const tenBen = side === "do" ? "Đỏ" : "Xanh";
+    const dauSo = deltaCuoi > 0 ? "+" : "";
+    ghiLogDieuChinhDiem(
+      courtId,
+      `Hoàn tác: Bàn thư ký ${tenBen} ${dauSo}${deltaCuoi}đ`,
+    );
   };
 
   const adjustNhacNho = (side: "do" | "xanh", delta: number) => {
@@ -307,6 +350,8 @@ export default function DieuHanhDoiKhangTab({
       canhCaoXanh: 0,
       nguoiThang: null,
     });
+    setLichSuDo([]);
+    setLichSuXanh([]);
   };
 
   const daKetThuc = live.trangThai === "da_ket_thuc";
@@ -366,11 +411,17 @@ export default function DieuHanhDoiKhangTab({
             ) : (
               <>
                 <div className={styles.stepBtnsBig}>
-                  <button onClick={() => adjustScore("do", -1)}>
-                    <Minus size={22} />
-                  </button>
-                  <button onClick={() => adjustScore("do", 1)}>
-                    <Plus size={22} />
+                  <button onClick={() => adjustScore("do", -1)}>-1</button>
+                  <button onClick={() => adjustScore("do", 1)}>+1</button>
+                  <button onClick={() => adjustScore("do", -2)}>-2</button>
+                  <button onClick={() => adjustScore("do", 2)}>+2</button>
+                  <button onClick={() => adjustScore("do", 3)}>+3</button>
+                  <button
+                    className={styles.undoBtnBig}
+                    onClick={() => hoanTac("do")}
+                    disabled={lichSuDo.length === 0}
+                    title="Hoàn tác thao tác cộng/trừ điểm gần nhất bên Đỏ">
+                    <Undo2 size={18} />
                   </button>
                 </div>
                 <div className={styles.warnRowBig}>
@@ -531,11 +582,17 @@ export default function DieuHanhDoiKhangTab({
             ) : (
               <>
                 <div className={styles.stepBtnsBig}>
-                  <button onClick={() => adjustScore("xanh", -1)}>
-                    <Minus size={22} />
-                  </button>
-                  <button onClick={() => adjustScore("xanh", 1)}>
-                    <Plus size={22} />
+                  <button onClick={() => adjustScore("xanh", -1)}>-1</button>
+                  <button onClick={() => adjustScore("xanh", 1)}>+1</button>
+                  <button onClick={() => adjustScore("xanh", -2)}>-2</button>
+                  <button onClick={() => adjustScore("xanh", 2)}>+2</button>
+                  <button onClick={() => adjustScore("xanh", 3)}>+3</button>
+                  <button
+                    className={styles.undoBtnBig}
+                    onClick={() => hoanTac("xanh")}
+                    disabled={lichSuXanh.length === 0}
+                    title="Hoàn tác thao tác cộng/trừ điểm gần nhất bên Xanh">
+                    <Undo2 size={18} />
                   </button>
                 </div>
                 <div className={styles.warnRowBig}>

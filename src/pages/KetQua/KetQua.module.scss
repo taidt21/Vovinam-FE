@@ -1,24 +1,38 @@
-@use '../../styles/variables'as *;
-@use '../../styles/admin-ui' as admin;
+@use '../../styles/variables' as *;
 
 .page {
     display: flex;
     flex-direction: column;
-    gap: 22px;
+    gap: 24px;
     min-width: 0;
-    width: 100%;
+    width: min(100%, 1560px);
+    margin-inline: auto;
 }
 
 .pageHeader {
+    position: relative;
     display: grid;
     grid-template-columns: minmax(260px, 1fr) minmax(520px, auto);
     align-items: stretch;
     gap: 28px;
     padding: 28px 30px;
-    background: linear-gradient(135deg, $color-surface 0%, rgba($color-do, 0.035) 100%);
     border: 1px solid $color-border;
     border-radius: 20px;
+    background:
+        radial-gradient(circle at 92% 12%, rgba($color-do, .09), transparent 30%),
+        linear-gradient(135deg, rgba($color-do, .04), $color-surface 54%);
     box-shadow: 0 10px 30px rgba(15, 23, 42, .045);
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: 18px;
+        bottom: 18px;
+        left: 0;
+        width: 4px;
+        border-radius: 0 999px 999px 0;
+        background: $color-do;
+    }
 }
 
 .headerIntro {
@@ -249,13 +263,14 @@
 
 .tabsBar {
     display: flex;
-    gap: 9px;
+    gap: 7px;
     width: fit-content;
     max-width: 100%;
     padding: 6px;
     border: 1px solid $color-border;
     border-radius: 16px;
-    background: $color-surface;
+    background: linear-gradient(180deg, $color-surface, rgba($color-bg, .34));
+    box-shadow: 0 4px 16px rgba(15, 23, 42, .025);
     overflow-x: auto;
 }
 
@@ -311,14 +326,19 @@
 .sidebar {
     position: sticky;
     top: 12px;
+    width: 100%;
+    min-width: 0;
     max-height: calc(100vh - 28px);
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    min-width: 0;
     padding: 16px;
     border: 1px solid $color-border;
     border-radius: 16px;
     background: $color-surface;
+    box-shadow:
+        0 1px 2px rgba(15, 23, 42, .02),
+        0 9px 24px rgba(15, 23, 42, .04);
 }
 
 .sidebarHead {
@@ -430,18 +450,12 @@
 
 .eventItemActive {
     padding-left: 18px;
-    background: rgba($color-do, .07);
-    border-color: rgba($color-do, .18);
+    background: linear-gradient(90deg, rgba($color-do, .09), rgba($color-do, .02));
+    border-color: rgba($color-do, .24);
+    box-shadow: inset 3px 0 0 rgba($color-do, .86);
 
     &::before {
-        content: '';
-        position: absolute;
-        top: 11px;
-        bottom: 11px;
-        left: 5px;
-        width: 3px;
-        border-radius: 999px;
-        background: $color-do;
+        display: none;
     }
 
     .eventName {
@@ -471,11 +485,33 @@
 }
 
 .main {
+    position: relative;
     min-width: 0;
     padding: 28px;
     border: 1px solid $color-border;
     border-radius: 18px;
     background: $color-surface;
+    box-shadow:
+        0 1px 2px rgba(15, 23, 42, .02),
+        0 10px 28px rgba(15, 23, 42, .045);
+
+    &::before {
+        content: '';
+        position: absolute;
+        z-index: 1;
+        top: 0;
+        left: 22px;
+        right: 22px;
+        height: 3px;
+        border-radius: 0 0 999px 999px;
+        background: linear-gradient(
+            90deg,
+            $color-do 0%,
+            rgba($color-do, .34) 62%,
+            transparent 100%
+        );
+        pointer-events: none;
+    }
 }
 
 .emptyMain,
@@ -1230,97 +1266,5 @@
 
     .sidebar {
         box-shadow: 0 8px 24px rgba(15, 23, 42, .03);
-    }
-}
-/* ========================================================================== */
-/* Shared Admin UI normalization                                               */
-/* ========================================================================== */
-.page {
-    @include admin.page-shell;
-}
-
-.pageHeader {
-    grid-template-columns: minmax(260px, 1fr) minmax(500px, auto);
-    gap: $space-6;
-    padding: 0;
-    border: 0;
-    border-radius: 0;
-    background: transparent;
-    box-shadow: none;
-}
-
-.eyebrow {
-    @include admin.eyebrow;
-}
-
-.title {
-    @include admin.page-title;
-}
-
-.pageDescription {
-    @include admin.page-subtitle;
-}
-
-.headerStats {
-    gap: $space-2;
-}
-
-.headerStat,
-.exportPanel,
-.loadingCard {
-    border-color: $color-border;
-    border-radius: $radius-lg;
-    background: $color-surface;
-    box-shadow: $shadow-card;
-}
-
-.headerStat {
-    padding: $space-3 $space-4;
-
-    strong {
-        font-size: 22px;
-    }
-}
-
-.exportPanel {
-    padding: $space-2 $space-3;
-}
-
-.exportWordBtn,
-.exportPdfBtn {
-    min-height: $control-height;
-    border-radius: $radius-md;
-}
-
-.tabsBar {
-    @include admin.segmented-tabs;
-}
-
-.tab,
-.tabActive {
-    @include admin.segmented-tab;
-}
-
-.tabActive {
-    @include admin.segmented-tab-active;
-}
-
-.sidebar,
-.main,
-.card,
-.bracketShell,
-.tallySection {
-    border-radius: $radius-lg;
-}
-
-.searchBox {
-    min-height: $control-height;
-    border-radius: $radius-md;
-    border-color: $color-border-strong;
-}
-
-@media (max-width: 1100px) {
-    .pageHeader {
-        grid-template-columns: 1fr;
     }
 }

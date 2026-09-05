@@ -1,5 +1,4 @@
-@use '../../styles/variables'as *;
-@use '../../styles/admin-ui'as admin;
+@use '../../styles/variables' as *;
 
 .page {
     display: flex;
@@ -95,7 +94,10 @@
 
 .tabActive {
     color: $color-do;
-    border-bottom-color: $color-do;
+    background: $color-surface;
+    box-shadow:
+        0 1px 2px rgba(15, 23, 42, .04),
+        inset 0 0 0 1px rgba($color-do, .13);
 
     &:hover {
         color: $color-do;
@@ -113,9 +115,12 @@
 /* ---- Tab 1: Lịch thi đấu ---- */
 .listCard {
     background: $color-surface;
-    border: 1px solid $color-border;
-    border-radius: 10px;
+    border: 1px solid rgba($color-border, .96);
+    border-radius: $radius-lg;
     overflow: hidden;
+    box-shadow:
+        0 1px 2px rgba(15, 23, 42, .02),
+        0 8px 22px rgba(15, 23, 42, .035);
 }
 
 .listHead {
@@ -353,13 +358,34 @@
 }
 
 .dieuHanh {
+    position: relative;
     display: flex;
     flex-direction: column;
     gap: $space-4;
-    background: $color-surface;
-    border: 1px solid $color-border;
-    border-radius: 10px;
     padding: $space-5;
+    border: 1px solid rgba($color-border, .96);
+    border-radius: $radius-lg;
+    background: $color-surface;
+    box-shadow:
+        0 1px 2px rgba(15, 23, 42, .02),
+        0 10px 28px rgba(15, 23, 42, .045);
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 22px;
+        right: 22px;
+        height: 3px;
+        border-radius: 0 0 999px 999px;
+        background: linear-gradient(
+            90deg,
+            $color-do,
+            rgba($color-do, .36) 62%,
+            transparent
+        );
+        pointer-events: none;
+    }
 }
 
 .matchMeta {
@@ -454,11 +480,14 @@
 
 .stepBtnsBig {
     display: flex;
-    gap: $space-3;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: $space-2;
 
     button {
-        width: 52px;
-        height: 52px;
+        min-width: 44px;
+        height: 44px;
+        padding: 0 $space-2;
         border: 1px solid rgba(255, 255, 255, 0.4);
         background: rgba(255, 255, 255, 0.14);
         color: white;
@@ -467,6 +496,8 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        font-size: 15px;
+        font-weight: 700;
 
         &:hover {
             background: rgba(255, 255, 255, 0.24);
@@ -475,6 +506,24 @@
         &:active {
             transform: scale(0.96);
         }
+    }
+}
+
+// Nút hoàn tác cố tình khác màu (vàng nhạt) với 5 nút cộng/trừ điểm —
+// đây là thao tác "sửa lại", không nên trông giống hệt các nút ghi
+// điểm để tránh bấm nhầm. Mờ hẳn đi + không bấm được lúc chưa có gì để
+// hoàn tác (mảng lịch sử rỗng).
+.undoBtnBig {
+    border-color: rgba(212, 167, 44, 0.55) !important;
+    background: rgba(212, 167, 44, 0.18) !important;
+
+    &:hover:not(:disabled) {
+        background: rgba(212, 167, 44, 0.3) !important;
+    }
+
+    &:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
     }
 }
 
@@ -1226,18 +1275,33 @@
 /* ========================================================================== */
 
 .page {
-    gap: 18px;
+    width: min(100%, 1580px);
+    margin-inline: auto;
+    gap: 24px;
 }
 
 .topbar {
-    align-items: flex-start;
+    position: relative;
+    align-items: center;
     gap: $space-5;
-    padding: 18px 20px;
+    padding: 22px 24px 22px 30px;
     border: 1px solid $color-border;
-    border-radius: 16px;
+    border-radius: $radius-lg;
     background:
-        linear-gradient(135deg, rgba($color-do, 0.045), transparent 42%),
-        $color-surface;
+        radial-gradient(circle at 92% 12%, rgba($color-do, .10), transparent 30%),
+        linear-gradient(135deg, rgba($color-do, .045), $color-surface 54%);
+    box-shadow: $shadow-card;
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: 17px;
+        bottom: 17px;
+        left: 0;
+        width: 4px;
+        border-radius: 0 999px 999px 0;
+        background: $color-do;
+    }
 }
 
 .topbarIdentity {
@@ -1248,30 +1312,33 @@
 .sectionEyebrow,
 .panelEyebrow {
     display: block;
-    margin-bottom: 4px;
+    margin-bottom: 6px;
+    color: $color-do;
     font-size: 10px;
     font-weight: 800;
     line-height: 1.2;
-    letter-spacing: 0.1em;
+    letter-spacing: .11em;
     text-transform: uppercase;
-    color: $color-text-muted;
 }
 
 .title {
-    font-size: 26px;
-    line-height: 1.15;
-    letter-spacing: -0.025em;
+    color: $color-text;
+    font-size: clamp(27px, 2.2vw, 34px);
+    font-weight: 800;
+    line-height: 1.12;
+    letter-spacing: -0.028em;
 }
 
 .pageSubtitle {
-    margin: 5px 0 0;
-    font-size: 13px;
+    margin: 7px 0 0;
     color: $color-text-muted;
+    font-size: 13px;
+    line-height: 1.55;
 }
 
 .topbarActions {
     align-items: stretch;
-    gap: 10px;
+    gap: 9px;
 }
 
 .courtControl {
@@ -1279,19 +1346,20 @@
     flex-direction: column;
     justify-content: center;
     gap: 3px;
-    min-width: 170px;
-    padding: 8px 11px;
-    border: 1px solid $color-border;
-    border-radius: 10px;
-    background: $color-bg;
+    min-width: 188px;
+    min-height: 50px;
+    padding: 8px 12px;
+    border: 1px solid rgba($color-do, .12);
+    border-radius: $radius-md;
+    background: linear-gradient(180deg, rgba($color-do, .035), $color-surface);
 }
 
 .courtControlLabel {
-    font-size: 10px;
-    font-weight: 700;
     color: $color-text-muted;
+    font-size: 10px;
+    font-weight: 750;
+    letter-spacing: .06em;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
 }
 
 .courtSelect,
@@ -1303,7 +1371,7 @@
     background: transparent;
     color: $color-text;
     font-size: 14px;
-    font-weight: 750;
+    font-weight: 800;
 }
 
 .courtSelect {
@@ -1314,20 +1382,44 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 5px;
-    min-height: 48px;
+    gap: 6px;
+    min-height: 50px;
     padding: 0 15px;
-    border-radius: 10px;
-    background: $color-surface;
+    border: 1px solid rgba($color-do, .18);
+    border-radius: $radius-md;
+    background: rgba($color-do, .04);
+    color: $color-do;
     font-size: 12px;
+    font-weight: 750;
+    box-shadow: none;
+    transition:
+        border-color .15s ease,
+        background .15s ease,
+        transform .15s ease,
+        box-shadow .15s ease;
+
+    &:hover:not(:disabled) {
+        border-color: rgba($color-do, .32);
+        background: rgba($color-do, .08);
+        color: $color-do;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 14px rgba($color-do, .08);
+    }
+
+    &:disabled {
+        opacity: .55;
+        cursor: wait;
+    }
 }
 
 .tabsBar {
-    gap: 4px;
-    padding: 5px;
-    border: 1px solid $color-border;
-    border-radius: 12px;
-    background: $color-surface;
+    gap: 5px;
+    width: 100%;
+    padding: 6px;
+    border: 1px solid rgba($color-border, .96);
+    border-radius: $radius-lg;
+    background: linear-gradient(180deg, $color-surface, rgba($color-bg, .34));
+    box-shadow: 0 4px 16px rgba(15, 23, 42, .025);
     overflow-x: auto;
     scrollbar-width: thin;
 }
@@ -1336,17 +1428,22 @@
 .tabActive {
     flex: 0 0 auto;
     gap: 7px;
-    min-height: 38px;
-    padding: 8px 12px;
+    min-height: 40px;
+    padding: 8px 13px;
     margin: 0;
     border: 0;
-    border-radius: 8px;
+    border-radius: $radius-md;
     white-space: nowrap;
     font-size: 13px;
     transition:
-        color 0.16s ease,
-        background 0.16s ease,
-        box-shadow 0.16s ease;
+        color .15s ease,
+        background .15s ease,
+        box-shadow .15s ease,
+        transform .15s ease;
+
+    &:hover {
+        transform: translateY(-1px);
+    }
 }
 
 .tab:hover {
@@ -1369,8 +1466,32 @@
 
 /* ---- Lịch thi đấu chung ---- */
 .scheduleCard {
-    border-radius: 16px;
-    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.035);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba($color-border, .96);
+    border-radius: $radius-lg;
+    background: $color-surface;
+    box-shadow:
+        0 1px 2px rgba(15, 23, 42, .02),
+        0 10px 28px rgba(15, 23, 42, .045);
+
+    &::before {
+        content: '';
+        position: absolute;
+        z-index: 3;
+        top: 0;
+        left: 22px;
+        right: 22px;
+        height: 3px;
+        border-radius: 0 0 999px 999px;
+        background: linear-gradient(
+            90deg,
+            $color-do 0%,
+            rgba($color-do, .36) 62%,
+            transparent 100%
+        );
+        pointer-events: none;
+    }
 }
 
 .scheduleHeader {
@@ -1378,8 +1499,11 @@
     grid-template-columns: minmax(0, 1fr) auto;
     gap: $space-5;
     align-items: center;
-    padding: 20px 22px 16px;
-    border-bottom: 1px solid $color-border;
+    padding: 22px 22px 17px;
+    border-bottom: 1px solid rgba($color-border, .9);
+    background:
+        radial-gradient(circle at 92% 0%, rgba($color-do, .065), transparent 34%),
+        linear-gradient(180deg, rgba($color-do, .018), $color-surface);
 }
 
 .scheduleTitle {
@@ -1860,12 +1984,35 @@
 
 /* ---- Điều hành quyền ---- */
 .dieuHanhQuyen {
+    position: relative;
     max-width: none;
     gap: 0;
     padding: 0;
     overflow: hidden;
-    border-radius: 16px;
-    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.035);
+    border: 1px solid rgba($color-border, .96);
+    border-radius: $radius-lg;
+    background: $color-surface;
+    box-shadow:
+        0 1px 2px rgba(15, 23, 42, .02),
+        0 10px 28px rgba(15, 23, 42, .045);
+
+    &::before {
+        content: '';
+        position: absolute;
+        z-index: 4;
+        top: 0;
+        left: 22px;
+        right: 22px;
+        height: 3px;
+        border-radius: 0 0 999px 999px;
+        background: linear-gradient(
+            90deg,
+            $color-do,
+            rgba($color-do, .36) 62%,
+            transparent
+        );
+        pointer-events: none;
+    }
 }
 
 .operationHeader {
@@ -1873,11 +2020,11 @@
     align-items: center;
     justify-content: space-between;
     gap: $space-4;
-    padding: 18px 22px;
-    border-bottom: 1px solid $color-border;
+    padding: 20px 22px 18px;
+    border-bottom: 1px solid rgba($color-border, .9);
     background:
-        linear-gradient(135deg, rgba($color-do, 0.04), transparent 48%),
-        $color-surface;
+        radial-gradient(circle at 92% 0%, rgba($color-do, .07), transparent 34%),
+        linear-gradient(180deg, rgba($color-do, .018), $color-surface);
 }
 
 .operationTitle {
@@ -2241,11 +2388,23 @@
 }
 
 .noMatch {
+    min-height: 150px;
+    display: grid;
+    place-items: center;
     padding: 28px;
-    border: 1px dashed $color-border;
-    border-radius: 14px;
-    background: rgba($color-bg, 0.7);
-    line-height: 1.6;
+    border: 1px dashed rgba($color-do, .16);
+    border-radius: $radius-lg;
+    background:
+        radial-gradient(circle at center, rgba($color-do, .025), transparent 62%),
+        $color-bg;
+    color: $color-text-muted;
+    text-align: center;
+
+    p {
+        max-width: 720px;
+        margin: 0;
+        line-height: 1.65;
+    }
 }
 
 @media (max-width: 1050px) {
@@ -2485,15 +2644,29 @@
 }
 
 .trongTaiOverview {
+    position: relative;
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
     gap: 28px;
-    padding: 22px 24px;
-    border: 1px solid $color-border;
-    border-radius: 16px;
-    background: $color-surface;
-    box-shadow: 0 8px 28px rgba(17, 24, 39, 0.045);
+    padding: 22px 24px 22px 28px;
+    border: 1px solid rgba($color-border, .96);
+    border-radius: $radius-lg;
+    background:
+        radial-gradient(circle at 92% 8%, rgba($color-do, .065), transparent 34%),
+        $color-surface;
+    box-shadow: 0 9px 24px rgba(15, 23, 42, .04);
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: 14px;
+        bottom: 14px;
+        left: 0;
+        width: 3px;
+        border-radius: 0 999px 999px 0;
+        background: rgba($color-do, .82);
+    }
 }
 
 .trongTaiEyebrow {
@@ -3102,72 +3275,4 @@
         width: 100%;
         max-width: none;
     }
-}
-
-/* ========================================================================== */
-/* Shared Admin UI normalization                                               */
-/* ========================================================================== */
-.page {
-    @include admin.page-shell;
-}
-
-.topbar {
-    @include admin.page-header;
-    padding: 0;
-    border: 0;
-    border-radius: 0;
-    background: transparent;
-    @include admin.responsive-header;
-}
-
-.pageEyebrow {
-    @include admin.eyebrow;
-}
-
-.title {
-    @include admin.page-title;
-}
-
-.pageSubtitle {
-    @include admin.page-subtitle;
-}
-
-.topbarActions {
-    gap: $space-2;
-}
-
-.courtControl {
-    min-width: 180px;
-    min-height: $control-height-lg;
-    padding: 7px 11px;
-    border-color: $color-border-strong;
-    border-radius: $radius-md;
-    background: $color-surface;
-    box-shadow: $shadow-card;
-}
-
-.publicScreenLink {
-    @include admin.button-secondary;
-    min-height: $control-height-lg;
-}
-
-.tabsBar {
-    @include admin.segmented-tabs;
-    width: 100%;
-}
-
-.tab,
-.tabActive {
-    @include admin.segmented-tab;
-}
-
-.tabActive {
-    @include admin.segmented-tab-active;
-}
-
-.scheduleCard,
-.listCard {
-    border-color: $color-border;
-    border-radius: $radius-lg;
-    box-shadow: $shadow-card;
 }

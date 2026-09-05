@@ -66,7 +66,7 @@
 .slotRow {
     flex: 1;
     display: flex;
-    align-items: baseline;
+    align-items: center;
     gap: 6px;
     padding: 0 $space-3;
     font-size: 13px;
@@ -81,7 +81,11 @@
 }
 
 .slotName {
-    flex-shrink: 0;
+    // Tên giữ theo độ rộng thật nhưng không được chiếm quá 70% slot.
+    // Component sẽ đo scrollWidth/clientWidth: nếu không vừa thì rút gọn
+    // tên đệm (VD: Hoàng Thị Mai Hương Lan -> Hoàng T. M. H. Lan).
+    flex: 0 1 auto;
+    min-width: 0;
     max-width: 70%;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -89,7 +93,9 @@
 }
 
 .slotTeam {
-    flex: 1;
+    // Đơn vị không tự viết tắt để tránh sai nghĩa. Nếu quá dài thì ưu tiên
+    // co trong phần còn lại và cuối cùng dùng ellipsis.
+    flex: 1 1 0;
     min-width: 0; // bắt buộc phải có — nếu thiếu dòng này, text-overflow bên
     // dưới sẽ không hoạt động, vì flex item mặc định không co
     // nhỏ hơn nội dung bên trong nó
