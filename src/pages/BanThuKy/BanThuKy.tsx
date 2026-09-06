@@ -881,12 +881,21 @@ export default function BanThuKy() {
   // early-return dưới đây — hook không được phép chạy có điều kiện.
   const [dangMoManHinh, setDangMoManHinh] = useState(false);
   const [manHinhCKDangChay, setManHinhCKDangChay] = useState(false);
+  // Backend tự soi địa chỉ IP thật của request để biết đang gọi từ
+  // ĐÚNG máy chủ hay từ máy khác (setup nhiều sân, mỗi sân 1 máy riêng)
+  // — dựa vào đó chỉ hiện đúng 1 trong 2 nút, không hiện cả 2 gây rối
+  // (nút còn lại chắc chắn không dùng được ở đúng vị trí BTC đang ngồi).
+  const [coTheDungMayChu, setCoTheDungMayChu] = useState(true);
 
   useEffect(() => {
-    layTrangThaiManHinhCongKhai()
-      .then((s) => setManHinhCKDangChay(s.dangChay))
+    if (!currentCourtId) return;
+    layTrangThaiManHinhCongKhai(currentCourtId)
+      .then((s) => {
+        setManHinhCKDangChay(s.dangChay);
+        setCoTheDungMayChu(s.coTheDungMayChu);
+      })
       .catch(() => {});
-  }, []);
+  }, [currentCourtId]);
 
   if (loading || loadingCourts)
     return (
@@ -920,8 +929,9 @@ export default function BanThuKy() {
   };
 
   const closePublicScreenExtended = async () => {
+    if (!currentCourtId) return;
     try {
-      const ket = await dongManHinhCongKhai();
+      const ket = await dongManHinhCongKhai(currentCourtId);
       setManHinhCKDangChay(ket.dangChay);
     } catch (err) {
       window.alert(
@@ -930,6 +940,24 @@ export default function BanThuKy() {
           : "Đóng màn hình công khai thất bại.",
       );
     }
+  };
+
+  // Dành cho máy BTC KHÁC máy đang chạy backend (VD 3 sân, chỉ đúng 1
+  // máy chạy backend, 2 máy còn lại chỉ đăng nhập bằng trình duyệt) —
+  // nút "Mở màn hình công khai" ở trên luôn mở cửa sổ TRÊN MÁY CHỦ, vô
+  // dụng nếu BTC đang ngồi máy khác. window.open() thì ngược lại, luôn
+  // mở ngay trên máy đang bấm — không cần HTTPS (khác hẳn
+  // getScreenDetails() đã bỏ trước đây), đổi lại không tự chọn được
+  // đúng màn hình phụ, phải tự kéo cửa sổ qua rồi bấm đúp để vào toàn
+  // màn hình (nút full màn hình nổi ở góc cũng dùng được). Đặt TÊN cửa
+  // sổ theo courtId để bấm lại chỉ load lại đúng cửa sổ cũ, không mở
+  // thêm tab trùng mỗi lần bấm.
+  const openPublicScreenTab = () => {
+    if (!currentCourtId) return;
+    const urlKhongCache =
+      `${window.location.origin}/man-hinh-cong-khai?san=${encodeURIComponent(currentCourtId)}` +
+      `&autoFullscreen=1&_t=${Date.now()}`;
+    window.open(urlKhongCache, `man-hinh-cong-khai-${currentCourtId}`);
   };
   return (
     <div className={styles.page}>
@@ -962,18 +990,28 @@ export default function BanThuKy() {
               </select>
             )}
           </div>
-          <button
-            className={styles.publicScreenLink}
-            onClick={openPublicScreenExtended}
-            disabled={dangMoManHinh}>
-            {dangMoManHinh ? "Đang mở..." : "Mở màn hình công khai"}{" "}
-            <span aria-hidden="true">↗</span>
-          </button>
-          {manHinhCKDangChay && (
+          {coTheDungMayChu ? (
+            <>
+              <button
+                className={styles.publicScreenLink}
+                onClick={openPublicScreenExtended}
+                disabled={dangMoManHinh}>
+                {dangMoManHinh ? "Đang mở..." : "Mở màn hình công khai (máy chủ)"}{" "}
+                <span aria-hidden="true">↗</span>
+              </button>
+              {manHinhCKDangChay && (
+                <button
+                  className={styles.publicScreenLink}
+                  onClick={closePublicScreenExtended}>
+                  Đóng màn hình công khai (máy chủ)
+                </button>
+              )}
+            </>
+          ) : (
             <button
               className={styles.publicScreenLink}
-              onClick={closePublicScreenExtended}>
-              Đóng màn hình công khai
+              onClick={openPublicScreenTab}>
+              Mở màn hình công khai <span aria-hidden="true">↗</span>
             </button>
           )}
         </div>

@@ -35,9 +35,13 @@ export default function RecoveryScreen({
     DEFAULT_THOI_GIAN_NGHI,
   );
   const [diemDo, setDiemDo] = useState(0);
-  const [canhCaoDo, setCanhCaoDo] = useState(0);
+  const [nhacNhoDo, setNhacNhoDo] = useState(0);
+  const [soCanhCaoDo, setSoCanhCaoDo] = useState(0);
+  const [soCanhCaoHiepDo, setSoCanhCaoHiepDo] = useState(0);
   const [diemXanh, setDiemXanh] = useState(0);
-  const [canhCaoXanh, setCanhCaoXanh] = useState(0);
+  const [nhacNhoXanh, setNhacNhoXanh] = useState(0);
+  const [soCanhCaoXanh, setSoCanhCaoXanh] = useState(0);
+  const [soCanhCaoHiepXanh, setSoCanhCaoHiepXanh] = useState(0);
 
   const khoiPhuc = () => {
     const base = makeLiveState(
@@ -60,9 +64,13 @@ export default function RecoveryScreen({
       thoiGianConLaiGiay,
       thoiGianNghiGiay,
       diemChinhThucDo: diemDo,
-      canhCaoDo,
+      nhacNhoDo,
+      soCanhCaoDo,
+      soCanhCaoHiepDo,
       diemChinhThucXanh: diemXanh,
-      canhCaoXanh,
+      nhacNhoXanh,
+      soCanhCaoXanh,
+      soCanhCaoHiepXanh,
       diemDaChinhTay: true,
       capNhatDongHoLuc: serverNow(),
     });
@@ -133,13 +141,33 @@ export default function RecoveryScreen({
           />
         </label>
         <label className={styles.field}>
-          <span>Số lần cảnh cáo Đỏ đã có (0–2)</span>
+          <span>Số lần nhắc nhở Đỏ đã có (0–2)</span>
           <input
             type="number"
             min={0}
             max={2}
-            value={canhCaoDo}
-            onChange={(e) => setCanhCaoDo(Number(e.target.value))}
+            value={nhacNhoDo}
+            onChange={(e) => setNhacNhoDo(Number(e.target.value))}
+          />
+        </label>
+        <label className={styles.field}>
+          <span>Số lần cảnh cáo Đỏ CẢ TRẬN đã có (0–3)</span>
+          <input
+            type="number"
+            min={0}
+            max={3}
+            value={soCanhCaoDo}
+            onChange={(e) => setSoCanhCaoDo(Number(e.target.value))}
+          />
+        </label>
+        <label className={styles.field}>
+          <span>Số lần cảnh cáo Đỏ TRONG HIỆP NÀY đã có (0–2)</span>
+          <input
+            type="number"
+            min={0}
+            max={2}
+            value={soCanhCaoHiepDo}
+            onChange={(e) => setSoCanhCaoHiepDo(Number(e.target.value))}
           />
         </label>
         <label className={styles.field}>
@@ -151,13 +179,33 @@ export default function RecoveryScreen({
           />
         </label>
         <label className={styles.field}>
-          <span>Số lần cảnh cáo Xanh đã có (0–2)</span>
+          <span>Số lần nhắc nhở Xanh đã có (0–2)</span>
           <input
             type="number"
             min={0}
             max={2}
-            value={canhCaoXanh}
-            onChange={(e) => setCanhCaoXanh(Number(e.target.value))}
+            value={nhacNhoXanh}
+            onChange={(e) => setNhacNhoXanh(Number(e.target.value))}
+          />
+        </label>
+        <label className={styles.field}>
+          <span>Số lần cảnh cáo Xanh CẢ TRẬN đã có (0–3)</span>
+          <input
+            type="number"
+            min={0}
+            max={3}
+            value={soCanhCaoXanh}
+            onChange={(e) => setSoCanhCaoXanh(Number(e.target.value))}
+          />
+        </label>
+        <label className={styles.field}>
+          <span>Số lần cảnh cáo Xanh TRONG HIỆP NÀY đã có (0–2)</span>
+          <input
+            type="number"
+            min={0}
+            max={2}
+            value={soCanhCaoHiepXanh}
+            onChange={(e) => setSoCanhCaoHiepXanh(Number(e.target.value))}
           />
         </label>
         <button className={styles.btnPrimary} onClick={khoiPhuc}>

@@ -1,9 +1,11 @@
 import { ensureStarted, ensureJoinedCourt, getConnection } from './matchHubConnection';
 
 export interface MatchLogEntry {
+  id: string;
   luc: string;
   noiDung: string;
   matchTimeLabel?: string | null;
+  giamDinhId?: string | null;
 }
 export interface ConsensusEvent {
   mau: 'do' | 'xanh';
@@ -42,6 +44,9 @@ function ensureHandlersRegistered() {
   conn.on('LogEntryAdded', (courtId: string, entry: MatchLogEntry) => {
     notifyLog(courtId, [...(logCache.get(courtId) ?? []), entry]);
   });
+  conn.on('LogEntryRemoved', (courtId: string, id: string) => {
+    notifyLog(courtId, (logCache.get(courtId) ?? []).filter((e) => e.id !== id));
+  });
   conn.on(
     'ConsensusScored',
     (courtId: string, mau: 'do' | 'xanh', diem: number, soLuong: number, luc: string) => {
@@ -68,10 +73,11 @@ export function pressLight(
   tenTrongTai: string,
   mau: 'do' | 'xanh',
   diem: 1 | 2,
+  matchTimeLabel?: string,
 ): void {
   ensureHandlersRegistered();
   ensureStarted()
-    .then((conn) => conn.invoke('PressLight', courtId, giamDinhId, tenTrongTai, mau, diem))
+    .then((conn) => conn.invoke('PressLight', courtId, giamDinhId, tenTrongTai, mau, diem, matchTimeLabel))
     .catch(() => {
       rejectListeners.forEach((cb) => cb('Gửi không thành công — kiểm tra kết nối mạng.'));
     });
@@ -83,16 +89,30 @@ export function getMatchLog(courtId: string): MatchLogEntry[] {
   return logCache.get(courtId) ?? [];
 }
 
-// Bàn thư ký cộng/trừ điểm tay hoặc hoàn tác — chỉ để GHI LOG (điểm số
-// thật vẫn gửi qua publishMatchState như trước, tách riêng đúng ở đây
-// để Nhật ký trận đấu hiện đủ cả thao tác tay lẫn đèn giám định cùng 1
-// nơi). Gửi ngay, không đợi phản hồi — lỗi gửi log không được chặn thao
-// tác điểm chính (đã áp dụng ngay ở phía state cục bộ trước khi gọi
-// hàm này).
-export function ghiLogDieuChinhDiem(courtId: string, noiDung: string): void {
+// Bàn thư ký cộng/trừ điểm tay — chỉ để GHI LOG (điểm số thật vẫn gửi
+// qua publishMatchState như trước, tách riêng đúng ở đây để Nhật ký
+// trận đấu hiện đủ cả thao tác tay lẫn đèn giám định cùng 1 nơi).
+// Trả về Id của dòng log vừa tạo (null nếu gửi lỗi) — gọi nơi dùng giữ
+// lại Id này để lỡ hoàn tác thì xoá đúng dòng, xem xoaLogDieuChinhDiem.
+export function ghiLogDieuChinhDiem(
+  courtId: string,
+  noiDung: string,
+  matchTimeLabel?: string,
+): Promise<string | null> {
+  ensureHandlersRegistered();
+  return ensureStarted()
+    .then((conn) => conn.invoke<string>('GhiLogDieuChinhDiem', courtId, noiDung, matchTimeLabel))
+    .catch(() => null);
+}
+
+// Hoàn tác điều chỉnh điểm tay — xoá HẲN dòng log gốc (không thêm dòng
+// "hoàn tác" mới) theo đúng Id đã lưu từ lúc ghiLogDieuChinhDiem trả
+// về. Gửi ngay, không đợi phản hồi — điểm số đã tự lùi lại đúng ở phía
+// state cục bộ rồi, lỗi xoá log (nếu có) không ảnh hưởng gì tới đó.
+export function xoaLogDieuChinhDiem(courtId: string, id: string): void {
   ensureHandlersRegistered();
   ensureStarted()
-    .then((conn) => conn.invoke('GhiLogDieuChinhDiem', courtId, noiDung))
+    .then((conn) => conn.invoke('XoaLogDieuChinhDiem', courtId, id))
     .catch(() => {});
 }
 

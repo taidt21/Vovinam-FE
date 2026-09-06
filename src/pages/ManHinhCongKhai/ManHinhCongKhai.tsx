@@ -34,7 +34,7 @@ import { numberDoiKhangMatches } from "../../lib/domain/bracket";
 import { fetchQuyenJudgeScores } from "../../lib/api/quyenJudgeScoreApi";
 import { tinhDiemQuyenTongHop } from "../../lib/domain/quyenScoring";
 import { fetchTrongTai } from "../../lib/api/trongTaiApi";
-import { useMatchStartBell } from "../../lib/audio/matchBell";
+import { useMatchBell } from "../../lib/audio/matchBell";
 import AthleteAvatar from "../../components/AthleteAvatar/AthleteAvatar";
 import styles from "./ManHinhCongKhai.module.scss";
 
@@ -99,12 +99,24 @@ function AutoFitTournamentTitle({ text }: { text: string }) {
 }
 
 function responsiveAthleteAvatarSize(): number {
-  if (typeof window === "undefined") return 80;
+  if (typeof window === "undefined") return 96;
 
   return Math.round(
     Math.max(
-      58,
-      Math.min(112, window.innerWidth * 0.055, window.innerHeight * 0.095),
+      74,
+      Math.min(148, window.innerWidth * 0.07, window.innerHeight * 0.125),
+    ),
+  );
+}
+
+
+function responsiveQuyenAvatarSize(): number {
+  if (typeof window === "undefined") return 190;
+
+  return Math.round(
+    Math.max(
+      160,
+      Math.min(280, window.innerWidth * 0.13, window.innerHeight * 0.24),
     ),
   );
 }
@@ -339,7 +351,7 @@ function CourtScreen({
   }, [autoFullscreen]);
 
   const pressed = usePressedLights(court.id);
-  useMatchStartBell(live?.trangThai);
+  useMatchBell(court.id, live?.trangThai, live?.hetHiepLuc);
 
   const compactHeader = (
     <header className={styles.compactHeader}>
@@ -411,25 +423,69 @@ function CourtScreen({
       <main className={styles.fightStage}>
         <section
           className={`${styles.fighterSide} ${styles.redSide} ${sideClass("do")}`}>
+          {(live.nhacNhoDo > 0 || live.soCanhCaoDo > 0) && (
+            <div className={styles.canhBaoOverlay}>
+              {live.nhacNhoDo > 0 && (
+                <span className={styles.nhacNhoMark}>
+                  {"!".repeat(live.nhacNhoDo)}
+                </span>
+              )}
+              {live.soCanhCaoDo > 0 && (
+                <span className={styles.canhCaoIcons}>
+                  {Array.from({ length: live.soCanhCaoDo }, (_, i) => (
+                    <span key={i} className={styles.canhCaoIcon}>
+                      ⚠
+                    </span>
+                  ))}
+                </span>
+              )}
+            </div>
+          )}
           <div className={styles.scoreValue}>{live.diemChinhThucDo}</div>
+          {daKetThuc && live.nguoiThang === "do" && (
+            <div className={`${styles.winnerTag} ${styles.winnerTagLeft}`}>
+              <Award size={22} /> THẮNG
+            </div>
+          )}
           <AthleteBar
             side="do"
             name={live.tenDo}
             unit={live.donViDo}
             photoUrl={live.anhDo}
-            winner={daKetThuc && live.nguoiThang === "do"}
           />
         </section>
 
         <section
           className={`${styles.fighterSide} ${styles.blueSide} ${sideClass("xanh")}`}>
+          {(live.nhacNhoXanh > 0 || live.soCanhCaoXanh > 0) && (
+            <div className={styles.canhBaoOverlay}>
+              {live.nhacNhoXanh > 0 && (
+                <span className={styles.nhacNhoMark}>
+                  {"!".repeat(live.nhacNhoXanh)}
+                </span>
+              )}
+              {live.soCanhCaoXanh > 0 && (
+                <span className={styles.canhCaoIcons}>
+                  {Array.from({ length: live.soCanhCaoXanh }, (_, i) => (
+                    <span key={i} className={styles.canhCaoIcon}>
+                      ⚠
+                    </span>
+                  ))}
+                </span>
+              )}
+            </div>
+          )}
           <div className={styles.scoreValue}>{live.diemChinhThucXanh}</div>
+          {daKetThuc && live.nguoiThang === "xanh" && (
+            <div className={`${styles.winnerTag} ${styles.winnerTagRight}`}>
+              <Award size={22} /> THẮNG
+            </div>
+          )}
           <AthleteBar
             side="xanh"
             name={live.tenXanh}
             unit={live.donViXanh}
             photoUrl={live.anhXanh}
-            winner={daKetThuc && live.nguoiThang === "xanh"}
           />
         </section>
       </main>
@@ -530,13 +586,11 @@ function AthleteBar({
   name,
   unit,
   photoUrl,
-  winner,
 }: {
   side: "do" | "xanh";
   name: string;
   unit: string;
   photoUrl: string | null | undefined;
-  winner: boolean;
 }) {
   const avatar = (
     <div className={styles.athleteAvatarWrap}>
@@ -552,11 +606,6 @@ function AthleteBar({
     <div className={styles.athleteInfo}>
       <div className={styles.athleteName}>{name}</div>
       <div className={styles.athleteUnit}>{unit}</div>
-      {winner && (
-        <div className={styles.winnerTag}>
-          <Award size={18} /> THẮNG
-        </div>
-      )}
     </div>
   );
 
@@ -601,9 +650,14 @@ function QuyenScreen({
   const dangThi = live.trangThai === "dang_thi";
 
   const [diemTongHop, setDiemTongHop] = useState<number | null>(null);
+  // 5 điểm riêng từng giám định đã gửi — hiện kèm điểm tổng hợp lúc kết
+  // thúc, dạng bảng đánh số 1-5 theo đúng thứ tự API trả về (không hiện
+  // tên thật, đơn giản hoá để nhìn từ xa dễ hơn).
+  const [diemTungGiamDinh, setDiemTungGiamDinh] = useState<number[]>([]);
   useEffect(() => {
     if (!daKetThuc) {
       setDiemTongHop(null);
+      setDiemTungGiamDinh([]);
       return;
     }
     let huy = false;
@@ -617,6 +671,7 @@ function QuyenScreen({
               s.athleteId === live.athleteId &&
               s.teamId === live.teamId,
           );
+          setDiemTungGiamDinh(cuaLuotNay.map((s) => s.diem));
           setDiemTongHop(tinhDiemQuyenTongHop(cuaLuotNay.map((s) => s.diem)));
         })
         .catch(() => {});
@@ -630,14 +685,14 @@ function QuyenScreen({
   }, [daKetThuc, live.eventId, live.athleteId, live.teamId]);
 
   return (
-    <div className={styles.screen}>
+    <div className={`${styles.screen} ${styles.quyenScreen}`}>
       {header}
       <div className={styles.quyenEvent}>{live.eventTen}</div>
       <div className={styles.quyenPerformerBig}>
         <AthleteAvatar
           name={live.performerLabel}
           photoUrl={live.photoUrl}
-          size={150}
+          size={responsiveQuyenAvatarSize()}
         />
         <div className={styles.quyenName}>{live.performerLabel}</div>
         <div className={styles.quyenUnit}>{live.performerSub}</div>
@@ -652,7 +707,27 @@ function QuyenScreen({
         )}
         {dangThi && <span className={styles.quyenLive}>TRỰC TIẾP</span>}
         {daKetThuc && diemTongHop !== null && (
-          <div className={styles.quyenScore}>{diemTongHop.toFixed(2)}</div>
+          <>
+            <div className={styles.quyenScore}>{diemTongHop.toFixed(2)}</div>
+            {diemTungGiamDinh.length > 0 && (
+              <table className={styles.quyenBangGiamDinh}>
+                <thead>
+                  <tr>
+                    <th>Giám định</th>
+                    <th>Điểm</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {diemTungGiamDinh.map((diem, i) => (
+                    <tr key={i}>
+                      <td>{i + 1}</td>
+                      <td>{diem.toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </>
         )}
       </div>
     </div>

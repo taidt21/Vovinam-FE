@@ -8,7 +8,17 @@ import {
 } from "../../lib/realtime/pressLightClient";
 import styles from "./MatchLogPanel.module.scss";
 
-export default function MatchLogPanel({ courtId }: { courtId: string }) {
+export default function MatchLogPanel({
+  courtId,
+  filterGiamDinhId,
+}: {
+  courtId: string;
+  // Có giá trị thì CHỈ hiện đúng dòng log của trọng tài này (VD màn hình
+  // trọng tài tự chấm — không cần/không nên thấy lượt bấm của người
+  // khác hay điều chỉnh tay của Bàn thư ký). Bỏ trống thì hiện đầy đủ
+  // như trước (VD bên Bàn thư ký cần thấy toàn cảnh).
+  filterGiamDinhId?: string;
+}) {
   const [log, setLog] = useState<MatchLogEntry[]>(() => getMatchLog(courtId));
 
   useEffect(() => {
@@ -16,13 +26,19 @@ export default function MatchLogPanel({ courtId }: { courtId: string }) {
     return subscribeMatchLog(courtId, setLog);
   }, [courtId]);
 
+  const daLoc = filterGiamDinhId
+    ? log.filter((e) => e.giamDinhId === filterGiamDinhId)
+    : log;
+
   return (
     <div className={styles.panel}>
-      <div className={styles.title}>Nhật ký trận đấu (thời gian thực)</div>
+      <div className={styles.title}>
+        {filterGiamDinhId ? "Nhật ký của bạn" : "Nhật ký trận đấu (thời gian thực)"}
+      </div>
       <div className={styles.list}>
-        {[...log].reverse().map((entry, i) => (
+        {[...daLoc].reverse().map((entry) => (
           <div
-            key={i}
+            key={entry.id}
             className={
               entry.noiDung.startsWith("✓") ? styles.scoreLine : styles.line
             }>
@@ -33,7 +49,7 @@ export default function MatchLogPanel({ courtId }: { courtId: string }) {
             <span>{entry.noiDung}</span>
           </div>
         ))}
-        {log.length === 0 && (
+        {daLoc.length === 0 && (
           <p className={styles.empty}>Chưa có sự kiện nào.</p>
         )}
       </div>

@@ -22,12 +22,13 @@ import {
   subscribeMatchState,
   formatMmSs,
   tinhThoiGianConLai,
+  tinhNhanThoiGianTran,
 } from "../../../lib/realtime/liveMatchStore";
 import { serverNow } from "../../../lib/realtime/serverClock";
 import { usePressedLights, toPositionedPresses } from "../../../lib/realtime/usePressedLights";
 import { fetchTrongTai } from "../../../lib/api/trongTaiApi";
-import { useMatchStartBell } from "../../../lib/audio/matchBell";
-import { ghiLogDieuChinhDiem } from "../../../lib/realtime/pressLightClient";
+import { useMatchBell } from "../../../lib/audio/matchBell";
+import { ghiLogDieuChinhDiem, xoaLogDieuChinhDiem } from "../../../lib/realtime/pressLightClient";
 import Modal from "../../../components/Modal/Modal";
 import AthleteAvatar from "../../../components/AthleteAvatar/AthleteAvatar";
 import MatchLogPanel from "../../../components/MatchLogPanel/MatchLogPanel";
@@ -127,7 +128,7 @@ export default function DieuHanhDoiKhangTab({
     return () => clearTimeout(t);
   }, [live, courtId]);
   const remaining = live ? tinhThoiGianConLai(live) : 0;
-  useMatchStartBell(live?.trangThai);
+  useMatchBell(courtId, live?.trangThai, live?.hetHiepLuc);
   // Lịch sử điều chỉnh tay của TỪNG BÊN riêng biệt — "Hoàn tác" bên nào
   // chỉ lùi lại đúng thao tác gần nhất của bên đó, không đụng bên kia dù
   // thao tác sau đó xen giữa 2 bên. Chỉ lưu lúc CÒN ĐANG XEM đúng trận
@@ -135,8 +136,18 @@ export default function DieuHanhDoiKhangTab({
   // (MatchState), đây chỉ là ngăn xếp để biết "lùi lại thế nào". Đặt
   // TRƯỚC "if (!live) return" bên dưới — xem đúng comment ngay sau đây
   // giải thích lý do bắt buộc.
-  const [lichSuDo, setLichSuDo] = useState<number[]>([]);
-  const [lichSuXanh, setLichSuXanh] = useState<number[]>([]);
+  //
+  // Giữ kèm logId (Id dòng log đã ghi lúc cộng/trừ) — hoàn tác XOÁ HẲN
+  // đúng dòng đó thay vì thêm 1 dòng "hoàn tác" mới, để log trông như
+  // chưa từng có thao tác này. null nếu lúc ghi log bị lỗi (mất mạng...)
+  // — vẫn hoàn tác điểm bình thường, chỉ là không xoá được dòng log
+  // tương ứng (vì chưa từng có dòng nào được ghi).
+  const [lichSuDo, setLichSuDo] = useState<
+    { delta: number; logId: string | null }[]
+  >([]);
+  const [lichSuXanh, setLichSuXanh] = useState<
+    { delta: number; logId: string | null }[]
+  >([]);
   const dangChay = live?.trangThai === "dang_thi";
   const dangNghi = live?.trangThai === "nghi_giua_hiep";
   const laHiepCuoi = live ? live.hiepHienTai >= live.tongSoHiep : false;
@@ -181,9 +192,41 @@ export default function DieuHanhDoiKhangTab({
       trangThai: "da_ket_thuc",
       nguoiThang: winner,
       lyDoKetThuc: dangHiepPhu ? "diem_vang" : "thang_diem",
+      hetHiepLuc: Date.now(),
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hetGio, dangChay, laHiepCuoi]);
+
+  // Cách biệt đủ 10 điểm -> xử thắng ngay lập tức, không cần chờ hết
+  // giờ hiệp.
+  //
+  // CHỈ áp dụng lúc ĐANG THI (dangChay) — KHÔNG áp dụng khi đã tạm dừng
+  // hay đã kết thúc. Lý do: nếu áp dụng cả lúc tạm dừng, sẽ tạo vòng
+  // lặp vô hạn với nút "Bấm nhầm, chọn lại" (huyKetThuc) — nút đó chỉ
+  // chuyển trangThai về "tam_dung", KHÔNG đụng gì tới điểm số. Nếu vẫn
+  // áp dụng lúc tạm dừng, effect này sẽ thấy điểm vẫn cách biệt ≥10
+  // ngay lập tức và tự kết thúc lại y hệt, khiến người dùng bấm "chọn
+  // lại" mà màn hình cứ nháy liên tục, không có gì thay đổi được (lỗi
+  // đã gặp thực tế, xác nhận qua ảnh chụp màn hình).
+  //
+  // Điều chỉnh tay lúc TẠM DỪNG (nút +/-) vẫn được xử lý riêng, ngay
+  // trong hàm adjustScore — xem đúng chỗ đó, không cần effect này lo.
+  //
+  // Dùng >= (không phải ==) vì 1 lượt ghi điểm có thể nhảy thẳng qua
+  // mốc 10 (VD đang cách 8, ghi thêm +3 thành 11).
+  useEffect(() => {
+    const cur = live;
+    if (!cur || !dangChay) return;
+    const chenhLech = Math.abs(cur.diemChinhThucDo - cur.diemChinhThucXanh);
+    if (chenhLech < 10) return;
+    const benThang = cur.diemChinhThucDo > cur.diemChinhThucXanh ? "do" : "xanh";
+    patch({
+      trangThai: "da_ket_thuc",
+      nguoiThang: benThang,
+      lyDoKetThuc: "cach_biet_10_diem",
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [live?.diemChinhThucDo, live?.diemChinhThucXanh, dangChay]);
 
   // Điểm vàng — ghi nhớ điểm số NGAY LÚC hiệp phụ bắt đầu, để biết chính
   // xác bên nào ghi điểm ĐẦU TIÊN trong hiệp phụ (không phải tổng điểm
@@ -250,7 +293,12 @@ export default function DieuHanhDoiKhangTab({
       hiepHienTai: live.hiepHienTai + 1,
       thoiGianConLaiGiay: live.thoiGianHiepGiay,
       capNhatDongHoLuc: serverNow(),
-    });
+      // Cảnh cáo TRONG HIỆP reset về 0 mỗi khi 1 hiệp mới THẬT SỰ bắt
+      // đầu — khác hẳn soCanhCaoDo/Xanh (cả trận), field đó không đụng
+      // tới ở đây, giữ nguyên xuyên suốt các hiệp.
+      soCanhCaoHiepDo: 0,
+      soCanhCaoHiepXanh: 0,
+    } as Partial<LiveMatchState>);
   const tamDung = () =>
     patch({ trangThai: "tam_dung", thoiGianConLaiGiay: remaining });
   const tiepTuc = () =>
@@ -269,64 +317,126 @@ export default function DieuHanhDoiKhangTab({
       live.diemChinhThucDo === live.diemChinhThucXanh;
     patch(
       laHiepCuoi && !vaoHiepPhu
-        ? { trangThai: "tam_dung", thoiGianConLaiGiay: 0 }
+        ? { trangThai: "tam_dung", thoiGianConLaiGiay: 0, hetHiepLuc: Date.now() }
         : {
             trangThai: "nghi_giua_hiep",
             thoiGianConLaiGiay: live.thoiGianNghiGiay,
             capNhatDongHoLuc: serverNow(),
+            hetHiepLuc: Date.now(),
           },
     );
   };
 
   const adjustScore = (side: "do" | "xanh", delta: number) => {
     const key = side === "do" ? "diemChinhThucDo" : "diemChinhThucXanh";
-    patch({
-      [key]: live[key] + delta,
-      diemDaChinhTay: true,
-    } as Partial<LiveMatchState>);
+    const diemDoMoi = side === "do" ? live.diemChinhThucDo + delta : live.diemChinhThucDo;
+    const diemXanhMoi =
+      side === "xanh" ? live.diemChinhThucXanh + delta : live.diemChinhThucXanh;
 
-    if (side === "do") setLichSuDo((prev) => [...prev, delta]);
-    else setLichSuXanh((prev) => [...prev, delta]);
+    // Chỉnh tay lúc ĐANG TẠM DỪNG vẫn cần bắt được luật cách biệt 10
+    // điểm ngay lập tức — effect riêng cho luật này (xem phía trên) CỐ
+    // TÌNH chỉ chạy lúc đang thi, không chạy lúc tạm dừng (tránh vòng
+    // lặp vô hạn với nút "Bấm nhầm, chọn lại"). Kiểm tra trực tiếp ở
+    // đây, đúng 1 lần ngay khi bấm, không có rủi ro lặp vì đây là hàm
+    // gọi 1 lần, không phải effect tự chạy lại theo dõi state.
+    const chenhLechMoi = Math.abs(diemDoMoi - diemXanhMoi);
+    if (live.trangThai !== "da_ket_thuc" && chenhLechMoi >= 10) {
+      const benThang = diemDoMoi > diemXanhMoi ? "do" : "xanh";
+      patch({
+        [key]: live[key] + delta,
+        diemDaChinhTay: true,
+        trangThai: "da_ket_thuc",
+        nguoiThang: benThang,
+        lyDoKetThuc: "cach_biet_10_diem",
+      } as Partial<LiveMatchState>);
+    } else {
+      patch({
+        [key]: live[key] + delta,
+        diemDaChinhTay: true,
+      } as Partial<LiveMatchState>);
+    }
 
     const tenBen = side === "do" ? "Đỏ" : "Xanh";
     const dauSo = delta > 0 ? "+" : "";
     ghiLogDieuChinhDiem(
       courtId,
       `Bàn thư ký ${delta > 0 ? "cộng" : "trừ"} ${tenBen} ${dauSo}${delta}đ`,
-    );
+      tinhNhanThoiGianTran(live),
+    ).then((logId) => {
+      if (side === "do") setLichSuDo((prev) => [...prev, { delta, logId }]);
+      else setLichSuXanh((prev) => [...prev, { delta, logId }]);
+    });
   };
 
   const hoanTac = (side: "do" | "xanh") => {
     const lichSu = side === "do" ? lichSuDo : lichSuXanh;
-    const deltaCuoi = lichSu[lichSu.length - 1];
-    if (deltaCuoi === undefined) return;
+    const cuoi = lichSu[lichSu.length - 1];
+    if (cuoi === undefined) return;
 
     const key = side === "do" ? "diemChinhThucDo" : "diemChinhThucXanh";
     patch({
-      [key]: live[key] - deltaCuoi,
+      [key]: live[key] - cuoi.delta,
       diemDaChinhTay: true,
     } as Partial<LiveMatchState>);
 
     if (side === "do") setLichSuDo((prev) => prev.slice(0, -1));
     else setLichSuXanh((prev) => prev.slice(0, -1));
 
-    const tenBen = side === "do" ? "Đỏ" : "Xanh";
-    const dauSo = deltaCuoi > 0 ? "+" : "";
-    ghiLogDieuChinhDiem(
-      courtId,
-      `Hoàn tác: Bàn thư ký ${tenBen} ${dauSo}${deltaCuoi}đ`,
-    );
+    // Xoá HẲN dòng log gốc thay vì ghi thêm dòng "hoàn tác" mới — log
+    // trông như chưa từng có thao tác này. Không còn logId (lỗi mạng
+    // lúc ghi log ban đầu) thì không có gì để xoá, bỏ qua — điểm vẫn
+    // đã lùi lại đúng ở trên rồi.
+    if (cuoi.logId) xoaLogDieuChinhDiem(courtId, cuoi.logId);
   };
 
+  // Nhắc nhở đủ 3 lần -> trừ 2 điểm + reset về 0 + CỘNG THÊM 1 vào CẢ 2
+  // bộ đếm cảnh cáo cùng lúc:
+  //   - soCanhCaoHiepDo/Xanh (trong ĐÚNG hiệp này, tự reset mỗi hiệp
+  //     mới ở batDauHiep) — đủ 3 -> xử thua ngay.
+  //   - soCanhCaoDo/Xanh (cả trận, không bao giờ tự reset) — đủ 4 ->
+  //     xử thua ngay, DÙ không hiệp riêng lẻ nào đủ 3 (VD hiệp 1 bị 2,
+  //     hiệp 2 bị thêm 2 -> mỗi hiệp riêng chưa đủ 3, nhưng tổng 4 vẫn
+  //     thua theo đúng luật này).
+  // Kiểm tra hiệp trước, cả trận sau — không quan trọng thứ tự (đủ 1
+  // trong 2 là thua), nhưng kiểm tra hiệp trước cho tự nhiên vì đó là
+  // ngưỡng thấp hơn, thường chạm tới trước.
+  //
+  // Xử thua y hệt cách "hết giờ, không hoà" tự chọn thắng ở effect phía
+  // trên (tự chuyển trangThai + nguoiThang, vẫn dừng lại đúng màn "Đã
+  // có người thắng" chờ BTK bấm xác nhận, không tự nhảy qua trận khác).
   const adjustNhacNho = (side: "do" | "xanh", delta: number) => {
-    const key = side === "do" ? "canhCaoDo" : "canhCaoXanh";
+    const key = side === "do" ? "nhacNhoDo" : "nhacNhoXanh";
     const scoreKey = side === "do" ? "diemChinhThucDo" : "diemChinhThucXanh";
+    const canhCaoKey = side === "do" ? "soCanhCaoDo" : "soCanhCaoXanh";
+    const canhCaoHiepKey =
+      side === "do" ? "soCanhCaoHiepDo" : "soCanhCaoHiepXanh";
     const next = Math.max(0, live[key] + delta);
+
     if (delta > 0 && next >= 3) {
-      patch({
-        [key]: 0,
-        [scoreKey]: live[scoreKey] - 2,
-      } as Partial<LiveMatchState>);
+      const canhCaoHiepMoi = live[canhCaoHiepKey] + 1;
+      const canhCaoTranMoi = live[canhCaoKey] + 1;
+      const thuaTheoHiep = canhCaoHiepMoi >= 3;
+      const thuaTheoTran = canhCaoTranMoi >= 4;
+
+      if (thuaTheoHiep || thuaTheoTran) {
+        const benThang = side === "do" ? "xanh" : "do";
+        patch({
+          [key]: 0,
+          [scoreKey]: live[scoreKey] - 2,
+          [canhCaoHiepKey]: canhCaoHiepMoi,
+          [canhCaoKey]: canhCaoTranMoi,
+          trangThai: "da_ket_thuc",
+          nguoiThang: benThang,
+          lyDoKetThuc: "xu_thua_canh_cao",
+        } as Partial<LiveMatchState>);
+      } else {
+        patch({
+          [key]: 0,
+          [scoreKey]: live[scoreKey] - 2,
+          [canhCaoHiepKey]: canhCaoHiepMoi,
+          [canhCaoKey]: canhCaoTranMoi,
+        } as Partial<LiveMatchState>);
+      }
     } else {
       patch({ [key]: next } as Partial<LiveMatchState>);
     }
@@ -335,7 +445,7 @@ export default function DieuHanhDoiKhangTab({
   const restartMatch = () => {
     if (
       !window.confirm(
-        "Đấu lại từ đầu? Toàn bộ điểm, nhắc nhở và tiến trình hiệp hiện tại sẽ bị xóa.",
+        "Đấu lại từ đầu? Toàn bộ điểm, nhắc nhở, cảnh cáo và tiến trình hiệp hiện tại sẽ bị xóa.",
       )
     )
       return;
@@ -346,8 +456,12 @@ export default function DieuHanhDoiKhangTab({
       diemChinhThucDo: 0,
       diemChinhThucXanh: 0,
       diemDaChinhTay: false,
-      canhCaoDo: 0,
-      canhCaoXanh: 0,
+      nhacNhoDo: 0,
+      nhacNhoXanh: 0,
+      soCanhCaoDo: 0,
+      soCanhCaoXanh: 0,
+      soCanhCaoHiepDo: 0,
+      soCanhCaoHiepXanh: 0,
       nguoiThang: null,
     });
     setLichSuDo([]);
@@ -431,7 +545,7 @@ export default function DieuHanhDoiKhangTab({
                       <span
                         key={i}
                         className={
-                          i < live.canhCaoDo ? styles.dotOnDo : styles.dotOff
+                          i < live.nhacNhoDo ? styles.dotOnDo : styles.dotOff
                         }
                       />
                     ))}
@@ -442,6 +556,36 @@ export default function DieuHanhDoiKhangTab({
                   <button onClick={() => adjustNhacNho("do", 1)}>
                     <Plus size={14} />
                   </button>
+                </div>
+                <div className={styles.warnRowBig}>
+                  <span>Cảnh cáo hiệp này (3 → xử thua ngay)</span>
+                  <div className={styles.dotsBig}>
+                    {[0, 1, 2].map((i) => (
+                      <span
+                        key={i}
+                        className={
+                          i < live.soCanhCaoHiepDo
+                            ? styles.dotOnDo
+                            : styles.dotOff
+                        }
+                      />
+                    ))}
+                  </div>
+                </div>
+                <div className={styles.warnRowBig}>
+                  <span>Cảnh cáo cả trận (4 → xử thua ngay)</span>
+                  <div className={styles.dotsBig}>
+                    {[0, 1, 2, 3].map((i) => (
+                      <span
+                        key={i}
+                        className={
+                          i < live.soCanhCaoDo
+                            ? styles.dotOnDo
+                            : styles.dotOff
+                        }
+                      />
+                    ))}
+                  </div>
                 </div>
               </>
             )}
@@ -602,7 +746,7 @@ export default function DieuHanhDoiKhangTab({
                       <span
                         key={i}
                         className={
-                          i < live.canhCaoXanh
+                          i < live.nhacNhoXanh
                             ? styles.dotOnXanh
                             : styles.dotOff
                         }
@@ -615,6 +759,36 @@ export default function DieuHanhDoiKhangTab({
                   <button onClick={() => adjustNhacNho("xanh", 1)}>
                     <Plus size={14} />
                   </button>
+                </div>
+                <div className={styles.warnRowBig}>
+                  <span>Cảnh cáo hiệp này (3 → xử thua ngay)</span>
+                  <div className={styles.dotsBig}>
+                    {[0, 1, 2].map((i) => (
+                      <span
+                        key={i}
+                        className={
+                          i < live.soCanhCaoHiepXanh
+                            ? styles.dotOnXanh
+                            : styles.dotOff
+                        }
+                      />
+                    ))}
+                  </div>
+                </div>
+                <div className={styles.warnRowBig}>
+                  <span>Cảnh cáo cả trận (4 → xử thua ngay)</span>
+                  <div className={styles.dotsBig}>
+                    {[0, 1, 2, 3].map((i) => (
+                      <span
+                        key={i}
+                        className={
+                          i < live.soCanhCaoXanh
+                            ? styles.dotOnXanh
+                            : styles.dotOff
+                        }
+                      />
+                    ))}
+                  </div>
                 </div>
               </>
             )}

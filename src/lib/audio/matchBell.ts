@@ -1,6 +1,6 @@
 /** @format */
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 // File thật đặt ở src/assets/ — PHẢI import kiểu này (không được ghi
 // thẳng đường dẫn dạng chuỗi "../../assets/...") vì đường dẫn CHUỖI chỉ
 // được trình duyệt hiểu là tương đối tính từ URL TRANG ĐANG MỞ (VD
@@ -96,34 +96,77 @@ function playBellSoundTongHop() {
 }
 
 /**
- * Phát chuông đúng 1 lần mỗi khi trận CHUYỂN SANG "đang thi" — dùng
- * chung cho cả 2 nơi (Bàn thư ký bấm "Bắt đầu hiệp", và màn hình công
- * khai nhận đúng thay đổi đó qua realtime) nên chỉ cần viết logic phát
- * hiện "vừa mới bắt đầu" đúng 1 chỗ.
+ * Phát chuông đúng 1 lần mỗi khi trận CHUYỂN SANG "đang thi" (bắt đầu
+ * hiệp), VÀ đúng 1 lần khi hết giờ hiệp — dùng chung cho cả 2 nơi (Bàn
+ * thư ký, và màn hình công khai nhận đúng thay đổi đó qua realtime) nên
+ * chỉ cần viết logic phát hiện đúng 1 chỗ.
+ *
+ * Phát hiện "hết hiệp" bằng field hetHiepLuc (epoch ms) — field này
+ * được ĐẶT LẠI Ở ĐÚNG 1 CHỖ DUY NHẤT (effect "hết giờ" trong
+ * DieuHanhDoiKhangTab.tsx, CẢ 3 nhánh của nó) mỗi khi 1 hiệp THẬT SỰ
+ * kết thúc do hết giờ — value đổi là chắc chắn vừa hết hiệp, không cần
+ * suy luận gì thêm.
+ *
+ * TRƯỚC ĐÂY dùng thoiGianConLaiGiay <= 0 để suy luận — SAI, vì field đó
+ * nhận giá trị KHÁC NHAU tuỳ từng nhánh kết thúc hiệp: hiệp cuối hoà thì
+ * đúng là đặt về 0, nhưng hiệp thường (chuyển sang nghỉ giữa hiệp) lại
+ * đặt THÀNH thời gian nghỉ giữa hiệp (1 số dương, VD 60s) — kiểm tra
+ * <= 0 chỉ đúng cho đúng 1 trong 3 nhánh, bỏ sót các nhánh còn lại
+ * (đây chính là lỗi khiến chuông không reo dù đã hết hiệp thật).
  *
  * CỐ TÌNH không phát ngay lúc trang vừa mở/tải xong dù trangThai lúc đó
  * đã là "dang_thi" — trường hợp đó là trận ĐANG DIỄN RA SẴN từ trước
  * (VD người dùng vừa F5 lại trang giữa hiệp), không phải vừa mới bắt
  * đầu, không nên phát chuông.
+ *
+ * TRƯỚC ĐÂY nhớ "trạng thái trước đó" bằng useRef bên trong hook — lỗi
+ * thật đã gặp: useRef gắn liền vòng đời CHÍNH COMPONENT gọi hook này,
+ * bị xoá sạch mỗi khi component đó unmount (VD Bàn thư ký bấm chuyển
+ * qua tab khác rồi quay lại "Điều hành đối kháng" — tab đó unmount rồi
+ * mount lại, useRef về lại giá trị ban đầu y hệt lúc F5 trang thật).
+ * Trận đang "dang_thi" sẵn từ trước lúc quay lại tab bị hiểu NHẦM thành
+ * "vừa mới bắt đầu", phát chuông sai dù không ai vừa bấm gì cả.
+ *
+ * Sửa bằng cách nhớ Ở NGOÀI vòng đời mọi component — theo TỪNG SÂN
+ * riêng (Map cấp module, sống suốt phiên làm việc của cả app, không
+ * unmount theo bất kỳ component nào) — dù tab có unmount/mount lại bao
+ * nhiêu lần, Map này vẫn nhớ đúng "sân này đã từng ở trạng thái gì",
+ * không còn hiểu nhầm quay-lại-tab thành vừa-bắt-đầu nữa.
  */
-export function useMatchStartBell(trangThai: string | undefined) {
-  const truocDo = useRef<string | undefined>(undefined);
-  const daTungCoDuLieu = useRef(false);
+interface TrangThaiDaGhiNhan {
+  trangThai: string;
+  hetHiepLuc: number;
+}
+const trangThaiTruocDoTheoSan = new Map<string, TrangThaiDaGhiNhan>();
 
+export function useMatchBell(
+  courtId: string | undefined,
+  trangThai: string | undefined,
+  hetHiepLuc: number | undefined,
+) {
   useEffect(() => {
-    const gtaTruoc = truocDo.current;
-    truocDo.current = trangThai;
-
-    if (trangThai === undefined) return;
-
-    if (!daTungCoDuLieu.current) {
-      daTungCoDuLieu.current = true;
+    if (!courtId || trangThai === undefined || hetHiepLuc === undefined) {
       return;
     }
 
-    if (trangThai === "dang_thi" && gtaTruoc !== "dang_thi") {
-      playBellSound();
+    const hienTai: TrangThaiDaGhiNhan = { trangThai, hetHiepLuc };
+    const truoc = trangThaiTruocDoTheoSan.get(courtId);
+    trangThaiTruocDoTheoSan.set(courtId, hienTai);
+
+    // Sân này CHƯA TỪNG được ghi nhận trạng thái nào (app vừa mở, hoặc
+    // đây là lần đầu tiên bất kỳ component nào theo dõi đúng sân này) —
+    // không đủ căn cứ để biết đây có phải "vừa mới chuyển sang/vừa hết
+    // giờ" hay không, nên bỏ qua, không phát chuông.
+    if (!truoc) return;
+
+    if (trangThai === "dang_thi" && truoc.trangThai !== "dang_thi") {
+      playBellSound(); // bắt đầu hiệp
+      return;
     }
-  }, [trangThai]);
+
+    if (hetHiepLuc !== truoc.hetHiepLuc) {
+      playBellSound(); // hết giờ hiệp
+    }
+  }, [courtId, trangThai, hetHiepLuc]);
 }
 

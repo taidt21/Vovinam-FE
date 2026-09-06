@@ -1,10 +1,7 @@
 /** @format */
 
 import { useEffect, useState } from "react";
-import {
-  subscribeLightPressed,
-  subscribeConsensus,
-} from "../../lib/realtime/pressLightClient";
+import { subscribeLightPressed } from "../../lib/realtime/pressLightClient";
 import styles from "./LiveLightsPanel.module.scss";
 
 interface ActivePress {
@@ -45,17 +42,14 @@ export default function LiveLightsPanel({ courtId }: { courtId: string }) {
       );
     });
 
-    // Đủ đồng thuận, đã ghi điểm chính thức -> dọn sạch đèn đang sáng,
-    // coi như 1 đợt tín hiệu đã kết thúc, bắt đầu đợt mới từ đầu.
-    const unsubConsensus = subscribeConsensus(courtId, () => {
-      timers.forEach((t) => clearTimeout(t));
-      timers.clear();
-      setActive({});
-    });
-
+    // TRƯỚC ĐÂY: nghe thêm ConsensusScored (đủ 3/5 người đồng thuận) để
+    // xoá sạch toàn bộ badge ngay lập tức — 5 giám định bấm gần như đồng
+    // thời thì backend xử lý tuần tự, người thứ 3 vừa đủ ngưỡng là xoá
+    // mất cả 3 badge vừa hiện, người thứ 4-5 bấm sau vài mili-giây mới
+    // kịp hiện, nên chỉ còn thấy tối đa 2 người dù cả 5 đều đã bấm. Bỏ
+    // hẳn — để MỖI badge tự tắt theo đúng hẹn giờ 2s của riêng nó.
     return () => {
       unsubPress();
-      unsubConsensus();
       timers.forEach((t) => clearTimeout(t));
     };
   }, [courtId]);

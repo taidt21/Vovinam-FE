@@ -186,83 +186,115 @@
     cursor: pointer;
 }
 
-/* ===== Đối kháng ===== */
-.matchInfo {
-    background: $color-surface;
-    border: 1px solid $color-border;
-    border-radius: 10px;
-    padding: $space-3;
+/* ===== Đối kháng — luôn ép ngang, kiểu tay cầm game ===== */
+
+// Bọc ngoài cùng, phủ kín màn hình, tách hẳn khỏi .page (không còn
+// cuộn dọc/max-width 480px của .page nữa — màn này CHIẾM HẾT màn
+// hình thật, không phải 1 phần nội dung trong trang cuộn được).
+.doiKhangRotWrap {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh; // dự phòng cho trình duyệt cũ chưa hiểu dvh
+    height: 100dvh;
+    z-index: 100;
+    background: #111417;
+}
+
+// CHỈ xoay khi máy THẬT SỰ đang ở chế độ DỌC. Máy đã tự xoay ngang sẵn
+// (trường hợp phổ biến, không khoá xoay) thì .doiKhangRotWrap ở trên
+// áp dụng nguyên vẹn, không xoay gì thêm — kiểm tra thực tế xác nhận:
+// xoay chồng thêm 1 lần nữa lúc máy đã ngang sẵn sẽ làm vỡ hẳn layout.
+//
+// Đảo width/height (100vh/100vw) vì sau khi xoay 90°, trục ngang/dọc
+// thật của màn hình đảo chỗ nhau. translateY(-100%) kéo khối về đúng
+// góc trên-trái sau khi xoay quanh chính góc đó (transform-origin).
+//
+// Dùng dvh/dvw (Dynamic Viewport) thay vì vh/vw thường — "vh" trên
+// Safari di động tính theo chiều cao lúc thanh địa chỉ/tab ẨN HẾT,
+// không phải chiều đang THẬT SỰ nhìn thấy lúc thanh đó còn hiện —
+// kiểm tra thực tế (ảnh chụp màn hình thật) xác nhận: dùng "vh" khiến
+// khối bị to hơn hẳn phần nhìn thấy được, cắt mất nguyên hàng nút +2
+// phía dưới. "dvh/dvw" tự cập nhật đúng theo phần đang hiện thật.
+@media (orientation: portrait) {
+    .doiKhangRotWrap {
+        width: 100vh; // dự phòng
+        width: 100dvh;
+        height: 100vw; // dự phòng
+        height: 100dvw;
+        transform-origin: top left;
+        transform: rotate(90deg) translateY(-100%);
+    }
+}
+
+.doiKhangInner {
+    width: 100%;
+    height: 100%;
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    text-align: center;
 }
 
-.eventName {
-    font-size: 12px;
-    color: $color-text-muted;
-}
-
-.namesRow {
+.doiKhangInfoStrip {
+    flex-shrink: 0;
+    height: 40px;
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: $space-2;
-    font-size: 15px;
-    font-weight: 700;
-}
-
-.nameDo {
-    color: $color-do;
-}
-
-.nameXanh {
-    color: $color-xanh;
-}
-
-.vs {
-    color: $color-text-muted;
-    font-size: 12px;
-    font-weight: 400;
-}
-
-.clockRow {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    justify-content: space-between;
     gap: $space-3;
-    margin-top: 4px;
-}
-
-.clock {
-    font-family: $font-mono;
-    font-size: 24px;
-    font-weight: 800;
-}
-
-.notPlayingNote {
-    margin-top: $space-2;
-    font-size: 12px;
-    color: $color-warning;
-    background: rgba($color-warning, 0.1);
-    padding: 6px $space-2;
-    border-radius: 6px;
-}
-
-.buttonGrid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: $space-3;
-}
-
-.btnDo,
-.btnXanh {
-    padding: $space-6 $space-2;
-    border: none;
-    border-radius: 14px;
+    padding: 0 $space-3;
+    background: #1a1e23;
     color: white;
-    font-size: 22px;
+}
+
+.doiKhangInfoNames {
+    min-width: 0;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.doiKhangInfoWarn {
+    flex-shrink: 0;
+    font-size: 12px;
+    font-weight: 700;
+    color: $color-warning;
+    white-space: nowrap;
+}
+
+.doiKhangInfoClock {
+    flex-shrink: 0;
+    font-family: $font-mono;
+    font-size: 20px;
     font-weight: 800;
+}
+
+// Trái = Xanh, phải = Đỏ — đúng thứ tự yêu cầu, mỗi bên chiếm nửa màn
+// hình, đủ rộng cầm 2 tay kiểu tay cầm game.
+.doiKhangMainArea {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+}
+
+.doiKhangSideCol {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px;
+}
+
+.doiKhangBtnXanh,
+.doiKhangBtnDo {
+    min-height: 0;
+    border: none;
+    border-radius: 16px;
+    color: white;
+    font-weight: 900;
     cursor: pointer;
     transition: transform 0.1s;
 
@@ -276,12 +308,32 @@
     }
 }
 
-.btnDo {
+.doiKhangBtnXanh {
+    background: $color-xanh;
+}
+
+.doiKhangBtnDo {
     background: $color-do;
 }
 
-.btnXanh {
-    background: $color-xanh;
+// +1 (trên) nhỉnh hơn +2 (dưới) một chút — cả về không gian chiếm lẫn
+// cỡ chữ, đủ để cảm nhận được sự khác biệt khi bấm nhanh không cần
+// nhìn kỹ.
+//
+// CỐ TÌNH dùng px cố định, KHÔNG dùng vh/vw — đơn vị đó luôn tính theo
+// chiều cao/rộng MÀN HÌNH THẬT (không đổi theo transform), nên ở trạng
+// thái đã xoay (portrait), "vh" vẫn lấy theo chiều cao thật (844px)
+// thay vì chiều đã xoay — kiểm tra thực tế thấy chữ to gấp đôi so với
+// lúc máy đã xoay ngang thật, dù là CÙNG 1 màn hình vật lý.
+.doiKhangBtn1 {
+    flex: 1.15;
+    font-size: 34px;
+}
+
+.doiKhangBtn2 {
+    flex: 1;
+    font-size: 27px;
+    opacity: 0.92;
 }
 
 .pressing {

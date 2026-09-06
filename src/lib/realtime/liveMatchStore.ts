@@ -75,3 +75,17 @@ export function formatMmSs(totalSeconds: number): string {
   const r = s % 60;
   return `${String(m).padStart(2, '0')}:${String(r).padStart(2, '0')}`;
 }
+
+// Nhãn "Hiệp X - MM:SS" để ghi kèm vào Nhật ký trận đấu — tính ở ĐÂY
+// (frontend), KHÔNG để backend tự tính lại. Backend tự tính dựa vào
+// state nó đang lưu trong bộ nhớ, đúng lúc ghi log có thể state đó
+// chưa đầy đủ (VD vừa restart backend, chưa ai vào lại đúng sân đó) —
+// khi đó backend trả về null, phía hiển thị lại rơi về giờ thực (đồng
+// hồ hệ thống) thay vì đồng hồ đếm ngược trận đấu, gây lẫn lộn 2 loại
+// giờ khác nhau trong cùng 1 nhật ký. Ở đây LUÔN có sẵn state đầy đủ
+// (đang hiển thị ngay trên màn hình), nên tính xong gửi thẳng lên,
+// backend chỉ cần lưu lại nguyên văn, không tự đoán lại nữa.
+export function tinhNhanThoiGianTran(state: LiveMatchState): string {
+  const giay = tinhThoiGianConLai(state);
+  return `Hiệp ${state.hiepHienTai} - ${formatMmSs(giay)}`;
+}

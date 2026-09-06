@@ -45,6 +45,20 @@ $blue-dark: #073e96;
     padding: 0 clamp(18px, 1.1vw, 28px) clamp(16px, 1.6vh, 24px);
 }
 
+// Riêng màn hình Nội dung quyền — ảnh nền lấy từ assets, phủ thêm lớp
+// tối mờ ở trên để chữ trắng/vàng sẵn có vẫn đọc rõ dù ảnh sáng màu hay
+// tối màu, không cần biết trước ảnh cụ thể là gì. Chỉ áp cho quyền,
+// KHÔNG đụng .combatScreen (đối kháng) hay CourtChooser/trạng thái chờ
+// — những màn đó vẫn giữ nguyên nền gradient tối như cũ.
+.quyenScreen {
+    background-image:
+        linear-gradient(180deg, rgba(4, 5, 6, 0.72) 0%, rgba(4, 5, 6, 0.85) 100%),
+        url("../../assets/quyen-background.jpg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
 .publicHeader {
     grid-column: 1 / -1;
     grid-row: 1;
@@ -259,10 +273,8 @@ $blue-dark: #073e96;
 }
 
 .judgeLightOn {
-    background: var(--judge-accent);
-    box-shadow:
-        0 0 10px color-mix(in srgb, var(--judge-accent), transparent 20%),
-        0 0 24px color-mix(in srgb, var(--judge-accent), transparent 52%);
+    background: #ffd500;
+    box-shadow: 0 0 14px rgba(255, 213, 0, 0.95), 0 0 26px rgba(255, 213, 0, 0.55);
     animation: judgeLightBlink 420ms ease-in-out infinite alternate;
 }
 
@@ -291,10 +303,11 @@ $blue-dark: #073e96;
 }
 
 .fighterSide {
+    position: relative;
     min-width: 0;
     min-height: 0;
     display: grid;
-    grid-template-rows: minmax(0, 1fr) clamp(96px, 12vh, 132px);
+    grid-template-rows: minmax(0, 1fr) clamp(126px, 15.5vh, 172px);
     transition: opacity 180ms ease, filter 180ms ease;
 }
 
@@ -308,6 +321,52 @@ $blue-dark: #073e96;
     background:
         radial-gradient(circle at 64% 28%, rgba(255, 255, 255, 0.09), transparent 42%),
         linear-gradient(225deg, #0872ff 0%, #075fe2 56%, #0647b6 100%);
+}
+
+// Nhắc nhở (dấu chấm than, tối đa 2 — đủ 3 thì BTK đã tự trừ điểm +
+// reset về 0 ngay từ phía Bàn thư ký, không bao giờ thấy 3 dấu ở đây)
+// và cảnh cáo thật (icon ⚠, không tự reset, đủ 3 thì trận đã kết thúc)
+// — đặt góc trên, không che số điểm hay khu vực đèn giám định.
+.canhBaoOverlay {
+    position: absolute;
+    top: clamp(8px, 1vh, 16px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    pointer-events: none;
+}
+
+.nhacNhoMark {
+    color: #ffd500;
+    font-size: clamp(28px, 3.2vw, 58px);
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: 0.08em;
+    text-shadow: 0 3px 10px rgba(0, 0, 0, 0.45);
+}
+
+.canhCaoIcons {
+    display: flex;
+    gap: 6px;
+}
+
+.canhCaoIcon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: clamp(28px, 2.6vw, 46px);
+    height: clamp(28px, 2.6vw, 46px);
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.55);
+    border: 2px solid #fff;
+    color: #fff;
+    font-size: clamp(16px, 1.5vw, 26px);
+    font-weight: 900;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45);
 }
 
 .scoreValue {
@@ -334,12 +393,12 @@ $blue-dark: #073e96;
 }
 
 .athleteBarRed {
-    grid-template-columns: clamp(94px, 7.4vw, 138px) minmax(0, 1fr);
+    grid-template-columns: clamp(124px, 9.4vw, 178px) minmax(0, 1fr);
     background: linear-gradient(90deg, #a60004 0%, #9c0003 100%);
 }
 
 .athleteBarBlue {
-    grid-template-columns: minmax(0, 1fr) clamp(94px, 7.4vw, 138px);
+    grid-template-columns: minmax(0, 1fr) clamp(124px, 9.4vw, 178px);
     background: linear-gradient(90deg, #073d91 0%, #063983 100%);
 }
 
@@ -370,7 +429,6 @@ $blue-dark: #073e96;
 
 .athleteInfo {
     min-width: 0;
-    position: relative;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -405,22 +463,32 @@ $blue-dark: #073e96;
     white-space: nowrap;
 }
 
+// Đặt trong .fighterSide (đã position:relative sẵn cho canhBaoOverlay) —
+// góc TRÊN của khối điểm, không phải trong khối tên/đơn vị nữa (tên dài
+// không còn ảnh hưởng gì tới vị trí này). Trái cho Đỏ, phải cho Xanh —
+// đối xứng ra 2 mép ngoài, không đụng canhBaoOverlay (canh giữa).
 .winnerTag {
     position: absolute;
-    top: 9px;
-    right: 18px;
+    top: clamp(8px, 1vh, 16px);
+    z-index: 1;
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: 7px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.4);
     color: $yellow;
-    font-size: clamp(13px, 0.9vw, 18px);
+    font-size: clamp(17px, 1.35vw, 26px);
     font-weight: 900;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.06em;
 }
 
-.athleteBarBlue .winnerTag {
-    right: auto;
-    left: 18px;
+.winnerTagLeft {
+    left: clamp(12px, 1.2vw, 24px);
+}
+
+.winnerTagRight {
+    right: clamp(12px, 1.2vw, 24px);
 }
 
 .sideWinner {
@@ -516,60 +584,157 @@ $blue-dark: #073e96;
     font-weight: 700;
 }
 
-/* ---------- Màn hình quyền: giữ chức năng hiện tại, đồng bộ dark UI ---------- */
+/* ---------- Màn hình công khai Quyền — scale lớn theo màn hình ---------- */
 .quyenEvent {
-    padding-top: 26px;
-    color: rgba(255, 255, 255, 0.78);
-    font-size: clamp(22px, 1.8vw, 34px);
-    font-weight: 700;
+    padding: clamp(18px, 2.2vh, 34px) clamp(24px, 3vw, 56px) 0;
+    color: rgba(255, 255, 255, 0.88);
+    font-size: clamp(30px, 2.6vw, 52px);
+    font-weight: 850;
+    line-height: 1.12;
     text-align: center;
+    text-wrap: balance;
 }
 
 .quyenPerformerBig {
-    height: calc(100vh - 160px);
+    height: calc(100vh - clamp(145px, 16vh, 190px));
+    min-height: 0;
+    padding: clamp(10px, 1.4vh, 20px) clamp(18px, 3vw, 54px) clamp(18px, 2.6vh, 34px);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 13px;
+    gap: clamp(10px, 1.35vh, 20px);
+    box-sizing: border-box;
+    text-align: center;
+}
+
+.quyenPerformerBig> :first-child {
+    flex-shrink: 0;
+    filter: drop-shadow(0 10px 28px rgba(0, 0, 0, 0.38));
 }
 
 .quyenName {
-    margin-top: 10px;
-    font-size: clamp(38px, 3.4vw, 64px);
-    font-weight: 900;
+    max-width: 92vw;
+    margin-top: clamp(6px, 1vh, 14px);
+    color: #fff;
+    font-size: clamp(48px, 4.8vw, 92px);
+    font-weight: 950;
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+    text-align: center;
+    text-wrap: balance;
 }
 
 .quyenUnit {
-    color: $muted;
-    font-size: clamp(22px, 1.8vw, 34px);
+    max-width: 88vw;
+    color: rgba(255, 255, 255, 0.72);
+    font-size: clamp(27px, 2.4vw, 48px);
+    font-weight: 700;
+    line-height: 1.16;
+    text-align: center;
 }
 
-.quyenClock,
-.quyenScore {
-    margin-top: 14px;
-    font-size: clamp(72px, 8vw, 150px);
-    font-weight: 900;
+.quyenClock {
+    margin-top: clamp(4px, 0.8vh, 12px);
+    font-size: clamp(98px, 11vw, 210px);
+    font-weight: 950;
+    line-height: 0.9;
+    letter-spacing: -0.055em;
     font-variant-numeric: tabular-nums;
+    color: #fff;
+    text-shadow: 0 10px 28px rgba(0, 0, 0, 0.34);
 }
 
 .quyenScore {
-    color: $yellow;
+    margin-top: clamp(2px, 0.5vh, 8px);
+    font-size: clamp(56px, 5.6vw, 108px);
+    font-weight: 950;
+    line-height: 0.9;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+    color: #ffd500;
+    text-shadow:
+        0 0 20px rgba(255, 213, 0, 0.16),
+        0 10px 28px rgba(0, 0, 0, 0.34);
 }
 
 .quyenStatus,
 .quyenLive {
-    margin-top: 6px;
-    padding: 8px 16px;
+    margin-top: clamp(4px, 0.65vh, 10px);
+    padding: clamp(10px, 1.15vh, 16px) clamp(22px, 2vw, 38px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.09);
-    font-size: 16px;
-    font-weight: 900;
+    background: rgba(255, 255, 255, 0.085);
+    font-size: clamp(19px, 1.55vw, 30px);
+    font-weight: 950;
+    line-height: 1;
+    letter-spacing: 0.05em;
 }
 
 .quyenLive {
     color: #ff5252;
+    border-color: rgba(255, 82, 82, 0.30);
+    background: rgba(255, 82, 82, 0.08);
 }
+
+
+
+/* Full HD / 2K: tận dụng thêm không gian để nhìn xa rõ hơn. */
+@media (min-width: 1800px) and (min-height: 950px) {
+    .quyenEvent {
+        font-size: clamp(42px, 2.7vw, 58px);
+    }
+
+    .quyenName {
+        font-size: clamp(68px, 4.9vw, 102px);
+    }
+
+    .quyenUnit {
+        font-size: clamp(34px, 2.45vw, 52px);
+    }
+
+    .quyenClock,
+    .quyenScore {
+        font-size: clamp(135px, 11.4vw, 225px);
+    }
+}
+
+/* Màn thấp: vẫn scale lớn nhưng ưu tiên không cắt bảng 5 giám định. */
+@media (max-height: 800px) {
+    .quyenEvent {
+        padding-top: 14px;
+        font-size: clamp(26px, 2.25vw, 38px);
+    }
+
+    .quyenPerformerBig {
+        height: calc(100vh - 128px);
+        padding-top: 8px;
+        padding-bottom: 12px;
+        gap: 7px;
+    }
+
+    .quyenName {
+        margin-top: 4px;
+        font-size: clamp(38px, 4.2vw, 62px);
+    }
+
+    .quyenUnit {
+        font-size: clamp(22px, 2vw, 32px);
+    }
+
+    .quyenClock,
+    .quyenScore {
+        margin-top: 4px;
+        font-size: clamp(78px, 9vw, 124px);
+    }
+
+    .quyenStatus,
+    .quyenLive {
+        padding: 8px 18px;
+        font-size: clamp(16px, 1.35vw, 22px);
+    }
+}
+
 
 @media (max-aspect-ratio: 4 / 3) {
     .combatScreen {
@@ -621,5 +786,195 @@ $blue-dark: #073e96;
 
     .judgeTitle {
         min-height: 22px;
+    }
+}
+
+/* ==========================================================================
+   MÀN HÌNH CÔNG KHAI QUYỀN — cập nhật theo TSX mới
+   Scale lớn theo viewport + danh sách điểm từng giám khảo dạng chip.
+   ========================================================================== */
+
+.quyenEvent {
+    padding: clamp(18px, 2.2vh, 34px) clamp(24px, 3vw, 56px) 0;
+    color: rgba(255, 255, 255, 0.88);
+    font-size: clamp(30px, 2.6vw, 52px);
+    font-weight: 850;
+    line-height: 1.12;
+    text-align: center;
+    text-wrap: balance;
+}
+
+.quyenPerformerBig {
+    min-height: 0;
+    height: calc(100vh - clamp(145px, 16vh, 190px));
+    padding: clamp(10px, 1.4vh, 20px) clamp(18px, 3vw, 54px) clamp(18px, 2.6vh, 34px);
+    box-sizing: border-box;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(10px, 1.35vh, 20px);
+    text-align: center;
+}
+
+.quyenPerformerBig> :first-child {
+    flex-shrink: 0;
+    filter: drop-shadow(0 10px 28px rgba(0, 0, 0, 0.38));
+}
+
+.quyenName {
+    max-width: 92vw;
+    margin-top: clamp(6px, 1vh, 14px);
+    color: #fff;
+    font-size: clamp(48px, 4.8vw, 92px);
+    font-weight: 950;
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+    text-align: center;
+    text-wrap: balance;
+}
+
+.quyenUnit {
+    max-width: 88vw;
+    color: rgba(255, 255, 255, 0.72);
+    font-size: clamp(27px, 2.4vw, 48px);
+    font-weight: 700;
+    line-height: 1.16;
+    text-align: center;
+}
+
+.quyenClock {
+    margin-top: clamp(4px, 0.8vh, 12px);
+    font-size: clamp(98px, 11vw, 210px);
+    font-weight: 950;
+    line-height: 0.9;
+    letter-spacing: -0.055em;
+    font-variant-numeric: tabular-nums;
+    color: #fff;
+    text-shadow: 0 10px 28px rgba(0, 0, 0, 0.34);
+}
+
+.quyenScore {
+    margin-top: clamp(2px, 0.5vh, 8px);
+    font-size: clamp(56px, 5.6vw, 108px);
+    font-weight: 950;
+    line-height: 0.9;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+    color: #ffd500;
+    text-shadow:
+        0 0 20px rgba(255, 213, 0, 0.16),
+        0 10px 28px rgba(0, 0, 0, 0.34);
+}
+
+.quyenStatus,
+.quyenLive {
+    margin-top: clamp(4px, 0.65vh, 10px);
+    padding: clamp(10px, 1.15vh, 16px) clamp(22px, 2vw, 38px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.085);
+    font-size: clamp(19px, 1.55vw, 30px);
+    font-weight: 950;
+    line-height: 1;
+    letter-spacing: 0.05em;
+}
+
+.quyenLive {
+    color: #ff5252;
+    border-color: rgba(255, 82, 82, 0.30);
+    background: rgba(255, 82, 82, 0.08);
+}
+
+// Bảng 5 điểm riêng từng giám định — đặt dưới điểm tổng hợp, đánh số
+// 1-5 theo đúng thứ tự API trả về, không hiện tên thật.
+//
+// CỐ TÌNH nhỏ hơn hẳn các chữ khác trên màn hình này — bảng có tới 6
+// dòng (tiêu đề + 5 giám định), cùng chia sẻ 1 khung CHIỀU CAO CỐ ĐỊNH
+// với avatar + tên + đơn vị + điểm tổng hợp ở trên. Để to như ban đầu
+// (~46px/dòng) thì tổng chiều cao vượt hẳn màn hình, bị cắt mất — xem
+// đủ cả 6 dòng quan trọng hơn việc từng dòng thật to.
+.quyenBangGiamDinh {
+    margin-top: clamp(8px, 1vh, 16px);
+    border-collapse: collapse;
+    font-size: clamp(15px, 1.35vw, 25px);
+    font-variant-numeric: tabular-nums;
+
+    th,
+    td {
+        padding: clamp(2px, 0.4vh, 6px) clamp(14px, 1.6vw, 26px);
+        text-align: center;
+    }
+
+    th {
+        color: rgba(255, 255, 255, 0.6);
+        font-weight: 700;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.25);
+    }
+
+    td {
+        font-weight: 800;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    tr:last-child td {
+        border-bottom: none;
+    }
+}
+
+/* Full HD / 2K: tận dụng màn hình lớn để nhìn từ xa rõ hơn. */
+@media (min-width: 1800px) and (min-height: 950px) {
+    .quyenEvent {
+        font-size: clamp(42px, 2.7vw, 58px);
+    }
+
+    .quyenName {
+        font-size: clamp(68px, 4.9vw, 102px);
+    }
+
+    .quyenUnit {
+        font-size: clamp(34px, 2.45vw, 52px);
+    }
+
+    .quyenClock,
+    .quyenScore {
+        font-size: clamp(135px, 11.4vw, 225px);
+    }
+}
+
+/* Màn hình thấp: vẫn to nhưng không để 5 ô điểm bị cắt. */
+@media (max-height: 800px) {
+    .quyenEvent {
+        padding-top: 12px;
+        font-size: clamp(25px, 2.2vw, 38px);
+    }
+
+    .quyenPerformerBig {
+        height: calc(100vh - 124px);
+        padding-top: 7px;
+        padding-bottom: 10px;
+        gap: 6px;
+    }
+
+    .quyenName {
+        margin-top: 3px;
+        font-size: clamp(38px, 4.1vw, 62px);
+    }
+
+    .quyenUnit {
+        font-size: clamp(21px, 1.95vw, 31px);
+    }
+
+    .quyenClock,
+    .quyenScore {
+        margin-top: 3px;
+        font-size: clamp(74px, 8.8vw, 120px);
+    }
+
+    .quyenStatus,
+    .quyenLive {
+        padding: 7px 17px;
+        font-size: clamp(15px, 1.3vw, 21px);
     }
 }

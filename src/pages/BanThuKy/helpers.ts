@@ -11,6 +11,8 @@ export const LY_DO_OPTIONS: { value: LyDoKetThuc; label: string }[] = [
   { value: "boc_tham", label: "Bốc thăm" },
   { value: "can_hang_can", label: "Cân hạng cân" },
   { value: "bo_cuoc", label: "Bỏ cuộc" },
+  { value: "xu_thua_canh_cao", label: "Xử thua do đủ 3 cảnh cáo" },
+  { value: "cach_biet_10_diem", label: "Thắng cách biệt 10 điểm" },
 ];
 
 export const LY_DO_KET_THUC_QUYEN_OPTIONS: {
@@ -82,12 +84,17 @@ export function makeLiveState(
     thoiGianNghiGiay: DEFAULT_THOI_GIAN_NGHI,
     thoiGianConLaiGiay: DEFAULT_THOI_GIAN_HIEP,
     capNhatDongHoLuc: serverNow(),
+    hetHiepLuc: 0,
     soTrongTaiCanCo: DEFAULT_SO_TRONG_TAI,
     diemChinhThucDo: 0,
     diemChinhThucXanh: 0,
     diemDaChinhTay: false,
-    canhCaoDo: 0,
-    canhCaoXanh: 0,
+    nhacNhoDo: 0,
+    nhacNhoXanh: 0,
+    soCanhCaoDo: 0,
+    soCanhCaoXanh: 0,
+    soCanhCaoHiepDo: 0,
+    soCanhCaoHiepXanh: 0,
     nguoiThang: null,
     capNhatLuc: Date.now(),
   };

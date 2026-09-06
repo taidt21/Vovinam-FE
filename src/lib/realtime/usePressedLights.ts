@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { subscribeLightPressed, subscribeConsensus } from "./pressLightClient";
+import { subscribeLightPressed } from "./pressLightClient";
 
 export interface PressedLights {
   do: { id: string; diem: number }[];
@@ -62,15 +62,18 @@ export function usePressedLights(courtId: string): PressedLights {
       timersRef.current.set(e.giamDinhId, t);
     });
 
-    const unsubConsensus = subscribeConsensus(courtId, () => {
-      timersRef.current.forEach((t) => clearTimeout(t));
-      timersRef.current.clear();
-      setPressed({ do: [], xanh: [] });
-    });
-
+    // TRƯỚC ĐÂY: nghe thêm sự kiện ConsensusScored (đủ 3/5 người đồng
+    // thuận, backend chốt điểm) để XOÁ SẠCH toàn bộ đèn ngay lập tức —
+    // tưởng là dọn dẹp cho gọn, nhưng 5 giám định bấm gần như đồng thời
+    // thì backend vẫn xử lý TUẦN TỰ từng lượt: người thứ 3 vừa đủ ngưỡng
+    // là bắn ConsensusScored NGAY, xoá mất cả 3 đèn vừa sáng — người thứ
+    // 4, 5 bấm sau đó vài mili-giây mới kịp sáng lên, nên chỉ còn thấy
+    // tối đa 2 đèn dù cả 5 người đều đã bấm. Bỏ hẳn việc tự xoá theo sự
+    // kiện này — để MỖI đèn tự tắt theo đúng hẹn giờ 1.5s CỦA RIÊNG NÓ
+    // (y hệt trường hợp không đạt đồng thuận), không bị xoá sớm chỉ vì
+    // đã đủ số đồng thuận ở lượt đó.
     return () => {
       unsubPress();
-      unsubConsensus();
       // timersRef.current LUÔN là đúng 1 Map được tạo 1 lần (dòng 14-16),
       // chỉ bị mutate qua set/delete/clear chứ không bao giờ bị gán lại
       // Map mới — nên cảnh báo chung "ref có thể đã đổi lúc cleanup chạy"

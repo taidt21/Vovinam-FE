@@ -5,7 +5,9 @@ export type LyDoKetThuc =
   | 'can_hang_can'
   | 'bo_cuoc'
   | 'dung_vi_y_te'
-  | 'boc_tham';
+  | 'boc_tham'
+  | 'xu_thua_canh_cao'
+  | 'cach_biet_10_diem';
 
 export interface Match {
   id: string;

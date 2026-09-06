@@ -40,14 +40,47 @@ export interface LiveMatchState {
   thoiGianConLaiGiay: number; // số giây còn lại TẠI capNhatDongHoLuc
   capNhatDongHoLuc: number; // epoch ms — dùng để các tab tự nội suy đồng hồ, không cần bắn broadcast mỗi giây
 
+  // Epoch ms — đặt LẠI (Date.now() mới) mỗi khi 1 hiệp THẬT SỰ kết thúc
+  // do hết giờ (cả 3 nhánh trong effect "hết giờ" của
+  // DieuHanhDoiKhangTab.tsx đều set field này). Dùng làm tín hiệu RÕ
+  // RÀNG cho chuông báo hết hiệp (useMatchBell) — KHÔNG suy luận qua
+  // trangThai/thoiGianConLaiGiay nữa, vì 2 field đó nhận giá trị KHÁC
+  // NHAU tuỳ từng nhánh (VD hết hiệp thường thì thoiGianConLaiGiay
+  // được đặt THÀNH thời gian nghỉ giữa hiệp, không phải 0 — kiểm tra
+  // == 0 chỉ đúng cho đúng 1 trong 3 nhánh, bỏ sót các nhánh còn lại).
+  hetHiepLuc: number;
+
   soTrongTaiCanCo: number; // mặc định 3, thư ký chỉnh trước khi bắt đầu hiệp 1
 
   diemChinhThucDo: number;
   diemChinhThucXanh: number;
   diemDaChinhTay: boolean; // true nếu thư ký từng bấm +/- tay, tạm ngưng tự tính theo trọng tài biên
 
-  canhCaoDo: number;
-  canhCaoXanh: number;
+  // TRƯỚC ĐÂY đặt tên "canhCaoDo/Xanh" nhưng thực chất đây là "nhắc nhở"
+  // (nhẹ — đủ 3 lần thì trừ 2 điểm rồi reset về 0, KHÔNG dẫn tới xử
+  // thua). Đổi tên cho đúng bản chất, để dành đúng tên "canhCao" cho
+  // khái niệm CẢNH CÁO thật ngay dưới đây (nặng hơn hẳn — đủ 3 lần xử
+  // thua ngay lập tức, không reset).
+  nhacNhoDo: number;
+  nhacNhoXanh: number;
+
+  // Cảnh cáo THẬT — mỗi lần nhắc nhở đủ 3 (xem nhacNhoDo/Xanh ở trên)
+  // thì +1 vào CẢ ĐÂY LẪN soCanhCaoHiepDo/Xanh ngay dưới, cùng lúc.
+  //
+  // Đây là tổng CẢ TRẬN, không reset theo hiệp (chỉ reset khi "Đấu lại
+  // từ đầu"). Đủ 4 (cả trận) -> xử thua ngay lập tức, BẤT KỂ mỗi hiệp
+  // riêng lẻ có đủ 3 hay không (VD hiệp 1 bị 2, hiệp 2 bị thêm 2 nữa —
+  // không hiệp nào riêng lẻ đủ 3, nhưng tổng 2 hiệp đã đủ 4 -> vẫn thua
+  // theo đúng luật này).
+  soCanhCaoDo: number;
+  soCanhCaoXanh: number;
+
+  // Cảnh cáo trong ĐÚNG hiệp hiện tại — tự reset về 0 mỗi khi bắt đầu
+  // hiệp mới (khác hẳn soCanhCaoDo/Xanh ở trên, không bao giờ reset).
+  // Đủ 3 TRONG CÙNG 1 HIỆP -> xử thua ngay lập tức, dù tổng cả trận
+  // (soCanhCaoDo/Xanh) có khi chưa tới 4.
+  soCanhCaoHiepDo: number;
+  soCanhCaoHiepXanh: number;
 
   nguoiThang: 'do' | 'xanh' | null;
   lyDoKetThuc?: LyDoKetThuc;
