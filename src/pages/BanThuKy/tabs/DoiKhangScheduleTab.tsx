@@ -1,7 +1,7 @@
 /** @format */
 
 import { useEffect, useMemo, useState } from "react";
-import { Pencil, RotateCcw, Search } from "lucide-react";
+import { Pencil, RotateCcw, Search, Eye } from "lucide-react";
 import type {
   CompetitionEvent,
   LiveMatchState,
@@ -51,6 +51,7 @@ export default function DoiKhangScheduleTab({
   onQuickFinish,
   onEditResult,
   onReplay,
+  onReviewMatch,
 }: {
   numbered: NumberedMatch[];
   eventOf: (id: string) => CompetitionEvent | undefined;
@@ -63,6 +64,7 @@ export default function DoiKhangScheduleTab({
     eventId: string,
     matchId: string,
     side: "do" | "xanh",
+    lyDo: LyDoKetThuc,
   ) => void;
   onEditResult: (
     match: Match,
@@ -71,10 +73,23 @@ export default function DoiKhangScheduleTab({
     side: "do" | "xanh",
   ) => void;
   onReplay: (match: Match, eventId: string) => void;
+  onReviewMatch: (item: NumberedMatch) => void;
 }) {
   const courtName = courts.find((c) => c.id === currentCourtId)?.ten ?? "";
   const [editingItem, setEditingItem] = useState<NumberedMatch | null>(null);
   const [editLyDo, setEditLyDo] = useState<LyDoKetThuc>("thang_diem");
+  // "Kết quả nhanh" (đấu ở lịch, chưa qua chấm điểm) — TRƯỚC ĐÂY bấm
+  // "Đỏ/Xanh thắng" là CHỐT LUÔN, lý do bị hardcode cứng "thang_diem"
+  // (thắng điểm) — SAI bản chất trong đa số trường hợp thật sự dùng nút
+  // này (bốc thăm, bỏ cuộc, cân hạng cân... không hề có chấm điểm nào
+  // cả). Giờ bấm chỉ MỞ modal xác nhận, bắt buộc chọn đúng lý do trước
+  // khi thật sự chốt kết quả — không còn giá trị mặc định nào được chọn
+  // sẵn (quickLyDo rỗng lúc mở), nút "Xác nhận" bị khoá tới khi chọn.
+  const [quickFinishItem, setQuickFinishItem] = useState<NumberedMatch | null>(
+    null,
+  );
+  const [quickFinishSide, setQuickFinishSide] = useState<"do" | "xanh">("do");
+  const [quickLyDo, setQuickLyDo] = useState<LyDoKetThuc | "">("");
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<ScheduleFilter>("tat_ca");
 
@@ -291,6 +306,12 @@ export default function DoiKhangScheduleTab({
                     <span className={styles.resultTag}>Đã hoàn thành</span>
                     <div className={styles.listActions}>
                       <button
+                        className={styles.reviewBtn}
+                        onClick={() => onReviewMatch(item)}
+                        title="Xem lại toàn bộ diễn biến trận này (chỉ đọc)">
+                        <Eye size={13} /> Xem lại
+                      </button>
+                      <button
                         className={styles.editBtn}
                         onClick={() => openEdit(item)}
                         title="Sửa lại người thắng hoặc lý do">
@@ -330,15 +351,23 @@ export default function DoiKhangScheduleTab({
                       <button
                         className={styles.quickBtnDo}
                         disabled={trueCourtBusy}
-                        onClick={() => onQuickFinish(event.id, match.id, "do")}
-                        title="Xử Đỏ thắng ngay, không qua chấm điểm">
+                        onClick={() => {
+                          setQuickFinishItem(item);
+                          setQuickFinishSide("do");
+                          setQuickLyDo("");
+                        }}
+                        title="Xử Đỏ thắng, không qua chấm điểm — cần chọn lý do">
                         Đỏ thắng
                       </button>
                       <button
                         className={styles.quickBtnXanh}
                         disabled={trueCourtBusy}
-                        onClick={() => onQuickFinish(event.id, match.id, "xanh")}
-                        title="Xử Xanh thắng ngay, không qua chấm điểm">
+                        onClick={() => {
+                          setQuickFinishItem(item);
+                          setQuickFinishSide("xanh");
+                          setQuickLyDo("");
+                        }}
+                        title="Xử Xanh thắng, không qua chấm điểm — cần chọn lý do">
                         Xanh thắng
                       </button>
                     </div>
@@ -406,6 +435,60 @@ export default function DoiKhangScheduleTab({
                   setEditingItem(null);
                 }}>
                 {athleteName(editingItem.match.athleteBlueId)} thắng
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {quickFinishItem && (
+        <Modal
+          title={`Xác nhận kết quả nhanh — #${quickFinishItem.so} ${quickFinishItem.event.ten}`}
+          onClose={() => setQuickFinishItem(null)}>
+          <div className={styles.settingsForm}>
+            <p>
+              <strong>
+                {athleteName(
+                  quickFinishSide === "do"
+                    ? quickFinishItem.match.athleteRedId
+                    : quickFinishItem.match.athleteBlueId,
+                )}
+              </strong>{" "}
+              ({quickFinishSide === "do" ? "Đỏ" : "Xanh"}) sẽ thắng — không
+              qua chấm điểm.
+            </p>
+            <label className={styles.reasonRow}>
+              <span>Lý do (bắt buộc chọn)</span>
+              <select
+                value={quickLyDo}
+                onChange={(e) =>
+                  setQuickLyDo(e.target.value as LyDoKetThuc | "")
+                }>
+                <option value="" disabled>
+                  — Chọn lý do —
+                </option>
+                {LY_DO_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div className={styles.controlBtns}>
+              <button
+                className={styles.btnPrimary}
+                disabled={quickLyDo === ""}
+                onClick={() => {
+                  if (quickLyDo === "") return;
+                  onQuickFinish(
+                    quickFinishItem.event.id,
+                    quickFinishItem.match.id,
+                    quickFinishSide,
+                    quickLyDo,
+                  );
+                  setQuickFinishItem(null);
+                }}>
+                Xác nhận
               </button>
             </div>
           </div>

@@ -7,7 +7,8 @@
 
 
 .editBtn,
-.replayBtn {
+.replayBtn,
+.reviewBtn {
     display: inline-flex;
     align-items: center;
     gap: 4px;
@@ -314,7 +315,8 @@
 .quickBtnDo,
 .quickBtnXanh,
 .editBtn,
-.replayBtn {
+.replayBtn,
+.reviewBtn {
     min-height: 28px;
 }
 

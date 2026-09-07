@@ -10,14 +10,17 @@ import type {
   Tournament,
 } from "../../types";
 import type { LiveQuyenState } from "../../types/liveQuyen";
+import type { LiveMatchState } from "../../types/live";
+import type { MatchLogEntry } from "../../lib/realtime/pressLightClient";
 import { useCourts } from "../../lib/utils/useCourts";
 import { getGanSan } from "../../lib/api/adminAuth";
 import { numberDoiKhangMatches } from "../../lib/domain/bracket";
+import type { NumberedMatch } from "../../lib/domain/bracket";
 import { compareNhomTuoi } from "../../lib/utils/nhomTuoi";
 import { serverNow } from "../../lib/realtime/serverClock";
 import { apiGet } from "../../lib/api/api";
 import { fetchEvents } from "../../lib/api/eventsApi";
-import { fetchMatches, updateMatch } from "../../lib/api/matchesApi";
+import { fetchMatches, updateMatch, fetchMatchReview } from "../../lib/api/matchesApi";
 import {
   fetchQuyenJudgeScores,
   type QuyenJudgeScoreWire,
@@ -67,6 +70,7 @@ import type { QuyenItem } from "./types";
 import DoiKhangScheduleTab from "./tabs/DoiKhangScheduleTab";
 import QuyenScheduleTab from "./tabs/QuyenScheduleTab";
 import DieuHanhDoiKhangTab from "./tabs/DieuHanhDoiKhangTab";
+import XemLaiDoiKhangTab from "./tabs/XemLaiDoiKhangTab";
 import DieuHanhQuyenTab from "./tabs/DieuHanhQuyenTab";
 import TrongTaiTab from "./tabs/TrongTaiTab";
 
@@ -121,6 +125,17 @@ export default function BanThuKy() {
 
   const { courts, loadingCourts } = useCourts();
   const [tab, setTab] = useState<TabId>("lich_dk");
+  // "Xem lại trận đã kết thúc" — có giá trị thì tab "dieu_hanh_dk" hiện
+  // đúng trận NÀY ở chế độ chỉ đọc (XemLaiDoiKhangTab) thay vì trận
+  // đang sống thật của sân (DieuHanhDoiKhangTab bình thường). null thì
+  // tab đó về lại đúng hành vi cũ, không có gì thay đổi.
+  const [reviewMatch, setReviewMatch] = useState<{
+    match: Match;
+    eventTen: string;
+    so?: number;
+    matchState: LiveMatchState;
+    log: MatchLogEntry[];
+  } | null>(null);
   const ganSan = getGanSan();
   const [currentCourtId, setCurrentCourtId] = useState(ganSan ?? "");
   const [tournament, setTournament] = useState<Tournament | null>(null);
@@ -377,7 +392,15 @@ export default function BanThuKy() {
   // Bấm tab điều hành = xin xác nhận NGAY tại đây nếu có xung đột — Huỷ
   // phải chặn được thật (không đổi tab, không báo tín hiệu gì), nên việc
   // hỏi phải xảy ra TRƯỚC khi tab đổi, không phải sau.
+  //
+  // Chuyển sang BẤT KỲ tab nào khác (kể cả quay lại "dieu_hanh_dk" từ 1
+  // tab khác) mà CHƯA bấm "Quay lại" trong màn xem lại — tự động thoát
+  // luôn khỏi chế độ xem lại, đúng yêu cầu "không bấm Quay lại thì
+  // chuyển tab sẽ tự trả lại điều hành đối kháng trống/nhường chỗ cho
+  // trận khác". Chỉ bỏ qua khi bấm LẠI đúng tab đang đứng (id === tab)
+  // — không có gì để "chuyển" trong trường hợp đó.
   const handleTabClick = (id: TabId) => {
+    if (id !== tab) setReviewMatch(null);
     if (id === "dieu_hanh_dk" || id === "dieu_hanh_quyen") {
       if (
         !chuyenActiveMode(
@@ -444,7 +467,7 @@ export default function BanThuKy() {
         return m;
       }),
     }));
-    if (match.courtId) clearMatchState(match.courtId);
+    if (match.courtId) clearMatchState(match.courtId, false);
 
     try {
       await updateMatch(updatedMatch.id, updatedMatch);
@@ -543,9 +566,10 @@ export default function BanThuKy() {
     eventId: string,
     matchId: string,
     side: "do" | "xanh",
+    lyDo: LyDoKetThuc,
   ) => {
     const match = bracketsByEvent[eventId]?.find((m) => m.id === matchId);
-    if (match) finishMatch(match, eventId, "thang_diem", side);
+    if (match) finishMatch(match, eventId, lyDo, side);
   };
 
   const editMatchResult = async (
@@ -653,6 +677,48 @@ export default function BanThuKy() {
     } catch {
       window.alert(
         "Lưu thay đổi thất bại — kiểm tra backend đã chạy chưa. Thử tải lại trang.",
+      );
+    }
+  };
+
+  // "Xem lại trận đã kết thúc" — bắt buộc CẢ 2 bên (đối kháng lẫn
+  // quyền) của sân hiện tại đều đang TRỐNG mới cho xem — y hệt lý do ở
+  // chuyenActiveMode phía trên: màn xem lại sẽ chiếm đúng chỗ hiển thị
+  // của tab "Điều hành đối kháng", không nên chen ngang lúc sân đó đang
+  // thật sự có việc (đang thi/đang chờ 1 trận hoặc lượt khác).
+  const openReview = async (item: NumberedMatch) => {
+    if (getMatchSnapshot(currentCourtId) !== null) {
+      window.alert(
+        `${courtName} đang còn lượt đối kháng chưa xong. Bấm "Bỏ, cho sân nghỉ" ngay tại tab Điều hành đối kháng, hoặc đợi lượt đó tự kết thúc, rồi mới xem lại được.`,
+      );
+      return;
+    }
+    if (getQuyenSnapshot(currentCourtId) !== null) {
+      window.alert(
+        `${courtName} đang còn lượt quyền chưa xong. Bấm "Bỏ, cho sân nghỉ" ngay tại tab Điều hành quyền, hoặc đợi lượt đó tự kết thúc, rồi mới xem lại được.`,
+      );
+      return;
+    }
+
+    try {
+      const data = await fetchMatchReview(item.match.id);
+      if (!data.matchState) {
+        window.alert(
+          "Không tìm thấy dữ liệu chi tiết của trận này để xem lại — có thể trận này diễn ra từ trước khi có tính năng này, hoặc dữ liệu đã bị dọn.",
+        );
+        return;
+      }
+      setReviewMatch({
+        match: item.match,
+        eventTen: item.event.ten,
+        so: item.so,
+        matchState: data.matchState,
+        log: data.log,
+      });
+      setTab("dieu_hanh_dk");
+    } catch {
+      window.alert(
+        "Không tải được dữ liệu xem lại — kiểm tra backend đã chạy chưa. Thử lại.",
       );
     }
   };
@@ -1054,6 +1120,7 @@ export default function BanThuKy() {
           onQuickFinish={quickFinish}
           onEditResult={editMatchResult}
           onReplay={replayMatch}
+          onReviewMatch={openReview}
         />
       )}
 
@@ -1068,7 +1135,19 @@ export default function BanThuKy() {
       )}
 
       {tab === "dieu_hanh_dk" &&
-        (!activeOnMyCourt || !activeEvent ? (
+        (reviewMatch ? (
+          <XemLaiDoiKhangTab
+            key={reviewMatch.match.id}
+            match={reviewMatch.match}
+            eventTen={reviewMatch.eventTen}
+            so={reviewMatch.so}
+            athleteName={athleteName}
+            athleteTeam={athleteTeam}
+            matchState={reviewMatch.matchState}
+            log={reviewMatch.log}
+            onBack={() => setReviewMatch(null)}
+          />
+        ) : !activeOnMyCourt || !activeEvent ? (
           <div className={styles.noMatch}>
             {dangNghiDoiKhang ? (
               <p>

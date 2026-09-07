@@ -40,11 +40,15 @@ export function publishMatchState(state: LiveMatchState): void {
     .catch(() => {});
 }
 
-export function clearMatchState(courtId: string): void {
+// xoaLuuTru mặc định true (giữ hành vi cũ) — truyền false khi trận
+// THẬT SỰ đã kết thúc bình thường, để backend GIỮ LẠI bản lưu phục vụ
+// tính năng "Xem lại trận đã kết thúc" (xem đúng comment ở
+// ClearMatchState trong MatchHub.cs backend).
+export function clearMatchState(courtId: string, xoaLuuTru = true): void {
   ensureHandlersRegistered();
   notify(courtId, null);
   ensureStarted()
-    .then((conn) => conn.invoke('ClearMatchState', courtId))
+    .then((conn) => conn.invoke('ClearMatchState', courtId, xoaLuuTru))
     .catch(() => {});
 }
 

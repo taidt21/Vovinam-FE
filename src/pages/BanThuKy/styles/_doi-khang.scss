@@ -501,3 +501,19 @@
     padding-top: $space-3;
     border-top: 1px solid $color-border;
 }
+
+// Tính năng "Xem lại trận đã kết thúc" (XemLaiDoiKhangTab.tsx) — nhãn
+// nhỏ báo đang ở chế độ chỉ đọc, và dòng hiện lý do kết thúc bên khối
+// kết quả.
+.xemLaiTag {
+    margin-left: $space-2;
+    font-size: 12px;
+    font-weight: 600;
+    color: $color-warning;
+}
+
+.xemLaiLyDo {
+    font-size: 13px;
+    color: $color-text-muted;
+    margin: 0;
+}
