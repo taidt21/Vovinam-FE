@@ -1,0 +1,700 @@
+@use '../../../styles/variables' as *;
+
+// Danh sách lịch thi đấu — dùng chung cho cả 2 tab lịch đối kháng (DoiKhangScheduleTab.tsx) và lịch quyền (QuyenScheduleTab.tsx), vì 2 màn này gần như giống hệt cấu trúc.
+// File này là 1 phần của BanThuKy.module.scss (đã tách ra cho gọn) —
+// KHÔNG tự import trực tiếp từ component, luôn đi qua đúng
+// BanThuKy.module.scss ở thư mục cha.
+
+
+/* ---- Tab 1: Lịch thi đấu ---- */
+.listCard {
+    background: $color-surface;
+    border: 1px solid rgba($color-border, .96);
+    border-radius: $radius-lg;
+    overflow: hidden;
+    box-shadow:
+        0 1px 2px rgba(15, 23, 42, .02),
+        0 8px 22px rgba(15, 23, 42, .035);
+}
+
+
+.listBody {
+    max-height: 640px;
+    overflow-y: auto;
+}
+
+
+.listRow {
+    display: flex;
+    align-items: center;
+    gap: $space-3;
+    padding: $space-3 $space-4;
+    border: none;
+    border-bottom: 1px solid $color-border;
+    background: none;
+    font: inherit;
+    text-align: left;
+    width: 100%;
+    color: inherit;
+    cursor: pointer;
+
+    &:last-child {
+        border-bottom: none;
+    }
+
+    &:hover {
+        background: $color-bg;
+    }
+}
+
+
+.listNo {
+    font-family: $font-mono;
+    font-size: 12px;
+    font-weight: 700;
+    color: $color-text-muted;
+    width: 32px;
+    flex-shrink: 0;
+}
+
+
+.listInfo {
+    flex: 1;
+    min-width: 0;
+}
+
+
+.listActions {
+    display: flex;
+    gap: $space-2;
+    flex-shrink: 0;
+}
+
+
+.quickBtnDo,
+.quickBtnXanh,
+.startBtn {
+    font-size: 12px;
+    font-weight: 600;
+    padding: $space-1 $space-2;
+    border-radius: 6px;
+    cursor: pointer;
+
+    &:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+}
+
+
+.quickBtnDo {
+    border: 1px solid $color-do;
+    color: $color-do;
+    background: none;
+
+    &:hover:not(:disabled) {
+        background: rgba($color-do, 0.06);
+    }
+}
+
+
+.quickBtnXanh {
+    border: 1px solid $color-xanh;
+    color: $color-xanh;
+    background: none;
+
+    &:hover:not(:disabled) {
+        background: rgba($color-xanh, 0.06);
+    }
+}
+
+
+.startBtn {
+    border: none;
+    color: white;
+    background: $color-do;
+
+    &:hover:not(:disabled) {
+        opacity: 0.9;
+    }
+}
+
+
+.waitTag,
+.playingTag,
+.pausedTag,
+.resultTag {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px $space-2;
+    border-radius: 999px;
+    flex-shrink: 0;
+}
+
+
+.waitTag {
+    color: $color-text-muted;
+    background: $color-bg;
+}
+
+
+.playingTag {
+    color: white;
+    background: $color-danger;
+}
+
+
+.pausedTag {
+    color: $color-warning;
+    background: rgba($color-warning, 0.14);
+}
+
+
+.resultTag {
+    color: $color-success;
+    background: rgba($color-success, 0.1);
+}
+
+
+.loserName {
+    color: $color-text-muted;
+    text-decoration: line-through;
+    text-decoration-thickness: 1.5px;
+}
+
+
+.empty {
+    font-size: 13px;
+    color: $color-text-muted;
+    text-align: center;
+    padding: $space-4;
+}
+
+
+/* ---- Lịch thi đấu chung ---- */
+.scheduleCard {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba($color-border, .96);
+    border-radius: $radius-lg;
+    background: $color-surface;
+    box-shadow:
+        0 1px 2px rgba(15, 23, 42, .02),
+        0 10px 28px rgba(15, 23, 42, .045);
+
+    &::before {
+        content: '';
+        position: absolute;
+        z-index: 3;
+        top: 0;
+        left: 22px;
+        right: 22px;
+        height: 3px;
+        border-radius: 0 0 999px 999px;
+        background: linear-gradient(
+            90deg,
+            $color-do 0%,
+            rgba($color-do, .36) 62%,
+            transparent 100%
+        );
+        pointer-events: none;
+    }
+}
+
+
+.scheduleHeader {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: $space-5;
+    align-items: center;
+    padding: 22px 22px 17px;
+    border-bottom: 1px solid rgba($color-border, .9);
+    background:
+        radial-gradient(circle at 92% 0%, rgba($color-do, .065), transparent 34%),
+        linear-gradient(180deg, rgba($color-do, .018), $color-surface);
+}
+
+
+.scheduleTitle {
+    margin: 0;
+    font-size: 20px;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+}
+
+
+.scheduleDescription {
+    max-width: 650px;
+    margin: 6px 0 0;
+    color: $color-text-muted;
+    font-size: 12px;
+    line-height: 1.55;
+}
+
+
+.scheduleStats {
+    display: flex;
+    gap: 8px;
+}
+
+
+.scheduleStat {
+    min-width: 82px;
+    padding: 9px 11px;
+    border: 1px solid $color-border;
+    border-radius: 10px;
+    background: $color-bg;
+    text-align: center;
+
+    strong {
+        display: block;
+        font-family: $font-mono;
+        font-size: 18px;
+        line-height: 1.15;
+        color: $color-text;
+    }
+
+    span {
+        display: block;
+        margin-top: 2px;
+        font-size: 10px;
+        font-weight: 600;
+        color: $color-text-muted;
+        white-space: nowrap;
+    }
+}
+
+
+.busyBanner {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 22px;
+    border-bottom: 1px solid rgba($color-warning, 0.2);
+    background: rgba($color-warning, 0.075);
+    color: $color-text;
+    font-size: 11px;
+
+    strong {
+        font-weight: 750;
+    }
+
+    >span:last-child {
+        color: $color-text-muted;
+    }
+}
+
+
+.busyDot {
+    width: 8px;
+    height: 8px;
+    flex: 0 0 auto;
+    border-radius: 999px;
+    background: $color-warning;
+    box-shadow: 0 0 0 3px rgba($color-warning, 0.13);
+}
+
+
+.scheduleToolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-3;
+    padding: 11px 14px;
+    border-bottom: 1px solid $color-border;
+    background: rgba($color-bg, 0.55);
+}
+
+
+.scheduleSearch {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: min(360px, 100%);
+    min-height: 36px;
+    padding: 0 11px;
+    border: 1px solid $color-border;
+    border-radius: 9px;
+    background: $color-surface;
+    color: $color-text-muted;
+
+    &:focus-within {
+        border-color: rgba($color-do, 0.55);
+        box-shadow: 0 0 0 3px rgba($color-do, 0.07);
+    }
+
+    input {
+        width: 100%;
+        min-width: 0;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: $color-text;
+        font: inherit;
+        font-size: 12px;
+
+        &::placeholder {
+            color: $color-text-muted;
+        }
+    }
+}
+
+
+.scheduleFilters {
+    display: flex;
+    gap: 5px;
+    overflow-x: auto;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+        display: none;
+    }
+}
+
+
+.filterBtn,
+.filterActive {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    flex: 0 0 auto;
+    min-height: 32px;
+    padding: 0 9px;
+    border: 1px solid $color-border;
+    border-radius: 8px;
+    background: $color-surface;
+    color: $color-text-muted;
+    font-size: 11px;
+    font-weight: 650;
+    cursor: pointer;
+
+    &:hover {
+        color: $color-text;
+        border-color: rgba($color-text-muted, 0.55);
+    }
+}
+
+
+.filterActive {
+    color: $color-do;
+    border-color: rgba($color-do, 0.25);
+    background: rgba($color-do, 0.075);
+}
+
+
+.filterCount {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    border-radius: 999px;
+    background: $color-bg;
+    font-family: $font-mono;
+    font-size: 9px;
+}
+
+
+.scheduleList {
+    max-height: min(68vh, 720px);
+}
+
+
+.scheduleRow {
+    display: grid;
+    grid-template-columns: 68px minmax(0, 1fr) minmax(190px, auto);
+    align-items: center;
+    gap: 14px;
+    min-height: 88px;
+    padding: 12px 15px;
+    cursor: default;
+    transition:
+        background 0.15s ease,
+        box-shadow 0.15s ease;
+
+    &:hover {
+        background: rgba($color-bg, 0.78);
+    }
+}
+
+
+.scheduleRowLive {
+    background: rgba($color-danger, 0.025);
+    box-shadow: inset 3px 0 0 rgba($color-danger, 0.75);
+}
+
+
+.scheduleRowDone {
+    background: rgba($color-success, 0.018);
+}
+
+
+.matchNumberBlock {
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding-right: 10px;
+    border-right: 1px solid $color-border;
+}
+
+
+.matchNumberBlock .listNo {
+    width: auto;
+    font-size: 14px;
+    color: $color-text;
+}
+
+
+.roundTag,
+.metaPill {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    border-radius: 999px;
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+
+.roundTag {
+    padding: 4px 7px;
+    background: $color-bg;
+    color: $color-text-muted;
+}
+
+
+.eventMetaLine {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+
+.eventNameStrong {
+    font-size: 12px;
+    font-weight: 750;
+    color: $color-text;
+}
+
+
+.metaPill {
+    padding: 4px 7px;
+    border: 1px solid $color-border;
+    color: $color-text-muted;
+    background: $color-surface;
+}
+
+
+.competitorPair {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 30px minmax(0, 1fr);
+    gap: 7px;
+    align-items: stretch;
+}
+
+
+.competitor {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    padding: 8px 10px;
+    border: 1px solid $color-border;
+    border-radius: 9px;
+    background: $color-surface;
+
+    strong {
+        overflow: hidden;
+        min-width: 0;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 12px;
+        font-weight: 700;
+    }
+}
+
+
+.competitorInfo {
+    display: flex;
+    flex: 1;
+    gap: 4px;
+    flex-wrap: wrap;
+    min-width: 0;
+}
+
+
+.competitorTeam {
+    overflow: hidden;
+    min-width: 0;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: $color-text-muted;
+    font-size: 10.5px;
+    font-weight: 500;
+}
+
+
+.competitorRed {
+    border-left: 3px solid $color-do;
+    background: rgba($color-do, 0.025);
+}
+
+
+.competitorBlue {
+    border-left: 3px solid $color-xanh;
+    background: rgba($color-xanh, 0.025);
+}
+
+
+.competitorSide {
+    flex: 0 0 auto;
+    font-size: 9px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: $color-text-muted;
+}
+
+
+.vsBadge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: $color-text-muted;
+    font-family: $font-mono;
+    font-size: 9px;
+    font-weight: 800;
+}
+
+
+.scheduleActionArea {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 7px;
+    min-width: 0;
+}
+
+
+.scheduleActionArea .startBtn {
+    min-width: 150px;
+    min-height: 34px;
+    padding: 7px 12px;
+    border-radius: 8px;
+    box-shadow: 0 3px 10px rgba($color-do, 0.13);
+}
+
+
+.quickResultActions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 5px;
+    flex-wrap: wrap;
+
+    >span {
+        margin-right: 2px;
+        color: $color-text-muted;
+        font-size: 9px;
+    }
+}
+
+
+.listActions {
+    justify-content: flex-end;
+}
+
+
+.waitTag,
+.playingTag,
+.pausedTag,
+.resultTag {
+    padding: 5px 9px;
+    font-size: 10px;
+}
+
+
+.playingTag {
+    box-shadow: 0 0 0 3px rgba($color-danger, 0.09);
+}
+
+
+/* ---- Lịch quyền ---- */
+.quyenSchedulePerformer {
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+    flex-wrap: wrap;
+
+    strong {
+        font-size: 14px;
+        font-weight: 750;
+    }
+
+    span {
+        color: $color-text-muted;
+        font-size: 11px;
+    }
+}
+
+
+.quyenProgressArea {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    min-width: 235px;
+}
+
+
+.judgeProgress {
+    width: 95px;
+
+    >span,
+    >strong {
+        font-size: 9px;
+    }
+
+    >span {
+        color: $color-text-muted;
+    }
+
+    >strong {
+        float: right;
+        font-family: $font-mono;
+        color: $color-text;
+    }
+}
+
+
+.scoreResultBox {
+    min-width: 82px;
+    padding: 7px 10px;
+    border: 1px solid rgba($color-success, 0.17);
+    border-radius: 9px;
+    background: rgba($color-success, 0.065);
+    text-align: right;
+
+    span {
+        display: block;
+        color: $color-text-muted;
+        font-size: 9px;
+    }
+
+    strong {
+        display: block;
+        margin-top: 1px;
+        color: $color-success;
+        font-family: $font-mono;
+        font-size: 17px;
+    }
+}

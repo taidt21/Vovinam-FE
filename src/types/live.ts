@@ -13,6 +13,7 @@ export type DieuHanhTrangThai =
   | 'dang_thi' // đồng hồ đang đếm ngược, trọng tài biên được chấm điểm
   | 'tam_dung' // đang thi nhưng thư ký bấm tạm dừng — trọng tài biên bị khóa
   | 'nghi_giua_hiep' // hết giờ 1 hiệp, chờ thư ký bấm bắt đầu hiệp kế
+  | 'y_te' // y tế đang can thiệp — đếm ngược 60s, mọi thao tác khác của BTK/trọng tài biên đều khoá
   | 'da_ket_thuc'; // đã có kết quả chính thức
 
 export interface LiveMatchState {
@@ -81,6 +82,31 @@ export interface LiveMatchState {
   // (soCanhCaoDo/Xanh) có khi chưa tới 4.
   soCanhCaoHiepDo: number;
   soCanhCaoHiepXanh: number;
+
+  // ===== Y tế can thiệp =====
+  // Bên nào đang được gọi y tế ngay lúc này — null nếu không có timeout
+  // y tế nào đang diễn ra. Khác dangGoiYTeLuc: field này chỉ VỀ null khi
+  // BTK bấm "VĐV đã ổn" hoặc "Gọi nhầm, huỷ" (không tự hết dù đếm ngược
+  // về 0 — hết giờ chỉ tự xử thua, không tự đóng màn timeout, để BTK vẫn
+  // thấy rõ mình cần xác nhận kết quả trước khi màn hình đổi tiếp).
+  dangGoiYTe: 'do' | 'xanh' | null;
+  // Epoch ms — thời điểm BẮT ĐẦU đếm ngược 60s, để mọi client tự nội suy
+  // đúng số giây còn lại (giống hệt cơ chế capNhatDongHoLuc của đồng hồ
+  // chính), không cần bắn broadcast mỗi giây.
+  yTeBatDauLuc: number;
+
+  // Số lần gọi y tế CẢ TRẬN (không reset theo hiệp, chỉ reset khi "Đấu
+  // lại từ đầu") — đủ 5 (cả trận) -> xử thua ngay, BẤT KỂ hiệp riêng lẻ
+  // có đủ 3 hay không (y hệt cơ chế soCanhCaoDo/Xanh phía trên, chỉ khác
+  // ngưỡng: cảnh cáo là 4, y tế là 5).
+  soLanYTeDo: number;
+  soLanYTeXanh: number;
+
+  // Số lần gọi y tế TRONG hiệp hiện tại — tự reset về 0 mỗi khi bắt đầu
+  // hiệp mới. Đủ 3 TRONG CÙNG 1 HIỆP -> xử thua ngay, dù tổng cả trận
+  // (soLanYTeDo/Xanh) có khi chưa tới 5.
+  soLanYTeHiepDo: number;
+  soLanYTeHiepXanh: number;
 
   nguoiThang: 'do' | 'xanh' | null;
   lyDoKetThuc?: LyDoKetThuc;

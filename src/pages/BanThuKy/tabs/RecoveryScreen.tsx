@@ -38,10 +38,14 @@ export default function RecoveryScreen({
   const [nhacNhoDo, setNhacNhoDo] = useState(0);
   const [soCanhCaoDo, setSoCanhCaoDo] = useState(0);
   const [soCanhCaoHiepDo, setSoCanhCaoHiepDo] = useState(0);
+  const [soLanYTeDo, setSoLanYTeDo] = useState(0);
+  const [soLanYTeHiepDo, setSoLanYTeHiepDo] = useState(0);
   const [diemXanh, setDiemXanh] = useState(0);
   const [nhacNhoXanh, setNhacNhoXanh] = useState(0);
   const [soCanhCaoXanh, setSoCanhCaoXanh] = useState(0);
   const [soCanhCaoHiepXanh, setSoCanhCaoHiepXanh] = useState(0);
+  const [soLanYTeXanh, setSoLanYTeXanh] = useState(0);
+  const [soLanYTeHiepXanh, setSoLanYTeHiepXanh] = useState(0);
 
   const khoiPhuc = () => {
     const base = makeLiveState(
@@ -67,10 +71,15 @@ export default function RecoveryScreen({
       nhacNhoDo,
       soCanhCaoDo,
       soCanhCaoHiepDo,
+      soLanYTeDo,
+      soLanYTeHiepDo,
       diemChinhThucXanh: diemXanh,
       nhacNhoXanh,
       soCanhCaoXanh,
       soCanhCaoHiepXanh,
+      soLanYTeXanh,
+      soLanYTeHiepXanh,
+      dangGoiYTe: null,
       diemDaChinhTay: true,
       capNhatDongHoLuc: serverNow(),
     });
@@ -171,6 +180,26 @@ export default function RecoveryScreen({
           />
         </label>
         <label className={styles.field}>
+          <span>Số lần gọi y tế Đỏ CẢ TRẬN đã có (0–4)</span>
+          <input
+            type="number"
+            min={0}
+            max={4}
+            value={soLanYTeDo}
+            onChange={(e) => setSoLanYTeDo(Number(e.target.value))}
+          />
+        </label>
+        <label className={styles.field}>
+          <span>Số lần gọi y tế Đỏ TRONG HIỆP NÀY đã có (0–2)</span>
+          <input
+            type="number"
+            min={0}
+            max={2}
+            value={soLanYTeHiepDo}
+            onChange={(e) => setSoLanYTeHiepDo(Number(e.target.value))}
+          />
+        </label>
+        <label className={styles.field}>
           <span>Điểm Xanh hiện tại</span>
           <input
             type="number"
@@ -206,6 +235,26 @@ export default function RecoveryScreen({
             max={2}
             value={soCanhCaoHiepXanh}
             onChange={(e) => setSoCanhCaoHiepXanh(Number(e.target.value))}
+          />
+        </label>
+        <label className={styles.field}>
+          <span>Số lần gọi y tế Xanh CẢ TRẬN đã có (0–4)</span>
+          <input
+            type="number"
+            min={0}
+            max={4}
+            value={soLanYTeXanh}
+            onChange={(e) => setSoLanYTeXanh(Number(e.target.value))}
+          />
+        </label>
+        <label className={styles.field}>
+          <span>Số lần gọi y tế Xanh TRONG HIỆP NÀY đã có (0–2)</span>
+          <input
+            type="number"
+            min={0}
+            max={2}
+            value={soLanYTeHiepXanh}
+            onChange={(e) => setSoLanYTeHiepXanh(Number(e.target.value))}
           />
         </label>
         <button className={styles.btnPrimary} onClick={khoiPhuc}>

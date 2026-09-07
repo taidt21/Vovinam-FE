@@ -341,8 +341,8 @@ $blue-dark: #073e96;
 }
 
 .nhacNhoMark {
-    color: #ffd500;
-    font-size: clamp(28px, 3.2vw, 58px);
+    color: $yellow;
+    font-size: clamp(32px, 3.6vw, 66px);
     font-weight: 900;
     line-height: 1;
     letter-spacing: 0.08em;
@@ -354,17 +354,21 @@ $blue-dark: #073e96;
     gap: 6px;
 }
 
+// Đồng bộ màu vàng cảnh báo ($yellow) với .nhacNhoMark ở trên — trước
+// đây viền/chữ màu trắng, không cùng "ngôn ngữ cảnh báo" với dấu nhắc
+// nhở. Nền vẫn giữ tối (rgba đen) để icon vàng nổi bật rõ, không bị
+// chìm nếu tô cả nền vàng luôn.
 .canhCaoIcon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: clamp(28px, 2.6vw, 46px);
-    height: clamp(28px, 2.6vw, 46px);
+    width: clamp(32px, 3vw, 52px);
+    height: clamp(32px, 3vw, 52px);
     border-radius: 50%;
     background: rgba(0, 0, 0, 0.55);
-    border: 2px solid #fff;
-    color: #fff;
-    font-size: clamp(16px, 1.5vw, 26px);
+    border: 2px solid $yellow;
+    color: $yellow;
+    font-size: clamp(18px, 1.7vw, 30px);
     font-weight: 900;
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45);
 }

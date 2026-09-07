@@ -1,0 +1,31 @@
+@use '../../../styles/variables' as *;
+
+// Màn khôi phục trận đấu (RecoveryScreen.tsx) khi dữ liệu live bị mất.
+// File này là 1 phần của BanThuKy.module.scss (đã tách ra cho gọn) —
+// KHÔNG tự import trực tiếp từ component, luôn đi qua đúng
+// BanThuKy.module.scss ở thư mục cha.
+
+
+.recoveryBox {
+    max-width: 480px;
+    margin: 24px auto;
+    padding: 20px;
+    border: 2px solid $color-warning;
+    border-radius: 12px;
+    background: rgba($color-warning, 0.06);
+}
+
+
+.recoveryTitle {
+    margin: 0 0 8px;
+    font-size: 16px;
+    color: #8a6416;
+}
+
+
+.recoveryDesc {
+    font-size: 13px;
+    color: $color-text;
+    line-height: 1.6;
+    margin: 0 0 16px;
+}

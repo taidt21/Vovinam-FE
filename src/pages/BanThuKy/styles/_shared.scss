@@ -1,0 +1,617 @@
+@use '../../../styles/variables' as *;
+
+// Class DÙNG CHUNG bởi từ 2 tab/file trở lên (nút bấm, ô nhập, nhãn trạng thái...) — sửa ở đây sẽ ảnh hưởng tới NHIỀU màn cùng lúc, cân nhắc kỹ trước khi đổi.
+// File này là 1 phần của BanThuKy.module.scss (đã tách ra cho gọn) —
+// KHÔNG tự import trực tiếp từ component, luôn đi qua đúng
+// BanThuKy.module.scss ở thư mục cha.
+
+
+.editBtn,
+.replayBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    padding: $space-1 $space-2;
+    border-radius: 6px;
+    cursor: pointer;
+    border: 1px solid $color-border;
+    color: $color-text-muted;
+    background: none;
+
+    &:hover {
+        color: $color-text;
+        border-color: $color-text-muted;
+    }
+}
+
+
+/* ---- Tab 2: Điều hành thi đấu (phóng to, thao tác nhiều nhất) ---- */
+.noMatch {
+    font-size: 14px;
+    color: $color-text-muted;
+    background: $color-bg;
+    border-radius: 10px;
+    padding: $space-6;
+    text-align: center;
+
+    p {
+        margin: 0 0 $space-4;
+    }
+}
+
+
+.dropMatchBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    padding: $space-2 $space-4;
+    border: 1px solid $color-border;
+    color: $color-text-muted;
+    background: none;
+    border-radius: 8px;
+    cursor: pointer;
+
+    &:hover {
+        background: $color-bg;
+    }
+}
+
+
+.endedBox {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $space-2;
+    padding-top: $space-3;
+    color: $color-vang;
+    text-align: center;
+}
+
+
+.endedLabel {
+    font-size: 14px;
+    font-weight: 700;
+    color: $color-text;
+}
+
+
+// Y tế can thiệp — cố tình dùng $color-danger (cam-đỏ), KHÁC hẳn màu
+// vàng ăn mừng của .endedBox — đây là tình huống cần chú ý khẩn, không
+// phải kết quả trận đấu.
+.yTeBox {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $space-2;
+    padding-top: $space-3;
+    color: $color-danger;
+    text-align: center;
+}
+
+
+// Xếp dọc (khác .controlBtns dùng chung cho màn "Đã có người thắng" —
+// chỗ đó chỉ 2 nút nên xếp ngang vừa đủ, ở đây có 3 nút, xếp dọc mỗi
+// nút full-width dễ bấm hơn, không bị chật).
+.yTeControlBtns {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: $space-2;
+    width: 100%;
+    max-width: 280px;
+}
+
+
+// VĐV xin thua ngay trong lúc y tế — mức nghiêm trọng NGANG với "VĐV đã
+// ổn" (đều là quyết định dứt điểm, không phải thao tác phụ như "Gọi
+// nhầm, huỷ"), nên cố tình KHÔNG dùng .linkBtn (quá nhẹ) — nhưng cũng
+// không dùng .btnPrimary màu xanh lá (ngụ ý kết quả tích cực, sai bản
+// chất ở đây) — viền rõ + nền mờ theo màu cảnh báo là đủ nổi bật mà
+// không gây hiểu nhầm là lựa chọn "tốt".
+.yTeSurrenderBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: $space-2 $space-4;
+    border: 1px solid $color-danger;
+    background: rgba($color-danger, 0.08);
+    color: $color-danger;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover {
+        background: rgba($color-danger, 0.16);
+    }
+}
+
+
+.linkBtn {
+    background: none;
+    border: none;
+    color: $color-text-muted;
+    font-size: 12px;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: $space-1;
+
+    &:hover {
+        color: $color-text;
+    }
+}
+
+
+.timerBig {
+    font-size: 48px;
+    font-weight: 700;
+    font-family: $font-mono;
+}
+
+
+.timerDone {
+    color: $color-danger;
+}
+
+
+.timerBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    padding: $space-2 $space-4;
+    border: 1px solid $color-do;
+    color: $color-do;
+    background: none;
+    border-radius: 8px;
+    cursor: pointer;
+
+    &:hover {
+        background: rgba($color-do, 0.06);
+    }
+}
+
+
+.reasonRow {
+    display: flex;
+    align-items: center;
+    gap: $space-3;
+    font-size: 13px;
+    font-weight: 500;
+
+    select {
+        font: inherit;
+        padding: $space-2 $space-3;
+        border: 1px solid $color-border;
+        border-radius: 6px;
+        flex: 1;
+    }
+}
+
+
+.controlBtns {
+    display: flex;
+    gap: $space-3;
+}
+
+
+.btnDangerBig {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: $space-2;
+    padding: $space-4 $space-5;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    background: $color-do;
+    color: white;
+
+    &:hover {
+        opacity: 0.9;
+    }
+}
+
+
+.pickDoBig,
+.pickXanhBig {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: $space-1;
+    padding: $space-4;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    flex: 1;
+    color: white;
+
+    &:hover {
+        opacity: 0.9;
+    }
+}
+
+
+.pickDoBig {
+    background: $color-do;
+}
+
+
+.pickXanhBig {
+    background: $color-xanh;
+}
+
+
+.btnPrimary {
+    background: $color-success;
+    color: white;
+    border: none;
+    padding: $space-3 $space-5;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover {
+        opacity: 0.9;
+    }
+}
+
+
+.settingsForm {
+    display: flex;
+    flex-direction: column;
+    gap: $space-3;
+}
+
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: $space-1;
+    font-size: 13px;
+    font-weight: 500;
+
+    input {
+        font: inherit;
+        padding: $space-2 $space-3;
+        border: 1px solid $color-border;
+        border-radius: 6px;
+    }
+}
+
+
+.hint {
+    font-size: 12px;
+    color: $color-text-muted;
+}
+
+
+.pageEyebrow,
+.sectionEyebrow,
+.panelEyebrow {
+    display: block;
+    margin-bottom: 6px;
+    color: $color-do;
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: .11em;
+    text-transform: uppercase;
+}
+
+
+.quickBtnDo,
+.quickBtnXanh,
+.editBtn,
+.replayBtn {
+    min-height: 28px;
+}
+
+
+.judgeProgressTrack {
+    position: relative;
+    width: 100%;
+    height: 5px;
+    margin-top: 5px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: $color-bg;
+
+    >span {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+        background: $color-success;
+        transition: width 0.2s ease;
+    }
+}
+
+
+.timerPanel .timerBig {
+    margin: 5px 0 3px;
+    font-size: clamp(44px, 5vw, 64px);
+    line-height: 1;
+    letter-spacing: -0.04em;
+}
+
+
+.quyenTimerActions .timerBtn {
+    justify-content: center;
+    width: 100%;
+    min-height: 40px;
+    border-radius: 9px;
+}
+
+
+.quyenEndActions {
+    flex-direction: column;
+    width: 100%;
+
+    .btnPrimary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        width: 100%;
+    }
+}
+
+
+.noMatch {
+    min-height: 150px;
+    display: grid;
+    place-items: center;
+    padding: 28px;
+    border: 1px dashed rgba($color-do, .16);
+    border-radius: $radius-lg;
+    background:
+        radial-gradient(circle at center, rgba($color-do, .025), transparent 62%),
+        $color-bg;
+    color: $color-text-muted;
+    text-align: center;
+
+    p {
+        max-width: 720px;
+        margin: 0;
+        line-height: 1.65;
+    }
+}
+
+
+@media (max-width: 1050px) {
+    .scheduleHeader {
+        grid-template-columns: 1fr;
+    }
+
+    .scheduleStats {
+        justify-content: flex-start;
+    }
+
+    .scheduleRow {
+        grid-template-columns: 64px minmax(0, 1fr);
+    }
+
+    .scheduleActionArea,
+    .quyenProgressArea {
+        grid-column: 2;
+        align-items: flex-start;
+        justify-content: flex-start;
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .quickResultActions {
+        justify-content: flex-start;
+    }
+
+    .quyenLayout {
+        grid-template-columns: minmax(300px, 0.9fr) minmax(330px, 1.1fr);
+    }
+}
+
+
+@media (max-width: 800px) {
+    .topbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .topbarActions {
+        width: 100%;
+    }
+
+    .courtControl {
+        flex: 1;
+    }
+
+    .scheduleToolbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .scheduleSearch {
+        width: 100%;
+    }
+
+    .scheduleFilters {
+        width: 100%;
+    }
+
+    .quyenLayout {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "main"
+            "judges";
+    }
+
+    .quyenMainCol {
+        border-right: 0;
+        border-bottom: 1px solid $color-border;
+    }
+
+    .operationHeader {
+        align-items: flex-start;
+    }
+}
+
+
+@media (max-width: 620px) {
+    .topbar {
+        padding: 15px;
+        border-radius: 12px;
+    }
+
+    .title {
+        font-size: 23px;
+    }
+
+    .topbarActions {
+        flex-direction: column;
+    }
+
+    .publicScreenLink {
+        width: 100%;
+        min-height: 40px;
+    }
+
+    .tabsBar {
+        margin-inline: -2px;
+    }
+
+    .tab,
+    .tabActive {
+        padding-inline: 10px;
+        font-size: 12px;
+    }
+
+    .scheduleHeader {
+        padding: 16px;
+    }
+
+    .scheduleStats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        width: 100%;
+    }
+
+    .scheduleStat {
+        min-width: 0;
+        padding-inline: 6px;
+    }
+
+    .busyBanner {
+        align-items: flex-start;
+        flex-wrap: wrap;
+        padding-inline: 16px;
+    }
+
+    .scheduleToolbar {
+        padding: 10px;
+    }
+
+    .scheduleList {
+        max-height: none;
+    }
+
+    .scheduleRow {
+        grid-template-columns: 48px minmax(0, 1fr);
+        gap: 10px;
+        padding: 12px 10px;
+    }
+
+    .matchNumberBlock {
+        padding-right: 7px;
+    }
+
+    .roundTag {
+        max-width: 46px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .competitorPair {
+        grid-template-columns: 1fr;
+        gap: 5px;
+    }
+
+    .vsBadge {
+        display: none;
+    }
+
+    .competitor strong {
+        white-space: normal;
+    }
+
+    .competitorTeam {
+        white-space: normal;
+    }
+
+    .scheduleActionArea,
+    .quyenProgressArea {
+        grid-column: 1 / -1;
+        padding-left: 58px;
+    }
+
+    .scheduleActionArea .startBtn {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .quickResultActions {
+        width: 100%;
+    }
+
+    .quyenProgressArea {
+        align-items: stretch;
+    }
+
+    .judgeProgress {
+        flex: 1;
+        width: auto;
+        min-width: 110px;
+    }
+
+    .operationHeader {
+        flex-direction: column;
+        padding: 15px;
+    }
+
+    .quyenMainCol,
+    .quyenJudgePanel {
+        padding: 15px;
+    }
+
+    .judgeProgressSummary {
+        grid-template-columns: 1fr;
+        gap: 5px;
+    }
+
+    .judgeProgressSummary span:last-child {
+        white-space: normal;
+    }
+
+    .reasonRow {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .endFlowActions {
+        flex-direction: column-reverse;
+    }
+
+    .endFlowActions button {
+        width: 100%;
+    }
+}

@@ -13,6 +13,8 @@ export const LY_DO_OPTIONS: { value: LyDoKetThuc; label: string }[] = [
   { value: "bo_cuoc", label: "Bỏ cuộc" },
   { value: "xu_thua_canh_cao", label: "Xử thua do đủ 3 cảnh cáo" },
   { value: "cach_biet_10_diem", label: "Thắng cách biệt 10 điểm" },
+  { value: "khong_tro_lai_sau_y_te", label: "Xử thua do không trở lại sau 60s y tế" },
+  { value: "qua_so_lan_goi_y_te", label: "Xử thua do quá số lần gọi y tế" },
 ];
 
 export const LY_DO_KET_THUC_QUYEN_OPTIONS: {
@@ -95,6 +97,12 @@ export function makeLiveState(
     soCanhCaoXanh: 0,
     soCanhCaoHiepDo: 0,
     soCanhCaoHiepXanh: 0,
+    dangGoiYTe: null,
+    yTeBatDauLuc: 0,
+    soLanYTeDo: 0,
+    soLanYTeXanh: 0,
+    soLanYTeHiepDo: 0,
+    soLanYTeHiepXanh: 0,
     nguoiThang: null,
     capNhatLuc: Date.now(),
   };

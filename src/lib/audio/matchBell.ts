@@ -96,16 +96,28 @@ function playBellSoundTongHop() {
 }
 
 /**
- * Phát chuông đúng 1 lần mỗi khi trận CHUYỂN SANG "đang thi" (bắt đầu
- * hiệp), VÀ đúng 1 lần khi hết giờ hiệp — dùng chung cho cả 2 nơi (Bàn
- * thư ký, và màn hình công khai nhận đúng thay đổi đó qua realtime) nên
- * chỉ cần viết logic phát hiện đúng 1 chỗ.
+ * Phát chuông đúng 1 lần mỗi khi trận CHUYỂN SANG "đang thi" DO BẮT ĐẦU
+ * HIỆP MỚI (không phải do chỉ đơn thuần bấm "Tiếp tục" sau tạm dừng),
+ * VÀ đúng 1 lần khi hết giờ hiệp — dùng chung cho cả 2 nơi (Bàn thư ký,
+ * và màn hình công khai nhận đúng thay đổi đó qua realtime) nên chỉ
+ * cần viết logic phát hiện đúng 1 chỗ.
+ *
+ * Phân biệt "bắt đầu hiệp thật" (batDauHiep()) với "chỉ tiếp tục sau
+ * tạm dừng" (tiepTuc()) bằng hiepHienTai — CHỈ batDauHiep() mới tăng số
+ * này lên, tiepTuc() giữ nguyên. LỖI THẬT đã gặp: bản trước chỉ kiểm
+ * tra "có chuyển sang dang_thi không", không phân biệt được 2 trường
+ * hợp trên — mỗi lần BTK bấm "Tiếp tục" (dù chỉ để tiếp tục sau tạm
+ * dừng thường, hay sau khi y tế can thiệp xong) cũng bị hiểu nhầm
+ * thành "bắt đầu hiệp", phát chuông sai không đúng lúc.
  *
  * Phát hiện "hết hiệp" bằng field hetHiepLuc (epoch ms) — field này
- * được ĐẶT LẠI Ở ĐÚNG 1 CHỖ DUY NHẤT (effect "hết giờ" trong
- * DieuHanhDoiKhangTab.tsx, CẢ 3 nhánh của nó) mỗi khi 1 hiệp THẬT SỰ
- * kết thúc do hết giờ — value đổi là chắc chắn vừa hết hiệp, không cần
- * suy luận gì thêm.
+ * được ĐẶT LẠI (giá trị Date.now() MỚI, LUÔN LỚN HƠN giá trị cũ) Ở
+ * ĐÚNG 1 CHỖ DUY NHẤT (effect "hết giờ" trong DieuHanhDoiKhangTab.tsx,
+ * CẢ 3 nhánh của nó) mỗi khi 1 hiệp THẬT SỰ kết thúc do hết giờ. Kiểm
+ * tra "TĂNG LÊN" (>) thay vì "khác đi" (!==) — cố tình phòng hờ: nếu
+ * sau này có chỗ nào reset field này về 0 (VD gộp vào restartMatch()
+ * cho "đủ bộ" các field khác), phép so sánh > vẫn đúng, không hiểu
+ * nhầm việc RESET thành "vừa hết hiệp" (0 luôn nhỏ hơn giá trị cũ).
  *
  * TRƯỚC ĐÂY dùng thoiGianConLaiGiay <= 0 để suy luận — SAI, vì field đó
  * nhận giá trị KHÁC NHAU tuỳ từng nhánh kết thúc hiệp: hiệp cuối hoà thì
@@ -135,6 +147,7 @@ function playBellSoundTongHop() {
  */
 interface TrangThaiDaGhiNhan {
   trangThai: string;
+  hiepHienTai: number;
   hetHiepLuc: number;
 }
 const trangThaiTruocDoTheoSan = new Map<string, TrangThaiDaGhiNhan>();
@@ -142,14 +155,20 @@ const trangThaiTruocDoTheoSan = new Map<string, TrangThaiDaGhiNhan>();
 export function useMatchBell(
   courtId: string | undefined,
   trangThai: string | undefined,
+  hiepHienTai: number | undefined,
   hetHiepLuc: number | undefined,
 ) {
   useEffect(() => {
-    if (!courtId || trangThai === undefined || hetHiepLuc === undefined) {
+    if (
+      !courtId ||
+      trangThai === undefined ||
+      hiepHienTai === undefined ||
+      hetHiepLuc === undefined
+    ) {
       return;
     }
 
-    const hienTai: TrangThaiDaGhiNhan = { trangThai, hetHiepLuc };
+    const hienTai: TrangThaiDaGhiNhan = { trangThai, hiepHienTai, hetHiepLuc };
     const truoc = trangThaiTruocDoTheoSan.get(courtId);
     trangThaiTruocDoTheoSan.set(courtId, hienTai);
 
@@ -159,14 +178,18 @@ export function useMatchBell(
     // giờ" hay không, nên bỏ qua, không phát chuông.
     if (!truoc) return;
 
-    if (trangThai === "dang_thi" && truoc.trangThai !== "dang_thi") {
-      playBellSound(); // bắt đầu hiệp
+    // Bắt đầu hiệp THẬT: chuyển sang "dang_thi" VÀ hiepHienTai tăng lên
+    // — chỉ đúng lúc bấm batDauHiep(), KHÔNG đúng lúc chỉ bấm tiepTuc()
+    // (tiếp tục sau tạm dừng thường, hoặc sau khi y tế can thiệp xong —
+    // cả 2 trường hợp đó đều KHÔNG đổi hiepHienTai).
+    if (trangThai === "dang_thi" && hiepHienTai > truoc.hiepHienTai) {
+      playBellSound();
       return;
     }
 
-    if (hetHiepLuc !== truoc.hetHiepLuc) {
+    if (hetHiepLuc > truoc.hetHiepLuc) {
       playBellSound(); // hết giờ hiệp
     }
-  }, [courtId, trangThai, hetHiepLuc]);
+  }, [courtId, trangThai, hiepHienTai, hetHiepLuc]);
 }
 

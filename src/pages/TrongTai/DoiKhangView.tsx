@@ -72,6 +72,8 @@ export default function DoiKhangView({
   // ghi chú dài trước đây (không đủ chỗ trong dải mỏng của layout mới).
   let trangThaiNgan = "";
   if (!live) trangThaiNgan = "Chưa có trận";
+  else if (live.trangThai === "y_te")
+    trangThaiNgan = `Y tế can thiệp — ${live.dangGoiYTe === "do" ? "ĐỎ" : "XANH"}`;
   else if (hetGio) trangThaiNgan = "Hết giờ — chờ hiệp mới";
   else if (!dangThi) trangThaiNgan = "Chưa thi / tạm dừng";
 

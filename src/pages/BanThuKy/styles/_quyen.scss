@@ -1,0 +1,576 @@
+@use '../../../styles/variables' as *;
+
+// Tab "Điều hành quyền" — chấm điểm giám định, tổng hợp điểm quyền. Dùng riêng trong DieuHanhQuyenTab.tsx.
+// File này là 1 phần của BanThuKy.module.scss (đã tách ra cho gọn) —
+// KHÔNG tự import trực tiếp từ component, luôn đi qua đúng
+// BanThuKy.module.scss ở thư mục cha.
+
+
+.dieuHanhQuyen {
+    display: flex;
+    flex-direction: column;
+    gap: $space-5;
+    background: $color-surface;
+    border: 1px solid $color-border;
+    border-radius: 10px;
+    padding: $space-5;
+    max-width: 900px;
+}
+
+
+.quyenLayout {
+    display: flex;
+    gap: $space-5;
+    align-items: flex-start;
+}
+
+
+.quyenJudgePanel {
+    flex: 1;
+    min-width: 280px;
+    display: flex;
+    flex-direction: column;
+    gap: $space-3;
+}
+
+
+.quyenMainCol {
+    width: 360px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $space-5;
+}
+
+
+.quyenPerformer {
+    width: 100%;
+    text-align: center;
+    padding: $space-4;
+    background: $color-bg;
+    border-radius: 10px;
+}
+
+
+.quyenPerformerName {
+    font-size: 20px;
+    font-weight: 700;
+}
+
+
+.quyenPerformerSub {
+    font-size: 13px;
+    color: $color-text-muted;
+    margin-top: 2px;
+}
+
+
+.quyenThanhVien {
+    font-size: 13px;
+    color: $color-text;
+    margin-top: 6px;
+    max-width: 320px;
+}
+
+
+.quyenJudgeList {
+    display: flex;
+    gap: $space-2;
+    flex-direction: column;
+}
+
+
+.quyenJudgeCell {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    padding: $space-3 $space-2;
+    border-radius: 8px;
+    background: $color-bg;
+}
+
+
+.quyenJudgeInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    text-align: left;
+    min-width: 0;
+}
+
+
+.quyenJudgeLabel {
+    font-size: 11px;
+    color: $color-text-muted;
+}
+
+
+.quyenJudgeName {
+    font-size: 13px;
+    font-weight: 600;
+    color: $color-text;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
+.quyenJudgeScore {
+    flex-shrink: 0;
+    font-weight: 700;
+    font-family: $font-mono;
+    font-size: 15px;
+    color: $color-text;
+}
+
+
+.quyenJudgeScorePending {
+    flex-shrink: 0;
+    text-align: right;
+    font-weight: 700;
+    font-family: $font-mono;
+    font-size: 12px;
+    color: $color-text-muted;
+}
+
+
+.quyenResultBox {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: $space-3 $space-4;
+    background: rgba($color-success, 0.08);
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+
+    strong {
+        font-size: 22px;
+        font-family: $font-mono;
+        color: $color-success;
+    }
+}
+
+
+/* ---- Điều hành quyền ---- */
+.dieuHanhQuyen {
+    position: relative;
+    max-width: none;
+    gap: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid rgba($color-border, .96);
+    border-radius: $radius-lg;
+    background: $color-surface;
+    box-shadow:
+        0 1px 2px rgba(15, 23, 42, .02),
+        0 10px 28px rgba(15, 23, 42, .045);
+
+    &::before {
+        content: '';
+        position: absolute;
+        z-index: 4;
+        top: 0;
+        left: 22px;
+        right: 22px;
+        height: 3px;
+        border-radius: 0 0 999px 999px;
+        background: linear-gradient(
+            90deg,
+            $color-do,
+            rgba($color-do, .36) 62%,
+            transparent
+        );
+        pointer-events: none;
+    }
+}
+
+
+.operationHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-4;
+    padding: 20px 22px 18px;
+    border-bottom: 1px solid rgba($color-border, .9);
+    background:
+        radial-gradient(circle at 92% 0%, rgba($color-do, .07), transparent 34%),
+        linear-gradient(180deg, rgba($color-do, .018), $color-surface);
+}
+
+
+.operationTitle {
+    margin: 0;
+    font-size: 20px;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+}
+
+
+.operationSubline {
+    max-width: 620px;
+    margin: 5px 0 0;
+    color: $color-text-muted;
+    font-size: 11px;
+}
+
+
+.operationStatus {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    flex: 0 0 auto;
+    padding: 7px 10px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 750;
+
+    >span {
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        background: currentColor;
+    }
+}
+
+
+.operationStatusLive {
+    color: $color-danger;
+    background: rgba($color-danger, 0.08);
+}
+
+
+.operationStatusPaused {
+    color: $color-warning;
+    background: rgba($color-warning, 0.1);
+}
+
+
+.operationStatusDone {
+    color: $color-success;
+    background: rgba($color-success, 0.09);
+}
+
+
+.operationStatusWaiting {
+    color: $color-text-muted;
+    background: $color-bg;
+}
+
+
+.quyenLayout {
+    display: grid;
+    grid-template-columns: minmax(340px, 0.9fr) minmax(360px, 1.1fr);
+    grid-template-areas: "main judges";
+    gap: 0;
+    align-items: stretch;
+}
+
+
+.quyenMainCol {
+    grid-area: main;
+    width: auto;
+    padding: 22px;
+    border-right: 1px solid $color-border;
+    background: rgba($color-bg, 0.33);
+}
+
+
+.quyenJudgePanel {
+    grid-area: judges;
+    min-width: 0;
+    padding: 22px;
+}
+
+
+.panelHeading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-3;
+
+    strong {
+        display: block;
+        font-size: 15px;
+    }
+}
+
+
+.judgeCountBadge {
+    padding: 5px 8px;
+    border-radius: 999px;
+    background: $color-bg;
+    color: $color-text-muted;
+    font-size: 9px;
+    font-weight: 700;
+}
+
+
+.quyenPerformer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    padding: 18px;
+    border: 1px solid $color-border;
+    border-radius: 12px;
+    background: $color-surface;
+}
+
+
+.quyenPerformer .panelEyebrow {
+    margin-bottom: 12px;
+}
+
+
+.quyenPerformerName {
+    margin-top: 9px;
+    font-size: 19px;
+    line-height: 1.25;
+}
+
+
+.quyenPerformerSub {
+    margin-top: 4px;
+}
+
+
+.quyenThanhVien {
+    margin-top: 8px;
+    padding: 7px 9px;
+    border-radius: 8px;
+    background: $color-bg;
+    font-size: 10px;
+    line-height: 1.5;
+}
+
+
+.quyenJudgeList {
+    gap: 7px;
+}
+
+
+.quyenJudgeCell {
+    justify-content: flex-start;
+    gap: 10px;
+    min-height: 54px;
+    padding: 8px 10px;
+    border: 1px solid $color-border;
+    border-radius: 10px;
+    background: $color-surface;
+    transition:
+        border-color 0.15s ease,
+        background 0.15s ease;
+}
+
+
+.quyenJudgeCellScored {
+    border-color: rgba($color-success, 0.2);
+    background: rgba($color-success, 0.035);
+}
+
+
+.judgeIndex {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    flex: 0 0 auto;
+    border-radius: 8px;
+    background: $color-bg;
+    color: $color-text-muted;
+    font-family: $font-mono;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+
+.quyenJudgeInfo {
+    flex: 1;
+}
+
+
+.quyenJudgeLabel {
+    font-size: 9px;
+}
+
+
+.quyenJudgeName {
+    font-size: 12px;
+}
+
+
+.quyenJudgeScore {
+    min-width: 48px;
+    text-align: right;
+    color: $color-success;
+    font-size: 18px;
+}
+
+
+.quyenJudgeScorePending {
+    min-width: 58px;
+    text-align: right;
+    font-size: 10px;
+}
+
+
+.judgeProgressSummary {
+    display: grid;
+    grid-template-columns: minmax(90px, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    padding-top: 2px;
+
+    span:last-child {
+        color: $color-text-muted;
+        font-size: 9px;
+        white-space: nowrap;
+    }
+}
+
+
+.quyenResultBox {
+    padding: 10px 12px;
+    border: 1px solid rgba($color-success, 0.16);
+    border-radius: 10px;
+
+    >div {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+    }
+
+    span {
+        font-size: 11px;
+    }
+
+    small {
+        color: $color-text-muted;
+        font-size: 9px;
+        font-weight: 400;
+    }
+
+    strong {
+        font-size: 24px;
+    }
+}
+
+
+.quyenControlPanel {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: 10px;
+}
+
+
+.timerPanel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    padding: 17px;
+    border: 1px solid $color-border;
+    border-radius: 12px;
+    background: $color-surface;
+}
+
+
+.timerCaption {
+    color: $color-text-muted;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+}
+
+
+.timerSupportText {
+    color: $color-text-muted;
+    font-size: 9px;
+    text-align: center;
+}
+
+
+.quyenTimerActions {
+    display: grid;
+    gap: 8px;
+}
+
+
+.timerBtnPrimary {
+    border-color: $color-success;
+    background: $color-success;
+    color: white;
+
+    &:hover {
+        background: $color-success;
+        opacity: 0.92;
+    }
+}
+
+
+.quyenFinishBtn {
+    width: 100%;
+    min-height: 42px;
+    margin-top: 2px;
+    padding: 10px 14px;
+    border-radius: 9px;
+    font-size: 13px;
+}
+
+
+.endFlowCard {
+    width: 100%;
+    padding: 13px;
+    border: 1px solid rgba($color-danger, 0.18);
+    border-radius: 10px;
+    background: rgba($color-danger, 0.035);
+}
+
+
+.endFlowTitle {
+    font-size: 12px;
+    font-weight: 750;
+}
+
+
+.endFlowActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+
+.quyenEndedBox {
+    width: 100%;
+    padding: 18px;
+    border: 1px solid rgba($color-success, 0.16);
+    border-radius: 12px;
+    background: rgba($color-success, 0.04);
+}
+
+
+.endedIcon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 999px;
+    background: rgba($color-success, 0.1);
+    color: $color-success;
+}
+
+
+.endedScore {
+    color: $color-success;
+    font-family: $font-mono;
+    font-size: 30px;
+}

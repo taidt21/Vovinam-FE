@@ -12,6 +12,7 @@ import {
   subscribeMatchState,
   tinhThoiGianConLai,
 } from "../../lib/realtime/liveMatchStore";
+import { serverNow } from "../../lib/realtime/serverClock";
 import {
   ensureJoinedCourt,
   subscribeConnectionState,
@@ -351,7 +352,7 @@ function CourtScreen({
   }, [autoFullscreen]);
 
   const pressed = usePressedLights(court.id);
-  useMatchBell(court.id, live?.trangThai, live?.hetHiepLuc);
+  useMatchBell(court.id, live?.trangThai, live?.hiepHienTai, live?.hetHiepLuc);
 
   const compactHeader = (
     <header className={styles.compactHeader}>
@@ -379,8 +380,15 @@ function CourtScreen({
   const remaining = tinhThoiGianConLai(live);
   const dangNghi = live.trangThai === "nghi_giua_hiep";
   const dangTamDung = live.trangThai === "tam_dung";
+  const dangYTe = live.trangThai === "y_te";
   const daKetThuc = live.trangThai === "da_ket_thuc";
   const choBatDau = live.trangThai === "cho_bat_dau";
+
+  // Đếm ngược 60s riêng cho y tế — tính lại mỗi giây nhờ "tick" (state ở
+  // trên) buộc component re-render, y hệt cơ chế của DieuHanhDoiKhangTab.
+  const yTeConLaiGiay = dangYTe
+    ? Math.max(0, 60 - (serverNow() - live.yTeBatDauLuc) / 1000)
+    : 0;
 
   const sideClass = (nguoiThang: "do" | "xanh") =>
     !daKetThuc
@@ -391,17 +399,21 @@ function CourtScreen({
 
   const timerTitle = daKetThuc
     ? "KẾT THÚC"
-    : dangNghi
-      ? `Nghỉ hiệp ${live.hiepHienTai}`
-      : `Hiệp ${live.hiepHienTai}`;
+    : dangYTe
+      ? "Y TẾ CAN THIỆP"
+      : dangNghi
+        ? `Nghỉ hiệp ${live.hiepHienTai}`
+        : `Hiệp ${live.hiepHienTai}`;
 
   const statusLabel = choBatDau
     ? "SẮP THI ĐẤU"
-    : dangTamDung
-      ? "TẠM DỪNG"
-      : dangNghi
-        ? "NGHỈ GIỮA HIỆP"
-        : null;
+    : dangYTe
+      ? `Y TẾ — ${live.dangGoiYTe === "do" ? "ĐỎ" : "XANH"}`
+      : dangTamDung
+        ? "TẠM DỪNG"
+        : dangNghi
+          ? "NGHỈ GIỮA HIỆP"
+          : null;
 
   return (
     <div className={styles.combatScreen}>
@@ -410,7 +422,13 @@ function CourtScreen({
         courtName={court.ten}
         matchNumber={matchNumber}
         roundLabel={timerTitle}
-        timeLabel={daKetThuc ? "--:--" : formatMmSs(remaining)}
+        timeLabel={
+          daKetThuc
+            ? "--:--"
+            : dangYTe
+              ? formatMmSs(yTeConLaiGiay)
+              : formatMmSs(remaining)
+        }
         statusLabel={statusLabel}
       />
 

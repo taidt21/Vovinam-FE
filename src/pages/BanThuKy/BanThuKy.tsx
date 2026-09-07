@@ -344,10 +344,14 @@ export default function BanThuKy() {
   }, [currentCourtId]);
 
   // Dùng chung cho mọi cách BTK có thể chuyển 1 sân sang đối kháng/quyền —
-  // bấm tab, hoặc bấm Bắt đầu thẳng từ lịch thi đấu. Hỏi trước nếu sân
-  // đang có lượt SỐNG của loại kia (chuyển lỡ tay không nên âm thầm cắt
-  // ngang); trả về false nếu người dùng huỷ, để nơi gọi dừng lại giữa
-  // chừng thay vì tiếp tục.
+  // bấm tab, hoặc bấm Bắt đầu thẳng từ lịch thi đấu.
+  //
+  // CHẶN HẲN việc chuyển tab nếu sân đang có lượt SỐNG của loại kia —
+  // KHÔNG tự hỏi rồi tự gỡ hộ như bản trước đó nữa (rủi ro bấm nhầm
+  // "Đồng ý" làm mất lượt kia oan uổng). BTK phải TỰ chủ động bấm "Bỏ,
+  // cho sân nghỉ" ngay tại đúng tab loại kia trước — hoặc lượt đó tự
+  // hết (không còn gì để xét), lúc đó lượt sống mới về null, hàm này
+  // mới cho qua.
   const chuyenActiveMode = (courtId: string, mode: "doi_khang" | "quyen") => {
     // Đã đúng chế độ này rồi (vừa xác nhận/không có gì cần hỏi ngay
     // trước đó) — không hỏi lại.
@@ -360,12 +364,10 @@ export default function BanThuKy() {
       const loaiKia = mode === "doi_khang" ? "quyền" : "đối kháng";
       const loaiMoi = mode === "doi_khang" ? "đối kháng" : "quyền";
       const tenSan = courts.find((c) => c.id === courtId)?.ten ?? "";
-      if (
-        !window.confirm(
-          `${tenSan} đang có lượt ${loaiKia} sống. Chuyển sang ${loaiMoi} sẽ dừng lượt ${loaiKia} đó lại. Tiếp tục?`,
-        )
-      )
-        return false;
+      window.alert(
+        `${tenSan} đang còn lượt ${loaiKia} chưa xong. Bấm "Bỏ, cho sân nghỉ" ngay tại tab Điều hành ${loaiKia}, hoặc đợi lượt đó tự kết thúc, rồi mới chuyển sang ${loaiMoi} được.`,
+      );
+      return false;
     }
     publishActiveMode(courtId, mode);
     setActiveModeLocal(mode);

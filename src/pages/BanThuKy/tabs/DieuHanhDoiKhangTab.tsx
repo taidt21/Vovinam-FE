@@ -14,6 +14,8 @@ import {
   Award,
   Check,
   X,
+  Siren,
+  AlertTriangle,
 } from "lucide-react";
 import type { LiveMatchState, LyDoKetThuc, Match } from "../../../types";
 import {
@@ -128,7 +130,7 @@ export default function DieuHanhDoiKhangTab({
     return () => clearTimeout(t);
   }, [live, courtId]);
   const remaining = live ? tinhThoiGianConLai(live) : 0;
-  useMatchBell(courtId, live?.trangThai, live?.hetHiepLuc);
+  useMatchBell(courtId, live?.trangThai, live?.hiepHienTai, live?.hetHiepLuc);
   // Lịch sử điều chỉnh tay của TỪNG BÊN riêng biệt — "Hoàn tác" bên nào
   // chỉ lùi lại đúng thao tác gần nhất của bên đó, không đụng bên kia dù
   // thao tác sau đó xen giữa 2 bên. Chỉ lưu lúc CÒN ĐANG XEM đúng trận
@@ -150,6 +152,20 @@ export default function DieuHanhDoiKhangTab({
   >([]);
   const dangChay = live?.trangThai === "dang_thi";
   const dangNghi = live?.trangThai === "nghi_giua_hiep";
+  // Gọi y tế cần cho phép bấm cả lúc ĐANG TẠM DỪNG (tam_dung) — chấn
+  // thương có thể lộ rõ ra cả lúc BTK đã tạm dừng vì lý do khác, không
+  // chỉ lúc đồng hồ đang chạy (dangChay).
+  //
+  // CỐ TÌNH KHÔNG thêm "nghi_giua_hiep" (nghỉ giữa hiệp) vào đây — dù
+  // nghe có vẻ hợp lý tương tự, nhưng sẽ phát sinh lỗi khác: xử lý y tế
+  // xong (vdvOnTiepTuc/huyGoiYTe) luôn đưa trangThai về "tam_dung", nút
+  // hiện ra sẽ là "Tiếp tục" (tiepTuc() -> "dang_thi" mà KHÔNG tăng
+  // hiepHienTai) thay vì đúng ra phải là "Bắt đầu hiệp {n+1}"
+  // (batDauHiep() -> có tăng hiepHienTai) — kết quả là quay lại nhầm
+  // đúng hiệp CŨ thay vì bắt đầu hiệp MỚI. Muốn hỗ trợ đúng cả trường
+  // hợp này cần thêm cơ chế nhớ "trạng thái trước khi gọi y tế" để
+  // khôi phục đúng lại, không đơn giản chỉ thêm điều kiện là đủ.
+  const coTheGoiYTe = dangChay || live?.trangThai === "tam_dung";
   const laHiepCuoi = live ? live.hiepHienTai >= live.tongSoHiep : false;
   // Hiệp phụ (điểm vàng) = hiepHienTai vượt qua tongSoHiep — đúng quy ước
   // đã có sẵn trong comment của type LiveMatchState từ trước, không phải
@@ -228,6 +244,33 @@ export default function DieuHanhDoiKhangTab({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [live?.diemChinhThucDo, live?.diemChinhThucXanh, dangChay]);
 
+  // Y tế can thiệp — đếm ngược 60s kể từ yTeBatDauLuc, tính lại mỗi giây
+  // nhờ "tick" (state đếm giây ở trên đã có sẵn, dùng chung luôn — xem
+  // đúng chỗ khai báo useState(0) phía trên cho đồng hồ chính) buộc
+  // component re-render để giá trị này luôn cập nhật đúng, không bị kẹt
+  // lại mốc cũ.
+  const dangYTe = live?.trangThai === "y_te";
+  const yTeConLaiGiay = dangYTe
+    ? Math.max(0, 60 - (serverNow() - live.yTeBatDauLuc) / 1000)
+    : 0;
+  const yTeHetGio = dangYTe && yTeConLaiGiay <= 0;
+
+  // Hết 60s mà BTK chưa bấm "VĐV đã ổn" hay "Gọi nhầm, huỷ" -> tự xử
+  // thua đúng bên vừa được gọi y tế (không kịp trở lại sân thi đấu).
+  useEffect(() => {
+    const cur = live;
+    if (!cur || !yTeHetGio || !cur.dangGoiYTe) return;
+    const benThua = cur.dangGoiYTe;
+    const benThang = benThua === "do" ? "xanh" : "do";
+    patch({
+      trangThai: "da_ket_thuc",
+      dangGoiYTe: null,
+      nguoiThang: benThang,
+      lyDoKetThuc: "khong_tro_lai_sau_y_te",
+    } as Partial<LiveMatchState>);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [yTeHetGio]);
+
   // Điểm vàng — ghi nhớ điểm số NGAY LÚC hiệp phụ bắt đầu, để biết chính
   // xác bên nào ghi điểm ĐẦU TIÊN trong hiệp phụ (không phải tổng điểm
   // cả trận, chỉ tính từ đây trở đi).
@@ -298,6 +341,10 @@ export default function DieuHanhDoiKhangTab({
       // tới ở đây, giữ nguyên xuyên suốt các hiệp.
       soCanhCaoHiepDo: 0,
       soCanhCaoHiepXanh: 0,
+      // Y hệt cơ chế cảnh cáo — số lần gọi y tế TRONG hiệp cũng reset,
+      // số lần CẢ TRẬN thì không đụng tới.
+      soLanYTeHiepDo: 0,
+      soLanYTeHiepXanh: 0,
     } as Partial<LiveMatchState>);
   const tamDung = () =>
     patch({ trangThai: "tam_dung", thoiGianConLaiGiay: remaining });
@@ -445,7 +492,7 @@ export default function DieuHanhDoiKhangTab({
   const restartMatch = () => {
     if (
       !window.confirm(
-        "Đấu lại từ đầu? Toàn bộ điểm, nhắc nhở, cảnh cáo và tiến trình hiệp hiện tại sẽ bị xóa.",
+        "Đấu lại từ đầu? Toàn bộ điểm, nhắc nhở, cảnh cáo, số lần gọi y tế và tiến trình hiệp hiện tại sẽ bị xóa.",
       )
     )
       return;
@@ -462,10 +509,115 @@ export default function DieuHanhDoiKhangTab({
       soCanhCaoXanh: 0,
       soCanhCaoHiepDo: 0,
       soCanhCaoHiepXanh: 0,
+      dangGoiYTe: null,
+      yTeBatDauLuc: 0,
+      soLanYTeDo: 0,
+      soLanYTeXanh: 0,
+      soLanYTeHiepDo: 0,
+      soLanYTeHiepXanh: 0,
       nguoiThang: null,
     });
     setLichSuDo([]);
     setLichSuXanh([]);
+  };
+
+  // Y tế can thiệp — bấm 1 trong 2 nút cho biết bên nào vừa chấn thương.
+  // Khoá NGAY mọi thao tác khác (điểm số, hoàn tác, kết thúc hiệp...) và
+  // cả đèn giám định bên màn hình trọng tài — TỰ ĐỘNG, không cần code
+  // riêng gì thêm, vì coTheBamDen bên đó đòi hỏi đúng "dang_thi", còn
+  // "y_te" không phải giá trị đó. Đếm ngược 60s bắt đầu từ đây — effect
+  // phía trên tự xử thua nếu hết 60s mà BTK chưa bấm gì.
+  const goiYTe = (side: "do" | "xanh") => {
+    // BẮT BUỘC đóng băng đúng số giây còn lại THẬT SỰ ngay lúc này vào
+    // thoiGianConLaiGiay — y hệt cách tamDung() đã làm ở trên. Thiếu
+    // dòng này là lỗi thật đã gặp: "y_te" không phải "dang_thi", nên
+    // tinhThoiGianConLai() không tự trừ thời gian đã trôi qua nữa, trả
+    // thẳng nguyên giá trị GỐC lúc bắt đầu hiệp (chưa từng được cập
+    // nhật liên tục) — lúc "VĐV đã ổn" lưu lại đúng con số gốc đó, đồng
+    // hồ nhảy ngược gần như về đầu hiệp.
+    patch({
+      trangThai: "y_te",
+      dangGoiYTe: side,
+      yTeBatDauLuc: Date.now(),
+      thoiGianConLaiGiay: remaining,
+    } as Partial<LiveMatchState>);
+  };
+
+  // VĐV xác nhận vẫn thi đấu được — cộng vào CẢ 2 bộ đếm (trong hiệp +
+  // cả trận) của đúng bên vừa được gọi y tế, kiểm tra đủ ngưỡng nào
+  // chưa (3/hiệp hoặc 5/trận) — đủ 1 trong 2 là xử thua ngay, y hệt
+  // logic cảnh cáo (chỉ khác số: cảnh cáo là 3/hiệp và 4/trận, y tế là
+  // 3/hiệp và 5/trận — đúng theo yêu cầu). Chưa đủ ngưỡng nào thì lùi
+  // về "tam_dung" (không tự chạy đồng hồ ngay) để BTK tự bấm "Tiếp tục"
+  // khi đã sẵn sàng thật sự — và khôi phục đúng số giây đồng hồ chính
+  // còn lại TẠI THỜI ĐIỂM chấn thương (remaining), không bị mất giờ oan
+  // trong lúc y tế can thiệp.
+  const vdvOnTiepTuc = () => {
+    // Phòng hờ trường hợp cực hiếm: bấm đúng khoảnh khắc hết 60s, effect
+    // tự xử thua vừa kịp chạy trước đó — trangThai lúc này đã là
+    // "da_ket_thuc", KHÔNG được ghi đè lại kết quả đó nữa.
+    if (live.trangThai !== "y_te" || !live.dangGoiYTe) return;
+    const side = live.dangGoiYTe;
+    const hiepKey = side === "do" ? "soLanYTeHiepDo" : "soLanYTeHiepXanh";
+    const tranKey = side === "do" ? "soLanYTeDo" : "soLanYTeXanh";
+    const hiepMoi = live[hiepKey] + 1;
+    const tranMoi = live[tranKey] + 1;
+    const thuaTheoHiep = hiepMoi >= 3;
+    const thuaTheoTran = tranMoi >= 5;
+
+    if (thuaTheoHiep || thuaTheoTran) {
+      const benThang = side === "do" ? "xanh" : "do";
+      patch({
+        [hiepKey]: hiepMoi,
+        [tranKey]: tranMoi,
+        dangGoiYTe: null,
+        trangThai: "da_ket_thuc",
+        nguoiThang: benThang,
+        lyDoKetThuc: "qua_so_lan_goi_y_te",
+      } as Partial<LiveMatchState>);
+      return;
+    }
+
+    patch({
+      [hiepKey]: hiepMoi,
+      [tranKey]: tranMoi,
+      dangGoiYTe: null,
+      trangThai: "tam_dung",
+      thoiGianConLaiGiay: remaining,
+    } as Partial<LiveMatchState>);
+  };
+
+  // Gọi nhầm — huỷ hẳn, KHÔNG cộng vào bộ đếm nào (không phải 1 lần gọi
+  // y tế thật sự đã xảy ra).
+  const huyGoiYTe = () => {
+    // Cùng lý do với guard ở vdvOnTiepTuc phía trên — không ghi đè lên
+    // kết quả nếu effect tự xử thua vừa kịp chạy trước đó.
+    if (live.trangThai !== "y_te") return;
+    patch({
+      dangGoiYTe: null,
+      trangThai: "tam_dung",
+      thoiGianConLaiGiay: remaining,
+    } as Partial<LiveMatchState>);
+  };
+
+  // VĐV xin thua NGAY trong lúc y tế đang can thiệp — không cần chờ đủ
+  // 60s mới xử thua (trường hợp thực tế: VĐV tự biết không thể tiếp
+  // tục, xin thua trước khi hết giờ, không có lý do gì bắt BTK phải
+  // đợi hết đếm ngược). Kết quả giống hệt effect tự xử thua khi hết
+  // 60s (đúng bên vừa gọi y tế thua) — chỉ khác lyDoKetThuc: đây là
+  // "bo_cuoc" (chủ động xin thua) thay vì "khong_tro_lai_sau_y_te" (hết
+  // giờ mà không rõ lý do), để ghi nhận đúng bản chất khác nhau của 2
+  // tình huống trong kết quả trận đấu.
+  const xinThuaTrongYTe = () => {
+    if (live.trangThai !== "y_te" || !live.dangGoiYTe) return;
+    const benThua = live.dangGoiYTe;
+    const benThang = benThua === "do" ? "xanh" : "do";
+    patch({
+      trangThai: "da_ket_thuc",
+      dangGoiYTe: null,
+      nguoiThang: benThang,
+      lyDoKetThuc: "bo_cuoc",
+    } as Partial<LiveMatchState>);
   };
 
   const daKetThuc = live.trangThai === "da_ket_thuc";
@@ -487,7 +639,8 @@ export default function DieuHanhDoiKhangTab({
         {nhanVong(match.vong)}
       </div>
 
-      <div className={styles.scoreBoardBig}>
+      <div
+        className={`${styles.scoreBoardBig} ${dangYTe ? styles.scoreBoardKhoaYTe : ""}`}>
         <div
           className={[
             styles.cornerDo,
@@ -538,53 +691,87 @@ export default function DieuHanhDoiKhangTab({
                     <Undo2 size={18} />
                   </button>
                 </div>
-                <div className={styles.warnRowBig}>
-                  <span>Nhắc nhở (3 → tự trừ 2đ)</span>
-                  <div className={styles.dotsBig}>
-                    {[0, 1, 2].map((i) => (
-                      <span
-                        key={i}
-                        className={
-                          i < live.nhacNhoDo ? styles.dotOnDo : styles.dotOff
-                        }
-                      />
-                    ))}
+                <div className={styles.statusPanel}>
+                  <div className={styles.statusRow}>
+                    <div className={styles.statusLeft}>
+                      <span className={styles.statusLabel}>Nhắc nhở</span>
+                      <div
+                        className={styles.miniDots}
+                        title="Đủ 3 lần → tự trừ 2 điểm, reset về 0">
+                        {[0, 1, 2].map((i) => (
+                          <span
+                            key={i}
+                            className={
+                              i < live.nhacNhoDo
+                                ? styles.miniDotOn
+                                : styles.miniDotOff
+                            }
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <div className={styles.stepBtnsMini}>
+                      <button onClick={() => adjustNhacNho("do", -1)}>
+                        <Minus size={12} />
+                      </button>
+                      <button onClick={() => adjustNhacNho("do", 1)}>
+                        <Plus size={12} />
+                      </button>
+                    </div>
                   </div>
-                  <button onClick={() => adjustNhacNho("do", -1)}>
-                    <Minus size={14} />
-                  </button>
-                  <button onClick={() => adjustNhacNho("do", 1)}>
-                    <Plus size={14} />
-                  </button>
-                </div>
-                <div className={styles.warnRowBig}>
-                  <span>Cảnh cáo hiệp này (3 → xử thua ngay)</span>
-                  <div className={styles.dotsBig}>
-                    {[0, 1, 2].map((i) => (
-                      <span
-                        key={i}
-                        className={
-                          i < live.soCanhCaoHiepDo
-                            ? styles.dotOnDo
-                            : styles.dotOff
-                        }
-                      />
-                    ))}
+                  <div className={`${styles.statusRow} ${styles.rowCanhCao}`}>
+                    <div className={styles.statusLeft}>
+                      <AlertTriangle size={13} />
+                      <span className={styles.statusLabel}>Cảnh cáo</span>
+                      <div
+                        className={styles.miniDots}
+                        title="Đủ 3 trong 1 hiệp, hoặc đủ 4 cả trận → xử thua ngay">
+                        {[0, 1, 2].map((i) => (
+                          <span
+                            key={i}
+                            className={
+                              i < live.soCanhCaoHiepDo
+                                ? styles.miniDotOn
+                                : styles.miniDotOff
+                            }
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <span className={styles.matchCount}>
+                      {live.soCanhCaoDo} / 4 cả trận
+                    </span>
                   </div>
-                </div>
-                <div className={styles.warnRowBig}>
-                  <span>Cảnh cáo cả trận (4 → xử thua ngay)</span>
-                  <div className={styles.dotsBig}>
-                    {[0, 1, 2, 3].map((i) => (
-                      <span
-                        key={i}
-                        className={
-                          i < live.soCanhCaoDo
-                            ? styles.dotOnDo
-                            : styles.dotOff
-                        }
-                      />
-                    ))}
+                  <div className={`${styles.statusRow} ${styles.rowYTe}`}>
+                    <div className={styles.yTeTop}>
+                      <div className={styles.statusLeft}>
+                        <Siren size={13} />
+                        <span className={styles.statusLabel}>Y tế</span>
+                        <div
+                          className={styles.miniDots}
+                          title="Đủ 3 trong 1 hiệp, hoặc đủ 5 cả trận → xử thua ngay">
+                          {[0, 1, 2].map((i) => (
+                            <span
+                              key={i}
+                              className={
+                                i < live.soLanYTeHiepDo
+                                  ? styles.miniDotOn
+                                  : styles.miniDotOff
+                              }
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      <span className={styles.matchCount}>
+                        {live.soLanYTeDo} / 5 cả trận
+                      </span>
+                    </div>
+                    <button
+                      className={styles.yTeCallBtnFull}
+                      disabled={!coTheGoiYTe}
+                      onClick={() => goiYTe("do")}>
+                      <Siren size={15} /> Gọi y tế
+                    </button>
                   </div>
                 </div>
               </>
@@ -593,7 +780,31 @@ export default function DieuHanhDoiKhangTab({
         </div>
 
         <div className={styles.timerCol}>
-          {daKetThuc ? (
+          {dangYTe ? (
+            <div className={styles.yTeBox}>
+              <Siren size={28} />
+              <span className={styles.endedLabel}>
+                Y tế đang can thiệp — {live.dangGoiYTe === "do" ? "ĐỎ" : "XANH"}
+              </span>
+              <span
+                className={`${styles.timerBig} ${yTeHetGio ? styles.timerDone : ""}`}>
+                {formatMmSs(yTeConLaiGiay)}
+              </span>
+              <div className={styles.yTeControlBtns}>
+                <button className={styles.btnPrimary} onClick={vdvOnTiepTuc}>
+                  <Check size={16} /> VĐV đã ổn, tiếp tục
+                </button>
+                <button
+                  className={styles.yTeSurrenderBtn}
+                  onClick={xinThuaTrongYTe}>
+                  <Flag size={15} /> VĐV xin thua, xử thua luôn
+                </button>
+                <button className={styles.linkBtn} onClick={huyGoiYTe}>
+                  Gọi nhầm, huỷ
+                </button>
+              </div>
+            </div>
+          ) : daKetThuc ? (
             <div className={styles.endedBox}>
               <Award size={28} />
               <span className={styles.endedLabel}>Đã có người thắng</span>
@@ -739,55 +950,87 @@ export default function DieuHanhDoiKhangTab({
                     <Undo2 size={18} />
                   </button>
                 </div>
-                <div className={styles.warnRowBig}>
-                  <span>Nhắc nhở (3 → tự trừ 2đ)</span>
-                  <div className={styles.dotsBig}>
-                    {[0, 1, 2].map((i) => (
-                      <span
-                        key={i}
-                        className={
-                          i < live.nhacNhoXanh
-                            ? styles.dotOnXanh
-                            : styles.dotOff
-                        }
-                      />
-                    ))}
+                <div className={styles.statusPanel}>
+                  <div className={styles.statusRow}>
+                    <div className={styles.statusLeft}>
+                      <span className={styles.statusLabel}>Nhắc nhở</span>
+                      <div
+                        className={styles.miniDots}
+                        title="Đủ 3 lần → tự trừ 2 điểm, reset về 0">
+                        {[0, 1, 2].map((i) => (
+                          <span
+                            key={i}
+                            className={
+                              i < live.nhacNhoXanh
+                                ? styles.miniDotOn
+                                : styles.miniDotOff
+                            }
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <div className={styles.stepBtnsMini}>
+                      <button onClick={() => adjustNhacNho("xanh", -1)}>
+                        <Minus size={12} />
+                      </button>
+                      <button onClick={() => adjustNhacNho("xanh", 1)}>
+                        <Plus size={12} />
+                      </button>
+                    </div>
                   </div>
-                  <button onClick={() => adjustNhacNho("xanh", -1)}>
-                    <Minus size={14} />
-                  </button>
-                  <button onClick={() => adjustNhacNho("xanh", 1)}>
-                    <Plus size={14} />
-                  </button>
-                </div>
-                <div className={styles.warnRowBig}>
-                  <span>Cảnh cáo hiệp này (3 → xử thua ngay)</span>
-                  <div className={styles.dotsBig}>
-                    {[0, 1, 2].map((i) => (
-                      <span
-                        key={i}
-                        className={
-                          i < live.soCanhCaoHiepXanh
-                            ? styles.dotOnXanh
-                            : styles.dotOff
-                        }
-                      />
-                    ))}
+                  <div className={`${styles.statusRow} ${styles.rowCanhCao}`}>
+                    <div className={styles.statusLeft}>
+                      <AlertTriangle size={13} />
+                      <span className={styles.statusLabel}>Cảnh cáo</span>
+                      <div
+                        className={styles.miniDots}
+                        title="Đủ 3 trong 1 hiệp, hoặc đủ 4 cả trận → xử thua ngay">
+                        {[0, 1, 2].map((i) => (
+                          <span
+                            key={i}
+                            className={
+                              i < live.soCanhCaoHiepXanh
+                                ? styles.miniDotOn
+                                : styles.miniDotOff
+                            }
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <span className={styles.matchCount}>
+                      {live.soCanhCaoXanh} / 4 cả trận
+                    </span>
                   </div>
-                </div>
-                <div className={styles.warnRowBig}>
-                  <span>Cảnh cáo cả trận (4 → xử thua ngay)</span>
-                  <div className={styles.dotsBig}>
-                    {[0, 1, 2, 3].map((i) => (
-                      <span
-                        key={i}
-                        className={
-                          i < live.soCanhCaoXanh
-                            ? styles.dotOnXanh
-                            : styles.dotOff
-                        }
-                      />
-                    ))}
+                  <div className={`${styles.statusRow} ${styles.rowYTe}`}>
+                    <div className={styles.yTeTop}>
+                      <div className={styles.statusLeft}>
+                        <Siren size={13} />
+                        <span className={styles.statusLabel}>Y tế</span>
+                        <div
+                          className={styles.miniDots}
+                          title="Đủ 3 trong 1 hiệp, hoặc đủ 5 cả trận → xử thua ngay">
+                          {[0, 1, 2].map((i) => (
+                            <span
+                              key={i}
+                              className={
+                                i < live.soLanYTeHiepXanh
+                                  ? styles.miniDotOn
+                                  : styles.miniDotOff
+                              }
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      <span className={styles.matchCount}>
+                        {live.soLanYTeXanh} / 5 cả trận
+                      </span>
+                    </div>
+                    <button
+                      className={styles.yTeCallBtnFull}
+                      disabled={!coTheGoiYTe}
+                      onClick={() => goiYTe("xanh")}>
+                      <Siren size={15} /> Gọi y tế
+                    </button>
                   </div>
                 </div>
               </>

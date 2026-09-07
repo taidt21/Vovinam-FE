@@ -1,0 +1,592 @@
+@use '../../../styles/variables' as *;
+
+// Tab "Trọng tài" — phân công, danh sách trọng tài theo sân. Dùng riêng trong TrongTaiTab.tsx.
+// File này là 1 phần của BanThuKy.module.scss (đã tách ra cho gọn) —
+// KHÔNG tự import trực tiếp từ component, luôn đi qua đúng
+// BanThuKy.module.scss ở thư mục cha.
+
+
+/* ========================================================================== */
+/* Trọng tài — optimized assignment UI                                        */
+/* ========================================================================== */
+
+.trongTaiTabV2 {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+}
+
+
+.trongTaiOverview {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 28px;
+    padding: 22px 24px 22px 28px;
+    border: 1px solid rgba($color-border, .96);
+    border-radius: $radius-lg;
+    background:
+        radial-gradient(circle at 92% 8%, rgba($color-do, .065), transparent 34%),
+        $color-surface;
+    box-shadow: 0 9px 24px rgba(15, 23, 42, .04);
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: 14px;
+        bottom: 14px;
+        left: 0;
+        width: 3px;
+        border-radius: 0 999px 999px 0;
+        background: rgba($color-do, .82);
+    }
+}
+
+
+.trongTaiEyebrow {
+    margin-bottom: 5px;
+    color: $color-do;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+
+.trongTaiPageTitle {
+    margin: 0;
+    color: $color-text;
+    font-size: 20px;
+    line-height: 1.3;
+}
+
+
+.trongTaiPageDesc {
+    max-width: 660px;
+    margin: 7px 0 0;
+    color: $color-text-muted;
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+
+.trongTaiStats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(92px, 1fr));
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+
+.trongTaiStat {
+    display: flex;
+    min-width: 96px;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 12px;
+    border: 1px solid $color-border;
+    border-radius: 11px;
+    background: $color-bg;
+
+    span {
+        color: $color-text-muted;
+        font-size: 10px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    strong {
+        color: $color-text;
+        font-family: $font-mono;
+        font-size: 20px;
+        line-height: 1.15;
+    }
+}
+
+
+.trongTaiListToolbar {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 2px 2px 0;
+
+    >div:first-child {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+    }
+
+    strong {
+        color: $color-text;
+        font-size: 14px;
+    }
+
+    span {
+        color: $color-text-muted;
+        font-size: 11px;
+        line-height: 1.4;
+    }
+}
+
+
+.trongTaiSearch {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 245px;
+    min-height: 38px;
+    box-sizing: border-box;
+    padding: 0 9px 0 11px;
+    border: 1px solid $color-border;
+    border-radius: 10px;
+    background: $color-surface;
+    color: $color-text-muted;
+
+    &:focus-within {
+        border-color: rgba($color-do, .45);
+        box-shadow: 0 0 0 3px rgba($color-do, .06);
+    }
+
+    input {
+        min-width: 0;
+        flex: 1;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: $color-text;
+        font: inherit;
+        font-size: 12px;
+    }
+
+    button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px;
+        height: 26px;
+        padding: 0;
+        border: 0;
+        border-radius: 7px;
+        background: transparent;
+        color: $color-text-muted;
+        cursor: pointer;
+
+        &:hover {
+            background: $color-bg;
+            color: $color-text;
+        }
+    }
+}
+
+
+.trongTaiCourtGrid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    align-items: start;
+}
+
+
+.trongTaiCourtCard {
+    overflow: hidden;
+    border: 1px solid $color-border;
+    border-radius: 15px;
+    background: $color-surface;
+    box-shadow: 0 6px 22px rgba(17, 24, 39, 0.035);
+}
+
+
+.trongTaiCourtHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 15px 16px 12px;
+}
+
+
+.trongTaiCourtIdentity {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+
+    h3 {
+        margin: 0;
+        color: $color-text;
+        font-size: 14px;
+        line-height: 1.25;
+    }
+
+    span {
+        display: block;
+        margin-top: 2px;
+        color: $color-text-muted;
+        font-size: 10px;
+    }
+}
+
+
+.trongTaiCourtIcon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    border-radius: 10px;
+    background: rgba($color-do, .08);
+    color: $color-do;
+}
+
+
+.trongTaiCoverageBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 8px;
+    border: 1px solid $color-border;
+    border-radius: 999px;
+    background: $color-bg;
+    color: $color-text-muted;
+    font-size: 10px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+
+.trongTaiCoverageComplete {
+    border-color: rgba($color-success, .25);
+    background: rgba($color-success, .07);
+    color: $color-success;
+}
+
+
+.trongTaiPositionStrip {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 5px;
+    padding: 0 16px 13px;
+    border-bottom: 1px solid $color-border;
+}
+
+
+.trongTaiPositionFilled,
+.trongTaiPositionEmpty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 25px;
+    border-radius: 7px;
+    font-family: $font-mono;
+    font-size: 9px;
+    font-weight: 800;
+}
+
+
+.trongTaiPositionFilled {
+    background: rgba($color-success, .1);
+    color: $color-success;
+}
+
+
+.trongTaiPositionEmpty {
+    border: 1px dashed $color-border;
+    color: $color-text-muted;
+}
+
+
+.trongTaiCourtBody {
+    display: flex;
+    flex-direction: column;
+}
+
+
+.trongTaiSection {
+    padding: 13px 16px 15px;
+
+    +.trongTaiSection {
+        border-top: 1px solid $color-border;
+        background: rgba($color-bg, .45);
+    }
+}
+
+
+.trongTaiSectionHead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 8px;
+
+    span {
+        color: $color-text-muted;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: .055em;
+        text-transform: uppercase;
+    }
+
+    small {
+        color: $color-text-muted;
+        font-size: 9px;
+        font-weight: 700;
+    }
+}
+
+
+.trongTaiAssignedList,
+.trongTaiReserveList {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+
+.trongTaiPersonRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-width: 0;
+    padding: 9px 9px 9px 10px;
+    border: 1px solid $color-border;
+    border-radius: 10px;
+    background: $color-surface;
+    transition: border-color .15s ease, box-shadow .15s ease;
+
+    &:hover {
+        border-color: rgba($color-text-muted, .35);
+        box-shadow: 0 4px 14px rgba(17, 24, 39, .04);
+    }
+}
+
+
+.trongTaiPersonAssigned {
+    border-left: 3px solid rgba($color-success, .7);
+    padding-left: 8px;
+}
+
+
+.trongTaiPersonMain {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 130px;
+    flex: 1;
+}
+
+
+.trongTaiAvatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 31px;
+    height: 31px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: rgba($color-do, .08);
+    color: $color-do;
+    font-size: 10px;
+    font-weight: 800;
+}
+
+
+.trongTaiPersonInfo {
+    min-width: 0;
+
+    strong {
+        display: block;
+        overflow: hidden;
+        color: $color-text;
+        font-size: 12px;
+        line-height: 1.25;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    span {
+        display: block;
+        margin-top: 2px;
+        color: $color-text-muted;
+        font-size: 9px;
+    }
+}
+
+
+.trongTaiPersonControls {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    flex-shrink: 0;
+
+    label {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    label>span {
+        padding-left: 2px;
+        color: $color-text-muted;
+        font-size: 8px;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    select {
+        max-width: 115px;
+        min-height: 30px;
+        padding: 4px 23px 4px 7px;
+        border: 1px solid $color-border;
+        border-radius: 7px;
+        outline: none;
+        background: $color-surface;
+        color: $color-text;
+        font: inherit;
+        font-size: 10px;
+
+        &:focus {
+            border-color: rgba($color-do, .45);
+        }
+    }
+}
+
+
+// Chỉ hiện khi daChonThietBi=true (đã có thiết bị chọn tên này) — màu
+// cam để phân biệt rõ với các nút khác, tránh bấm nhầm (đây là thao
+// tác "mở khoá cho chọn lại", chỉ nên dùng khi chắc máy cũ hỏng).
+.trongTaiResetLuaChonBtn {
+    padding: 4px 10px;
+    border: 1px solid rgba(#f59e0b, .4);
+    border-radius: 7px;
+    background: rgba(#f59e0b, .1);
+    color: #b45309;
+    font-size: 10px;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+
+    &:hover {
+        background: rgba(#f59e0b, .18);
+    }
+}
+
+
+.trongTaiSectionEmpty,
+.trongTaiCourtEmpty {
+    margin: 0;
+    color: $color-text-muted;
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+
+.trongTaiSectionEmpty {
+    padding: 7px 0 3px;
+}
+
+
+.trongTaiCourtEmpty {
+    padding: 22px 16px;
+    border-top: 1px solid $color-border;
+    text-align: center;
+}
+
+
+@media (max-width: 1100px) {
+    .trongTaiCourtGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+@media (max-width: 780px) {
+    .trongTaiOverview {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .trongTaiStats {
+        width: 100%;
+    }
+
+    .trongTaiAddFormV2 {
+        grid-template-columns: 1fr 1fr;
+
+        >button {
+            grid-column: 1 / -1;
+        }
+    }
+
+    .trongTaiListToolbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .trongTaiSearch {
+        width: 100%;
+        min-width: 0;
+    }
+}
+
+
+@media (max-width: 620px) {
+    .trongTaiOverview {
+        padding: 17px 15px;
+    }
+
+    .trongTaiStats {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .trongTaiStat {
+        min-width: 0;
+        padding: 9px 7px;
+    }
+
+    .trongTaiStat span {
+        white-space: normal;
+    }
+
+    .trongTaiAddFormV2 {
+        grid-template-columns: 1fr;
+        padding: 13px;
+    }
+
+    .trongTaiAddFormV2>button {
+        grid-column: auto;
+    }
+
+    .trongTaiCourtHeader {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .trongTaiPositionStrip {
+        padding-inline: 12px;
+    }
+
+    .trongTaiSection {
+        padding-inline: 12px;
+    }
+
+    .trongTaiPersonRow {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .trongTaiPersonControls {
+        display: grid;
+        grid-template-columns: 1fr 1fr auto;
+        width: 100%;
+    }
+
+    .trongTaiPersonControls select {
+        width: 100%;
+        max-width: none;
+    }
+}
