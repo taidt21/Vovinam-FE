@@ -1,0 +1,383 @@
+$white: #f7f7f7;
+
+.screen {
+    width: 100vw;
+    height: 100vh;
+    min-height: 100vh;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 50% -20%, rgba(255, 255, 255, 0.08), transparent 36%),
+        linear-gradient(180deg, #0a0b0c 0%, #040506 100%);
+    color: $white;
+    font-family: Inter, Roboto, "Segoe UI", Arial, sans-serif;
+    box-sizing: border-box;
+}
+
+.quyenScreen {
+    background-image:
+        linear-gradient(180deg, rgba(4, 5, 6, 0.72) 0%, rgba(4, 5, 6, 0.85) 100%),
+        url("../../assets/quyen-background.jpg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.quyenEvent {
+    padding: 1.6vh 2.4vw 0;
+    color: rgba(255, 255, 255, 0.88);
+    font-size: min(3.5vw, 6.2vh);
+    font-weight: 850;
+    line-height: 1.12;
+    text-align: center;
+    text-wrap: balance;
+}
+
+.quyenPerformerBig {
+    min-height: 0;
+    height: 86vh;
+    padding: 0.9vh 3vw 1.5vh;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 3.2vw;
+}
+
+.quyenIdentity {
+    flex: 0 0 42%;
+    min-width: 0;
+    max-width: 42%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 1.1vh;
+}
+
+.quyenIdentityFinished {
+    justify-content: flex-start;
+    padding-top: 1.5vh;
+    padding-bottom: 1.4vh;
+}
+
+.quyenIdentity> :first-child {
+    flex-shrink: 0;
+    filter: drop-shadow(0 10px 28px rgba(0, 0, 0, 0.38));
+}
+
+.quyenInfoBlock {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.7vh;
+}
+
+.quyenInfoBlockFinished {
+    margin-top: 0.9vh;
+}
+
+.quyenResultCol {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: start;
+    padding-left: 4vw;
+
+    &::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 8%;
+        bottom: 8%;
+        width: 2px;
+        border-radius: 999px;
+        background: linear-gradient(180deg,
+                transparent 0%,
+                rgba(37, 177, 255, 0.35) 14%,
+                rgba(37, 177, 255, 0.95) 50%,
+                rgba(37, 177, 255, 0.35) 86%,
+                transparent 100%);
+        box-shadow:
+            0 0 8px rgba(37, 177, 255, 0.9),
+            0 0 22px rgba(37, 177, 255, 0.62),
+            0 0 48px rgba(37, 177, 255, 0.32);
+        pointer-events: none;
+    }
+}
+
+.quyenName {
+    max-width: 34vw;
+    margin-top: 0.3vh;
+    color: #fff;
+    font-size: min(4.1vw, 7.3vh);
+    font-weight: 950;
+    line-height: 1.03;
+    letter-spacing: -0.025em;
+    text-align: center;
+    text-wrap: balance;
+}
+
+.quyenUnit {
+    max-width: 34vw;
+    color: rgba(255, 255, 255, 0.74);
+    font-size: min(2.35vw, 4.2vh);
+    font-weight: 700;
+    line-height: 1.12;
+    text-align: center;
+}
+
+.quyenClock {
+    margin-top: 0.4vh;
+    font-size: min(9.8vw, 17.4vh);
+    font-weight: 950;
+    line-height: 0.9;
+    letter-spacing: -0.055em;
+    font-variant-numeric: tabular-nums;
+    color: #fff;
+    text-shadow: 0 10px 28px rgba(0, 0, 0, 0.34);
+}
+
+.quyenScore {
+    margin: auto;
+    font-size: min(11vw, 19.6vh);
+    font-weight: 950;
+    line-height: 0.88;
+    letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums;
+    color: #ffd500;
+    text-shadow:
+        0 0 28px rgba(255, 213, 0, 0.24),
+        0 0 68px rgba(255, 213, 0, 0.18),
+        0 10px 28px rgba(0, 0, 0, 0.34);
+}
+
+.quyenScoreFinished {
+    margin-top: auto;
+    font-size: min(16vw, 28vh);
+    line-height: 0.84;
+}
+
+.quyenStatus,
+.quyenLive {
+    margin-top: 0.65vh;
+    padding: 1.35vh 2.3vw;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.085);
+    font-size: min(2vw, 3.6vh);
+    font-weight: 950;
+    line-height: 1;
+    letter-spacing: 0.05em;
+}
+
+.quyenLive {
+    color: #ff5252;
+    border-color: rgba(255, 82, 82, 0.3);
+    background: rgba(255, 82, 82, 0.08);
+}
+
+.quyenBangGiamDinh {
+    width: min(100%, 680px);
+    margin-top: 0.3vh;
+    border-collapse: collapse;
+    font-variant-numeric: tabular-nums;
+
+    th,
+    td {
+        text-align: center;
+    }
+
+    th {
+        padding: 1.2vh 2vw;
+        color: rgba(255, 255, 255, 0.64);
+        font-weight: 800;
+        font-size: min(2vw, 3.6vh);
+        border-bottom: 2px solid rgba(255, 255, 255, 0.24);
+    }
+
+    tbody tr td {
+        padding: 1.3vh 2vw;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    tbody tr:last-child td {
+        border-bottom: none;
+    }
+}
+
+.judgeIndexCell {
+    width: 42%;
+    font-size: min(4.5vw, 8vh);
+    font-weight: 900;
+    color: rgba(255, 255, 255, 0.95);
+}
+
+.judgeScoreCell {
+    width: 58%;
+    font-size: min(6vw, 10.7vh);
+    font-weight: 950;
+    line-height: 0.95;
+    letter-spacing: -0.035em;
+    transition: color 0.2s ease, text-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.judgeRowKept .judgeScoreCell {
+    position: relative;
+    color: #ffe100;
+    animation: keptScorePulse 1.15s ease-in-out infinite;
+    will-change: filter, text-shadow, transform;
+}
+
+.judgeRowKept .judgeIndexCell {
+    color: #fff;
+    text-shadow: 0 0 14px rgba(255, 255, 255, 0.12);
+}
+
+.judgeRowDropped .judgeScoreCell {
+    color: rgba(255, 255, 255, 0.72);
+    text-shadow: none;
+}
+
+// Giám định CHƯA gửi điểm — hiện "—" mờ hẳn đi, rõ ràng là "đang chờ",
+// không lẫn với điểm thật (kể cả điểm bị loại .judgeRowDropped, vốn
+// vẫn là 1 điểm thật, chỉ không được TÍNH vào tổng).
+.judgeRowPending .judgeScoreCell {
+    color: rgba(255, 255, 255, 0.32);
+    text-shadow: none;
+}
+
+.judgeRowPending .judgeIndexCell {
+    color: rgba(255, 255, 255, 0.55);
+}
+
+@keyframes keptScorePulse {
+
+    0%,
+    100% {
+        filter: brightness(1);
+        transform: scale(1);
+        text-shadow:
+            0 0 10px rgba(255, 225, 0, 0.42),
+            0 0 24px rgba(255, 213, 0, 0.34),
+            0 0 52px rgba(255, 183, 0, 0.18);
+    }
+
+    48%,
+    55% {
+        filter: brightness(1.42);
+        transform: scale(1.045);
+        text-shadow:
+            0 0 12px rgba(255, 248, 176, 0.95),
+            0 0 28px rgba(255, 225, 0, 0.95),
+            0 0 58px rgba(255, 190, 0, 0.72),
+            0 0 92px rgba(255, 165, 0, 0.38);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .judgeRowKept .judgeScoreCell {
+        animation: none;
+        filter: brightness(1.2);
+        text-shadow:
+            0 0 12px rgba(255, 248, 176, 0.8),
+            0 0 30px rgba(255, 225, 0, 0.75),
+            0 0 64px rgba(255, 190, 0, 0.4);
+    }
+}
+
+@media (max-width: 1100px) {
+    .quyenPerformerBig {
+        flex-direction: column;
+        justify-content: center;
+        height: calc(100vh - 124px);
+        padding-top: 7px;
+        padding-bottom: 10px;
+        gap: 14px;
+    }
+
+    .quyenIdentity,
+    .quyenResultCol {
+        flex: none;
+        max-width: 100%;
+        width: 100%;
+        height: auto;
+    }
+
+    .quyenIdentityFinished {
+        justify-content: center;
+        padding-top: 0;
+        padding-bottom: 0;
+    }
+
+    .quyenResultCol {
+        padding-left: 0;
+        padding-top: 14px;
+        border-top: 2px solid rgba(30, 163, 255, 0.4);
+        box-shadow: inset 0 16px 24px -24px rgba(30, 163, 255, 0.55);
+
+        &::before {
+            display: none;
+        }
+    }
+
+    .quyenEvent {
+        padding-top: 12px;
+        font-size: min(3.8vw, 5.2vh);
+    }
+
+    .quyenName,
+    .quyenUnit {
+        max-width: 92vw;
+    }
+
+    .quyenName {
+        font-size: min(5.6vw, 7vh);
+    }
+
+    .quyenUnit {
+        font-size: min(3.2vw, 4vh);
+    }
+
+    .quyenClock {
+        font-size: min(9vw, 12vh);
+    }
+
+    .quyenScore {
+        font-size: min(10vw, 14vh);
+    }
+
+    .quyenScoreFinished {
+        margin-top: 1.6vh;
+        font-size: min(12vw, 16vh);
+    }
+
+    .quyenStatus,
+    .quyenLive {
+        padding: 7px 17px;
+        font-size: min(2.1vw, 2.8vh);
+    }
+
+    .quyenBangGiamDinh {
+        width: 100%;
+
+        th {
+            font-size: min(2.2vw, 2.8vh);
+        }
+    }
+
+    .judgeIndexCell {
+        font-size: min(4vw, 5vh);
+    }
+
+    .judgeScoreCell {
+        font-size: min(5vw, 6.4vh);
+    }
+}

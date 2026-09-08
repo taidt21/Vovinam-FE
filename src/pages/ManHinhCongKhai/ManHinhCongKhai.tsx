@@ -32,11 +32,10 @@ import { apiGet } from "../../lib/api/api";
 import { fetchEvents } from "../../lib/api/eventsApi";
 import { fetchMatches } from "../../lib/api/matchesApi";
 import { numberDoiKhangMatches } from "../../lib/domain/bracket";
-import { fetchQuyenJudgeScores } from "../../lib/api/quyenJudgeScoreApi";
-import { tinhDiemQuyenTongHop } from "../../lib/domain/quyenScoring";
 import { fetchTrongTai } from "../../lib/api/trongTaiApi";
 import { useMatchBell } from "../../lib/audio/matchBell";
 import AthleteAvatar from "../../components/AthleteAvatar/AthleteAvatar";
+import QuyenScreen from "./QuyenCongKhaiScreen";
 import styles from "./ManHinhCongKhai.module.scss";
 
 const DEFAULT_TOURNAMENT_NAME = "GIẢI VOVINAM";
@@ -110,17 +109,6 @@ function responsiveAthleteAvatarSize(): number {
   );
 }
 
-
-function responsiveQuyenAvatarSize(): number {
-  if (typeof window === "undefined") return 190;
-
-  return Math.round(
-    Math.max(
-      160,
-      Math.min(280, window.innerWidth * 0.13, window.innerHeight * 0.24),
-    ),
-  );
-}
 
 export default function ManHinhCongKhai() {
   const { courts, loadingCourts } = useCourts();
@@ -644,110 +632,5 @@ function AthleteBar({
         </>
       )}
     </footer>
-  );
-}
-
-function QuyenScreen({
-  header,
-  live,
-}: {
-  header: React.ReactNode;
-  live: LiveQuyenState;
-}) {
-  const daTroi =
-    live.trangThai === "dang_thi"
-      ? live.thoiGianDaTroiGiay + (Date.now() - live.capNhatDongHoLuc) / 1000
-      : live.thoiGianDaTroiGiay;
-  const hienThi = live.coGioiHan
-    ? Math.max(0, (live.thoiGianGioiHanGiay ?? 0) - daTroi)
-    : daTroi;
-  const mm = Math.floor(hienThi / 60);
-  const ss = Math.floor(hienThi % 60);
-  const timeLabel = `${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`;
-  const daKetThuc = live.trangThai === "da_ket_thuc";
-  const dangThi = live.trangThai === "dang_thi";
-
-  const [diemTongHop, setDiemTongHop] = useState<number | null>(null);
-  // 5 điểm riêng từng giám định đã gửi — hiện kèm điểm tổng hợp lúc kết
-  // thúc, dạng bảng đánh số 1-5 theo đúng thứ tự API trả về (không hiện
-  // tên thật, đơn giản hoá để nhìn từ xa dễ hơn).
-  const [diemTungGiamDinh, setDiemTungGiamDinh] = useState<number[]>([]);
-  useEffect(() => {
-    if (!daKetThuc) {
-      setDiemTongHop(null);
-      setDiemTungGiamDinh([]);
-      return;
-    }
-    let huy = false;
-    const taiDiem = () => {
-      fetchQuyenJudgeScores()
-        .then((all) => {
-          if (huy) return;
-          const cuaLuotNay = all.filter(
-            (s) =>
-              s.eventId === live.eventId &&
-              s.athleteId === live.athleteId &&
-              s.teamId === live.teamId,
-          );
-          setDiemTungGiamDinh(cuaLuotNay.map((s) => s.diem));
-          setDiemTongHop(tinhDiemQuyenTongHop(cuaLuotNay.map((s) => s.diem)));
-        })
-        .catch(() => {});
-    };
-    taiDiem();
-    const id = setInterval(taiDiem, 3000);
-    return () => {
-      huy = true;
-      clearInterval(id);
-    };
-  }, [daKetThuc, live.eventId, live.athleteId, live.teamId]);
-
-  return (
-    <div className={`${styles.screen} ${styles.quyenScreen}`}>
-      {header}
-      <div className={styles.quyenEvent}>{live.eventTen}</div>
-      <div className={styles.quyenPerformerBig}>
-        <AthleteAvatar
-          name={live.performerLabel}
-          photoUrl={live.photoUrl}
-          size={responsiveQuyenAvatarSize()}
-        />
-        <div className={styles.quyenName}>{live.performerLabel}</div>
-        <div className={styles.quyenUnit}>{live.performerSub}</div>
-        {!daKetThuc && live.trangThai !== "cho_bat_dau" && (
-          <span className={styles.quyenClock}>{timeLabel}</span>
-        )}
-        {live.trangThai === "tam_dung" && (
-          <span className={styles.quyenStatus}>TẠM DỪNG</span>
-        )}
-        {live.trangThai === "cho_bat_dau" && (
-          <span className={styles.quyenStatus}>SẮP THI ĐẤU</span>
-        )}
-        {dangThi && <span className={styles.quyenLive}>TRỰC TIẾP</span>}
-        {daKetThuc && diemTongHop !== null && (
-          <>
-            <div className={styles.quyenScore}>{diemTongHop.toFixed(2)}</div>
-            {diemTungGiamDinh.length > 0 && (
-              <table className={styles.quyenBangGiamDinh}>
-                <thead>
-                  <tr>
-                    <th>Giám định</th>
-                    <th>Điểm</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {diemTungGiamDinh.map((diem, i) => (
-                    <tr key={i}>
-                      <td>{i + 1}</td>
-                      <td>{diem.toFixed(2)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </>
-        )}
-      </div>
-    </div>
   );
 }
