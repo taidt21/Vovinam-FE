@@ -67,7 +67,21 @@ export function makeLiveState(
   tenXanh: string,
   donViXanh: string,
   anhXanh: string | null,
+  // Cài đặt riêng của sân này (số hiệp, thời gian hiệp/nghỉ) — đọc từ
+  // /court-settings/{courtId}, đã lưu từ lần BTK chỉnh trước đó cho
+  // ĐÚNG sân này (xem đúng comment ở Model CourtSettings.cs backend).
+  // Bỏ trống thì dùng mặc định cứng như trước — chỉ xảy ra nếu sân đó
+  // CHƯA TỪNG có cài đặt lưu nào (backend cũng tự trả về đúng bộ mặc
+  // định này nếu chưa có, nên trong thực tế hầu như luôn có giá trị).
+  caiDatSan?: {
+    tongSoHiep: number;
+    thoiGianHiepGiay: number;
+    thoiGianNghiGiay: number;
+  },
 ): LiveMatchState {
+  const tongSoHiep = caiDatSan?.tongSoHiep ?? DEFAULT_TONG_SO_HIEP;
+  const thoiGianHiepGiay = caiDatSan?.thoiGianHiepGiay ?? DEFAULT_THOI_GIAN_HIEP;
+  const thoiGianNghiGiay = caiDatSan?.thoiGianNghiGiay ?? DEFAULT_THOI_GIAN_NGHI;
   return {
     matchId: match.id,
     courtId,
@@ -81,10 +95,10 @@ export function makeLiveState(
     anhXanh,
     trangThai: "cho_bat_dau",
     hiepHienTai: 0,
-    tongSoHiep: DEFAULT_TONG_SO_HIEP,
-    thoiGianHiepGiay: DEFAULT_THOI_GIAN_HIEP,
-    thoiGianNghiGiay: DEFAULT_THOI_GIAN_NGHI,
-    thoiGianConLaiGiay: DEFAULT_THOI_GIAN_HIEP,
+    tongSoHiep,
+    thoiGianHiepGiay,
+    thoiGianNghiGiay,
+    thoiGianConLaiGiay: thoiGianHiepGiay,
     capNhatDongHoLuc: serverNow(),
     hetHiepLuc: 0,
     soTrongTaiCanCo: DEFAULT_SO_TRONG_TAI,

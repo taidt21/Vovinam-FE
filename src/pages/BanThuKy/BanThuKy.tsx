@@ -21,6 +21,7 @@ import { serverNow } from "../../lib/realtime/serverClock";
 import { apiGet } from "../../lib/api/api";
 import { fetchEvents } from "../../lib/api/eventsApi";
 import { fetchMatches, updateMatch, fetchMatchReview } from "../../lib/api/matchesApi";
+import { fetchCourtSettings } from "../../lib/api/courtSettingsApi";
 import {
   fetchQuyenJudgeScores,
   type QuyenJudgeScoreWire,
@@ -537,6 +538,16 @@ export default function BanThuKy() {
       return next;
     });
 
+    // Đọc đúng cài đặt riêng đã lưu của SÂN NÀY (số hiệp, thời gian
+    // hiệp/nghỉ) — để trận mới mở vào tự dùng lại, không cần BTK chỉnh
+    // tay lại từ đầu mỗi trận. Backend tự trả về mặc định nếu sân này
+    // chưa từng tuỳ chỉnh, nên không cần catch riêng "chưa có gì" ở
+    // đây — chỉ cần phòng hờ lỗi mạng/backend chưa chạy (undefined thì
+    // makeLiveState tự rơi về đúng mặc định cứng như trước).
+    const caiDatSan = await fetchCourtSettings(currentCourtId).catch(
+      () => undefined,
+    );
+
     publishMatchState(
       makeLiveState(
         currentCourtId,
@@ -548,6 +559,7 @@ export default function BanThuKy() {
         athleteName(match.athleteBlueId) ?? "—",
         athleteTeam(match.athleteBlueId),
         athletePhoto(match.athleteBlueId),
+        caiDatSan,
       ),
     );
     setTab("dieu_hanh_dk");

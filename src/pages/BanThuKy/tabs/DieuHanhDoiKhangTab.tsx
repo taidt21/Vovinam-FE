@@ -29,6 +29,7 @@ import {
 import { serverNow } from "../../../lib/realtime/serverClock";
 import { usePressedLights, toPositionedPresses } from "../../../lib/realtime/usePressedLights";
 import { fetchTrongTai } from "../../../lib/api/trongTaiApi";
+import { updateCourtSettings } from "../../../lib/api/courtSettingsApi";
 import { useMatchBell } from "../../../lib/audio/matchBell";
 import { ghiLogDieuChinhDiem, xoaLogDieuChinhDiem } from "../../../lib/realtime/pressLightClient";
 import Modal from "../../../components/Modal/Modal";
@@ -1087,6 +1088,10 @@ export default function DieuHanhDoiKhangTab({
       {showSettings && (
         <Modal title="Cài đặt trận đấu" onClose={() => setShowSettings(false)}>
           <div className={styles.settingsForm}>
+            <p className={styles.hint}>
+              Áp dụng cho trận này và TỰ ĐỘNG dùng lại cho các trận sau của
+              đúng sân này — không cần chỉnh lại mỗi trận.
+            </p>
             <label className={styles.field}>
               <span>Số hiệp</span>
               <input
@@ -1094,7 +1099,15 @@ export default function DieuHanhDoiKhangTab({
                 min={1}
                 max={5}
                 value={live.tongSoHiep}
-                onChange={(e) => patch({ tongSoHiep: Number(e.target.value) })}
+                onChange={(e) => {
+                  const tongSoHiep = Number(e.target.value);
+                  patch({ tongSoHiep });
+                  updateCourtSettings(courtId, {
+                    tongSoHiep,
+                    thoiGianHiepGiay: live.thoiGianHiepGiay,
+                    thoiGianNghiGiay: live.thoiGianNghiGiay,
+                  }).catch(() => {});
+                }}
               />
             </label>
             <label className={styles.field}>
@@ -1104,12 +1117,18 @@ export default function DieuHanhDoiKhangTab({
                 min={30}
                 step={10}
                 value={live.thoiGianHiepGiay}
-                onChange={(e) =>
+                onChange={(e) => {
+                  const thoiGianHiepGiay = Number(e.target.value);
                   patch({
-                    thoiGianHiepGiay: Number(e.target.value),
-                    thoiGianConLaiGiay: Number(e.target.value),
-                  })
-                }
+                    thoiGianHiepGiay,
+                    thoiGianConLaiGiay: thoiGianHiepGiay,
+                  });
+                  updateCourtSettings(courtId, {
+                    tongSoHiep: live.tongSoHiep,
+                    thoiGianHiepGiay,
+                    thoiGianNghiGiay: live.thoiGianNghiGiay,
+                  }).catch(() => {});
+                }}
               />
             </label>
             <label className={styles.field}>
@@ -1119,9 +1138,15 @@ export default function DieuHanhDoiKhangTab({
                 min={10}
                 step={10}
                 value={live.thoiGianNghiGiay}
-                onChange={(e) =>
-                  patch({ thoiGianNghiGiay: Number(e.target.value) })
-                }
+                onChange={(e) => {
+                  const thoiGianNghiGiay = Number(e.target.value);
+                  patch({ thoiGianNghiGiay });
+                  updateCourtSettings(courtId, {
+                    tongSoHiep: live.tongSoHiep,
+                    thoiGianHiepGiay: live.thoiGianHiepGiay,
+                    thoiGianNghiGiay,
+                  }).catch(() => {});
+                }}
               />
             </label>
           </div>
