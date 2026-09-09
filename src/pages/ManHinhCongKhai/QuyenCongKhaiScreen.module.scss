@@ -22,6 +22,13 @@ $white: #f7f7f7;
     background-repeat: no-repeat;
 }
 
+// Chỉ quyền đồng đội dùng flex theo chiều dọc để phần nội dung lấy đúng
+// phần chiều cao CÒN LẠI sau header + tên nội dung. Quyền đơn giữ nguyên.
+.quyenScreenTeam {
+    display: flex;
+    flex-direction: column;
+}
+
 .quyenEvent {
     padding: 1.6vh 2.4vw 0;
     color: rgba(255, 255, 255, 0.88);
@@ -57,6 +64,12 @@ $white: #f7f7f7;
     gap: 3.2vw;
 }
 
+.quyenPerformerBigTeam {
+    flex: 1;
+    height: auto;
+    min-height: 0;
+}
+
 .quyenIdentity {
     flex: 0 0 42%;
     min-width: 0;
@@ -88,8 +101,15 @@ $white: #f7f7f7;
     display: grid;
     justify-content: center;
     justify-items: center;
-    gap: 1.4vw;
+    gap: min(1.4vw, 2.2vh);
     max-width: 100%;
+}
+
+// Khi công bố kết quả, roster chuyển sang compact mode. Không ẩn thành
+// viên, chỉ giảm khoảng cách + avatar (avatar giảm ở TSX) để nhường chỗ
+// cho tổng điểm lớn bên dưới.
+.quyenThanhVienRowResult {
+    gap: min(0.85vw, 1.35vh);
 }
 
 .quyenThanhVienItemBig {
@@ -109,6 +129,20 @@ $white: #f7f7f7;
     align-items: center;
     justify-content: center;
     gap: 0.7vh;
+}
+
+.quyenInfoBlockTeam {
+    margin-bottom: 0.5vh;
+}
+
+.quyenTeamCount {
+    margin-top: 0.15vh;
+    color: rgba(255, 255, 255, 0.56);
+    font-size: min(1.45vw, 2.55vh);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
 }
 
 .quyenInfoBlockFinished {
@@ -198,6 +232,13 @@ $white: #f7f7f7;
     margin-top: auto;
     font-size: min(16vw, 28vh);
     line-height: 0.84;
+}
+
+// Tổng điểm đồng đội vẫn là hero khi đã khoá, nhưng giới hạn thêm theo
+// chiều cao để 3 hàng avatar (10-15 VĐV) không bị đẩy/cắt khỏi viewport.
+.quyenScoreTeamFinished {
+    margin-top: auto;
+    font-size: min(15vw, 25vh);
 }
 
 .quyenStatus,
@@ -414,5 +455,58 @@ $white: #f7f7f7;
 
     .judgeScoreCell {
         font-size: min(5vw, 6.4vh);
+    }
+}
+
+// Màn công khai đồng đội trên landscape 1024-1100px vẫn giữ 2 cột.
+// Không xếp dọc roster + 5 giám định vì sẽ thiếu chiều cao với đội đông.
+@media (max-width: 1100px) and (orientation: landscape) {
+    .quyenPerformerBigTeam {
+        flex: 1;
+        height: auto;
+        flex-direction: row;
+        justify-content: space-between;
+        padding: 0.8vh 2.2vw 1.2vh;
+        gap: 2.2vw;
+    }
+
+    .quyenPerformerBigTeam>.quyenIdentity {
+        flex: 0 0 42%;
+        max-width: 42%;
+        width: auto;
+        height: 100%;
+    }
+
+    .quyenPerformerBigTeam>.quyenResultCol {
+        flex: 1;
+        width: auto;
+        height: 100%;
+        padding-top: 0;
+        padding-left: 3vw;
+        border-top: 0;
+        box-shadow: none;
+    }
+
+    .quyenPerformerBigTeam>.quyenResultCol::before {
+        display: block;
+    }
+
+    .quyenPerformerBigTeam .quyenName {
+        max-width: 36vw;
+        font-size: min(3.8vw, 6.4vh);
+    }
+
+    .quyenPerformerBigTeam .quyenUnit {
+        max-width: 36vw;
+        font-size: min(2.15vw, 3.7vh);
+    }
+
+    .quyenPerformerBigTeam .quyenTeamCount {
+        font-size: min(1.35vw, 2.35vh);
+    }
+
+    .quyenPerformerBigTeam .quyenScoreTeamFinished {
+        margin-top: auto;
+        font-size: min(14vw, 23vh);
     }
 }

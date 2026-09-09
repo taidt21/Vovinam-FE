@@ -30,13 +30,28 @@ function responsiveQuyenAvatarSize(): number {
   );
 }
 
-function responsiveTeamAvatarSize(memberCount: number): number {
+function responsiveTeamAvatarSize(
+  memberCount: number,
+  compactResult = false,
+): number {
   const base = responsiveQuyenAvatarSize();
 
-  if (memberCount <= 3) return Math.round(base * 0.62);
-  if (memberCount <= 5) return Math.round(base * 0.56);
-  if (memberCount <= 10) return Math.round(base * 0.44);
-  return Math.round(base * 0.36);
+  let ratio: number;
+  if (memberCount <= 3) ratio = 0.62;
+  else if (memberCount <= 5) ratio = 0.56;
+  else if (memberCount <= 10) ratio = 0.44;
+  else ratio = 0.36;
+
+  // Khi đã công bố kết quả, roster đồng đội thu gọn để nhường chiều cao
+  // cho tổng điểm. Đội càng đông thì mức thu càng mạnh.
+  if (compactResult) {
+    if (memberCount <= 3) ratio *= 0.9;
+    else if (memberCount <= 5) ratio *= 0.85;
+    else if (memberCount <= 10) ratio *= 0.8;
+    else ratio *= 0.72;
+  }
+
+  return Math.round(base * ratio);
 }
 
 // scores TRUYỀN VÀO đã đúng thứ tự vị trí giám định (index 0 = Giám
@@ -122,6 +137,7 @@ export default function QuyenScreen({
   const timeLabel = `${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`;
   const daKetThuc = live.trangThai === "da_ket_thuc";
   const dangThi = live.trangThai === "dang_thi";
+  const laDongDoi = Boolean(live.thanhVien && live.thanhVien.length > 0);
 
   const [scores, setScores] = useState<QuyenJudgeScoreWire[]>([]);
 
@@ -172,9 +188,7 @@ export default function QuyenScreen({
               .filter(
                 (t) => t.courtId === live.courtId && t.thuTuGiamDinh !== null,
               )
-              .sort(
-                (a, b) => (a.thuTuGiamDinh ?? 0) - (b.thuTuGiamDinh ?? 0),
-              ),
+              .sort((a, b) => (a.thuTuGiamDinh ?? 0) - (b.thuTuGiamDinh ?? 0)),
           );
         })
         .catch(() => {});
@@ -234,89 +248,104 @@ export default function QuyenScreen({
     .map((diem, slotIndex) => ({ diem, slotIndex }))
     .filter((o): o is { diem: number; slotIndex: number } => o.diem !== null);
   const diemTongHop = tinhDiemQuyenTongHop(viTriCoDiem.map((o) => o.diem));
-  const chiSoNenGiu = getKeptJudgeScoreIndices(
-    viTriCoDiem.map((o) => o.diem),
-  );
+  const chiSoNenGiu = getKeptJudgeScoreIndices(viTriCoDiem.map((o) => o.diem));
   const viTriGocDuocGiu = new Set(
     viTriCoDiem
       .filter((_, compactIndex) => chiSoNenGiu.has(compactIndex))
       .map((o) => o.slotIndex),
   );
 
+  const dangHienKetQua = daKetThuc && diemTongHop !== null && daKhoa;
+
   return (
-    <div className={`${styles.screen} ${styles.quyenScreen}`}>
+    <div
+      className={`${styles.screen} ${styles.quyenScreen} ${
+        laDongDoi ? styles.quyenScreenTeam : ""
+      }`}>
       {header}
       <div className={styles.quyenEvent}>
         {soThuTu && <span className={styles.quyenSoTag}>#{soThuTu}</span>}{" "}
         {live.eventTen}
       </div>
-      <div className={styles.quyenPerformerBig}>
+      <div
+        className={`${styles.quyenPerformerBig} ${
+          laDongDoi ? styles.quyenPerformerBigTeam : ""
+        }`}>
         <div
           className={`${styles.quyenIdentity} ${
             daKetThuc ? styles.quyenIdentityFinished : ""
           }`}>
-          {live.thanhVien && live.thanhVien.length > 0 ? (
-            // Đồng đội: màn hình công khai chỉ cần nhận diện đội hình bằng
-            // avatar. Không hiện tên từng VĐV để 10-15 thành viên vẫn giữ
-            // được avatar đủ lớn, bố cục ổn định và không chiếm chỗ của
-            // trạng thái / tổng điểm. Tên vẫn truyền vào AthleteAvatar để
-            // tạo fallback chữ cái khi VĐV chưa có ảnh.
-            //
-            // Tách thanhVien ra biến cục bộ (const) NGAY TẠI ĐÂY — bắt
-            // buộc, vì TypeScript không giữ được việc "đã kiểm tra khác
-            // null" (live.thanhVien &&...) cho tới bên TRONG callback
-            // .map() bên dưới nếu cứ đọc thẳng qua live.thanhVien (giới
-            // hạn đã biết: hẹp kiểu qua đường dẫn thuộc tính object
-            // không xuyên qua được ranh giới 1 hàm khác, kể cả callback
-            // đồng bộ) — lỗi build thật đã gặp: "'live.thanhVien' is
-            // possibly 'null'" ngay tại dòng gọi responsiveTeamAvatarSize
-            // bên trong .map(). Biến const cục bộ thì KHÔNG bị giới hạn
-            // này, hẹp kiểu giữ nguyên xuyên suốt.
+          {laDongDoi ? (
             (() => {
-              const thanhVien = live.thanhVien;
+              const thanhVien = live.thanhVien!;
               return (
-                <div
-                  className={styles.quyenThanhVienRowBig}
-                  style={{
-                    gridTemplateColumns: `repeat(${Math.min(
-                      thanhVien.length,
-                      5,
-                    )}, max-content)`,
-                  }}>
-                  {thanhVien.map((tv, i) => (
-                    <div
-                      key={i}
-                      className={styles.quyenThanhVienItemBig}
-                      title={tv.hoTen}>
-                      <AthleteAvatar
-                        name={tv.hoTen}
-                        photoUrl={tv.anhDaiDien}
-                        size={responsiveTeamAvatarSize(thanhVien.length)}
-                      />
+                <>
+                  {/* Đồng đội: tên đội đặt trên roster để người xem nhận diện
+                      theo đúng thứ tự thị giác: đội nào -> đội hình -> kết quả. */}
+                  <div
+                    className={`${styles.quyenInfoBlock} ${styles.quyenInfoBlockTeam} ${
+                      daKetThuc ? styles.quyenInfoBlockFinished : ""
+                    }`}>
+                    <div className={styles.quyenName}>
+                      {live.performerLabel}
                     </div>
-                  ))}
-                </div>
+                    <div className={styles.quyenUnit}>{live.performerSub}</div>
+                    <div className={styles.quyenTeamCount}>
+                      {thanhVien.length} VĐV
+                    </div>
+                  </div>
+
+                  <div
+                    className={`${styles.quyenThanhVienRowBig} ${
+                      dangHienKetQua ? styles.quyenThanhVienRowResult : ""
+                    }`}
+                    style={{
+                      gridTemplateColumns: `repeat(${Math.min(
+                        thanhVien.length,
+                        5,
+                      )}, max-content)`,
+                    }}>
+                    {thanhVien.map((tv, i) => (
+                      <div
+                        key={i}
+                        className={styles.quyenThanhVienItemBig}
+                        title={tv.hoTen}>
+                        <AthleteAvatar
+                          name={tv.hoTen}
+                          photoUrl={tv.anhDaiDien}
+                          size={responsiveTeamAvatarSize(
+                            thanhVien.length,
+                            dangHienKetQua,
+                          )}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </>
               );
             })()
           ) : (
-            <AthleteAvatar
-              name={live.performerLabel}
-              photoUrl={live.photoUrl}
-              size={responsiveQuyenAvatarSize()}
-            />
+            <>
+              <AthleteAvatar
+                name={live.performerLabel}
+                photoUrl={live.photoUrl}
+                size={responsiveQuyenAvatarSize()}
+              />
+              <div
+                className={`${styles.quyenInfoBlock} ${
+                  daKetThuc ? styles.quyenInfoBlockFinished : ""
+                }`}>
+                <div className={styles.quyenName}>{live.performerLabel}</div>
+                <div className={styles.quyenUnit}>{live.performerSub}</div>
+              </div>
+            </>
           )}
-
-          <div
-            className={`${styles.quyenInfoBlock} ${
-              daKetThuc ? styles.quyenInfoBlockFinished : ""
-            }`}>
-            <div className={styles.quyenName}>{live.performerLabel}</div>
-            <div className={styles.quyenUnit}>{live.performerSub}</div>
-          </div>
 
           {daKetThuc && diemTongHop !== null && daKhoa ? (
             <div
-              className={`${styles.quyenScore} ${styles.quyenScoreFinished}`}>
+              className={`${styles.quyenScore} ${styles.quyenScoreFinished} ${
+                laDongDoi ? styles.quyenScoreTeamFinished : ""
+              }`}>
               {diemTongHop.toFixed(0)}
             </div>
           ) : (
