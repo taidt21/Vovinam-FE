@@ -17,7 +17,16 @@ function ensureHandlersRegistered() {
   const conn = getConnection();
 
   conn.on('CourtSnapshot', (courtId: string, snapshot: { quyenState: LiveQuyenState | null }) => {
-    notify(courtId, snapshot.quyenState ?? null);
+    // CourtSnapshot là phản hồi cho ĐÚNG 1 lần gọi JoinCourt cụ thể —
+    // KHÔNG phải tín hiệu "trạng thái vừa đổi". Nếu backend xử lý lần
+    // gọi đó chậm (VD lúc mới mount trang, hoặc backend vừa khởi động
+    // lại đang xử lý dồn), phản hồi có thể tới TRỄ hơn hẳn 1 cập nhật
+    // MỚI HƠN mà client đã tự nhận được entretemps — áp thẳng snapshot
+    // cũ (null) lúc đó sẽ XOÁ MẤT trạng thái mới vừa thiết lập. Chỉ áp
+    // dụng snapshot null khi client CHƯA từng có gì.
+    if (cache.get(courtId) == null || snapshot.quyenState != null) {
+      notify(courtId, snapshot.quyenState ?? null);
+    }
   });
   conn.on('QuyenStateUpdated', (courtId: string, state: LiveQuyenState) => {
     notify(courtId, state);

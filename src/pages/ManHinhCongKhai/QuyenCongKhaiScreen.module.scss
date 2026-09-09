@@ -32,6 +32,19 @@ $white: #f7f7f7;
     text-wrap: balance;
 }
 
+// Số thứ tự toàn cụ — nhỏ, mờ hơn hẳn tên nội dung, dạng viên thuốc để
+// không cạnh tranh sự chú ý với tên nội dung ngay bên cạnh.
+.quyenSoTag {
+    display: inline-block;
+    padding: 0.3vh 1vw;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 0.55em;
+    font-weight: 700;
+    vertical-align: middle;
+}
+
 .quyenPerformerBig {
     min-height: 0;
     height: 86vh;
@@ -61,6 +74,28 @@ $white: #f7f7f7;
     justify-content: flex-start;
     padding-top: 1.5vh;
     padding-bottom: 1.4vh;
+}
+
+// Hàng avatar từng thành viên đồng đội — thay cho 1 avatar chung chung
+// (đội không có "1 ảnh đại diện" nào). display: grid (KHÔNG phải flex)
+// — bắt buộc, vì QuyenCongKhaiScreen.tsx đặt gridTemplateColumns qua
+// inline style để giới hạn tối đa 5 cột/hàng (đội đông 10-15 người vẫn
+// xuống dòng đều đặn) — thuộc tính đó CHỈ có tác dụng trên chính
+// display: grid, đặt nhầm display: flex thì bị bỏ qua hoàn toàn, số
+// lượng mỗi hàng lúc đó phụ thuộc flex-wrap tự nhiên (không đoán trước
+// được, từng ra 6/hàng thay vì đúng 5 — lỗi thật đã gặp).
+.quyenThanhVienRowBig {
+    display: grid;
+    justify-content: center;
+    justify-items: center;
+    gap: 1.4vw;
+    max-width: 100%;
+}
+
+.quyenThanhVienItemBig {
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .quyenIdentity> :first-child {

@@ -33,7 +33,6 @@ import { fetchEvents } from "../../lib/api/eventsApi";
 import { fetchMatches } from "../../lib/api/matchesApi";
 import { numberDoiKhangMatches } from "../../lib/domain/bracket";
 import { fetchTrongTai } from "../../lib/api/trongTaiApi";
-import { useMatchBell } from "../../lib/audio/matchBell";
 import AthleteAvatar from "../../components/AthleteAvatar/AthleteAvatar";
 import QuyenScreen from "./QuyenCongKhaiScreen";
 import styles from "./ManHinhCongKhai.module.scss";
@@ -340,7 +339,13 @@ function CourtScreen({
   }, [autoFullscreen]);
 
   const pressed = usePressedLights(court.id);
-  useMatchBell(court.id, live?.trangThai, live?.hiepHienTai, live?.hetHiepLuc);
+  // Chuông giờ CHỈ phát ở Bàn thư ký (DieuHanhDoiKhangTab.tsx, gọi trực
+  // tiếp ngay tại đúng hành động — bắt đầu hiệp/hết giờ), KHÔNG còn phát
+  // ở đây nữa — màn công khai và Bàn thư ký thường CÙNG 1 THIẾT BỊ vật
+  // lý (theo xác nhận thực tế của người dùng hệ thống), nên trước đây
+  // 2 nơi TỰ ĐỘNG LẬP cùng phát chuông độc lập gây chồng tiếng/nghe như
+  // "reo bừa bãi". Chuông là tín hiệu ra hiệu cho VĐV đang thi đấu nên
+  // phải chỉ phát từ ĐÚNG 1 NGUỒN DUY NHẤT.
 
   const compactHeader = (
     <header className={styles.compactHeader}>

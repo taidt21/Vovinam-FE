@@ -1,7 +1,7 @@
 /** @format */
 
 import { useEffect, useState } from "react";
-import { Play, Pause, Flag, Award, Check, X } from "lucide-react";
+import { Play, Pause, Flag, Award, Check, X, Lock, Unlock } from "lucide-react";
 import type {
   LiveQuyenState,
   LyDoKetThucQuyen,
@@ -19,6 +19,7 @@ import {
   subscribeCourtResting,
 } from "../../../lib/realtime/courtRestingStore";
 import { serverNow } from "../../../lib/realtime/serverClock";
+import { playBellSound } from "../../../lib/audio/matchBell";
 import {
   markQuyenLuotHoanThanh,
   unmarkQuyenLuotHoanThanh,
@@ -26,9 +27,14 @@ import {
 import { tinhDiemQuyenTongHop } from "../../../lib/domain/quyenScoring";
 import {
   deleteQuyenJudgeScores,
+  fetchQuyenScoreLocks,
+  lockQuyenScore,
+  unlockQuyenScore,
   type QuyenJudgeScoreWire,
+  type QuyenScoreLockWire,
 } from "../../../lib/api/quyenJudgeScoreApi";
 import type { TrongTaiWire } from "../../../lib/api/trongTaiApi";
+import type { QuyenItem } from "../types";
 import AthleteAvatar from "../../../components/AthleteAvatar/AthleteAvatar";
 import {
   LY_DO_KET_THUC_QUYEN_OPTIONS,
@@ -39,11 +45,13 @@ import styles from "../BanThuKy.module.scss";
 export default function DieuHanhQuyenTab({
   courtId,
   quyenJudgeScores,
+  quyenNumbered,
   trongTaiList,
   onLuotXong,
 }: {
   courtId: string;
   quyenJudgeScores: QuyenJudgeScoreWire[];
+  quyenNumbered: QuyenItem[];
   trongTaiList: TrongTaiWire[];
   onLuotXong: (marked: {
     eventId: string;
@@ -56,11 +64,31 @@ export default function DieuHanhQuyenTab({
     getQuyenSnapshot(courtId),
   );
   const [, setTick] = useState(0);
-  const [showEndFlow, setShowEndFlow] = useState(false);
   const [lyDo, setLyDo] = useState<LyDoKetThucQuyen>("hoan_thanh");
   const [dangNghi, setDangNghiState] = useState(() =>
     getCourtResting(courtId, "quyen"),
   );
+
+  // Danh sách lượt đang bị khoá — poll nhẹ, không cần realtime tức thời
+  // như điểm số (khoá/mở khoá là hành động hiếm, không cần cập nhật
+  // trong vài trăm mili-giây như lúc giám định đang gửi điểm).
+  const [locks, setLocks] = useState<QuyenScoreLockWire[]>([]);
+  useEffect(() => {
+    let huy = false;
+    const tai = () => {
+      fetchQuyenScoreLocks()
+        .then((all) => {
+          if (!huy) setLocks(all);
+        })
+        .catch(() => {});
+    };
+    tai();
+    const id = setInterval(tai, 5000);
+    return () => {
+      huy = true;
+      clearInterval(id);
+    };
+  }, []);
 
   useEffect(() => {
     setLive(getQuyenSnapshot(courtId));
@@ -119,8 +147,21 @@ export default function DieuHanhQuyenTab({
   const dangTamDung = live.trangThai === "tam_dung";
   const daKetThuc = live.trangThai === "da_ket_thuc";
 
-  const batDau = () =>
+  // Số thứ tự của ĐÚNG lượt đang điều hành — tra theo eventId +
+  // athleteId + teamId (bộ khoá định danh 1 lượt quyền, y hệt cách
+  // tra điểm/khoá điểm ở trên), không tra theo courtId vì 1 sân có thể
+  // đổi qua nhiều lượt khác nhau theo thời gian.
+  const soThuTu = quyenNumbered.find(
+    (item) =>
+      item.event.id === live.eventId &&
+      item.athleteId === live.athleteId &&
+      item.teamId === live.teamId,
+  )?.so;
+
+  const batDau = () => {
     patch({ trangThai: "dang_thi", capNhatDongHoLuc: serverNow() });
+    playBellSound();
+  };
   const tamDung = () =>
     patch({ trangThai: "tam_dung", thoiGianDaTroiGiay: daTroi });
   const tiepTuc = () =>
@@ -132,7 +173,6 @@ export default function DieuHanhQuyenTab({
       lyDoKetThuc: reason,
       thoiGianDaTroiGiay: daTroi,
     });
-    setShowEndFlow(false);
   };
 
   // Đánh dấu ĐÃ XONG lưu lâu dài trước khi xoá state sống — để biết đúng
@@ -189,6 +229,44 @@ export default function DieuHanhQuyenTab({
       s.teamId === live.teamId,
   );
   const tongHop = tinhDiemQuyenTongHop(scores.map((s) => s.diem));
+  const daKhoa = locks.some(
+    (l) =>
+      l.eventId === live.eventId &&
+      l.athleteId === live.athleteId &&
+      l.teamId === live.teamId,
+  );
+  const khoaDiem = () =>
+    lockQuyenScore(live.eventId, live.athleteId, live.teamId)
+      .then(() =>
+        setLocks((prev) => [
+          ...prev,
+          {
+            eventId: live.eventId,
+            athleteId: live.athleteId,
+            teamId: live.teamId,
+          },
+        ]),
+      )
+      .catch(() =>
+        window.alert("Khoá điểm thất bại — kiểm tra mạng rồi thử lại."),
+      );
+  const moKhoaDiem = () =>
+    unlockQuyenScore(live.eventId, live.athleteId, live.teamId)
+      .then(() =>
+        setLocks((prev) =>
+          prev.filter(
+            (l) =>
+              !(
+                l.eventId === live.eventId &&
+                l.athleteId === live.athleteId &&
+                l.teamId === live.teamId
+              ),
+          ),
+        ),
+      )
+      .catch(() =>
+        window.alert("Mở khoá thất bại — kiểm tra mạng rồi thử lại."),
+      );
   // 5 giám định ĐANG HOẠT ĐỘNG tại đúng sân này, xếp theo đúng số vị trí
   // Bàn thư ký đã gán — không phải theo thứ tự gửi điểm.
   const giamDinhSan = trongTaiList
@@ -215,12 +293,24 @@ export default function DieuHanhQuyenTab({
         ? styles.operationStatusPaused
         : styles.operationStatusWaiting;
 
+  // Giao diện riêng cho nội dung đồng đội. Chỉ thay cách BỐ TRÍ:
+  // roster được đưa ra full-width để 10-15 VĐV vẫn nhìn thấy cùng lúc,
+  // còn toàn bộ logic timer / điểm / khoá / kết thúc giữ nguyên.
+  const laDongDoi = Boolean(live.teamId);
+  const thanhVienDongDoi = live.thanhVien ?? [];
+  const soThanhVien = thanhVienDongDoi.length;
+  const soCotThanhVien =
+    soThanhVien <= 5 ? Math.max(soThanhVien, 1) : soThanhVien <= 10 ? 5 : 8;
+
   return (
     <div className={styles.dieuHanhQuyen}>
       <div className={styles.operationHeader}>
         <div>
           <span className={styles.sectionEyebrow}>Điều hành quyền</span>
-          <h2 className={styles.operationTitle}>{live.eventTen}</h2>
+          <h2 className={styles.operationTitle}>
+            {soThuTu && <span className={styles.matchNoTag}>#{soThuTu}</span>}{" "}
+            {live.eventTen}
+          </h2>
           <p className={styles.operationSubline}>
             Theo dõi VĐV, thời gian và điểm của 5 giám định trong cùng một màn
             hình.
@@ -231,7 +321,53 @@ export default function DieuHanhQuyenTab({
         </span>
       </div>
 
-      <div className={styles.quyenLayout}>
+      {laDongDoi && (
+        <section className={styles.quyenTeamStrip}>
+          <div className={styles.quyenTeamStripHeader}>
+            <div className={styles.quyenTeamIdentity}>
+              <span className={styles.panelEyebrow}>Đang điều hành</span>
+              <div className={styles.quyenTeamTitleRow}>
+                <h3 className={styles.quyenTeamName}>{live.performerLabel}</h3>
+                <span className={styles.quyenTeamMeta}>Danh sách thành viên thi đấu</span>
+              </div>
+            </div>
+            <div className={styles.quyenTeamCount}>
+              <strong>{soThanhVien} VĐV</strong>
+              <span>Thành viên đội</span>
+            </div>
+          </div>
+
+          <div
+            className={styles.quyenTeamRoster}
+            style={
+              {
+                "--quyen-team-cols": soCotThanhVien,
+              } as React.CSSProperties
+            }>
+            {thanhVienDongDoi.map((tv, i) => (
+              <div
+                key={`${tv.hoTen}-${i}`}
+                className={styles.quyenTeamMember}
+                title={tv.hoTen}>
+                <div className={styles.quyenTeamMemberAvatar}>
+                  <AthleteAvatar
+                    name={tv.hoTen}
+                    photoUrl={tv.anhDaiDien}
+                    size={38}
+                  />
+                  <span className={styles.quyenTeamMemberNo}>{i + 1}</span>
+                </div>
+                <span className={styles.quyenTeamMemberName}>{tv.hoTen}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <div
+        className={`${styles.quyenLayout} ${
+          laDongDoi ? styles.quyenLayoutTeam : ""
+        }`}>
         <div className={styles.quyenJudgePanel}>
           <div className={styles.panelHeading}>
             <div>
@@ -284,7 +420,13 @@ export default function DieuHanhQuyenTab({
             <span>{Math.min(scores.length, 5)} / 5 giám định đã gửi điểm</span>
           </div>
 
-          {tongHop !== null && (
+          {/* Chỉ hiện SAU KHI khoá — y hệt lý do màn hình công khai đã ẩn
+              (xem QuyenCongKhaiScreen.tsx): điểm từng giám định đã hiện
+              sẵn ngay phía trên rồi (để BTK soát), nhưng con số TỔNG HỢP
+              đã tính sẵn thì để BTK chủ động khoá mới hiện — tạo đúng 1
+              mốc "chốt xong, xem kết quả", không lộ ra ngay khi vừa đủ
+              5 điểm. */}
+          {tongHop !== null && daKhoa && (
             <div className={styles.quyenResultBox}>
               <div>
                 <span>Kết quả tổng hợp</span>
@@ -293,26 +435,98 @@ export default function DieuHanhQuyenTab({
               <strong>{tongHop.toFixed(2)}</strong>
             </div>
           )}
+
+          {/* Phòng hờ cho lượt đã lỡ bị khoá TỪ TRƯỚC lúc chưa đủ 5 điểm
+              (trước khi có điều kiện chặn nút ở trên) — không để im
+              lặng không hiện gì, dễ hiểu nhầm là lỗi. Bấm "bấm để mở
+              lại" ngay trên nút khoá để gỡ, đợi đủ điểm rồi khoá lại. */}
+          {tongHop === null && daKhoa && (
+            <div className={styles.quyenLockIncompleteNote}>
+              Đã khoá nhưng CHƯA đủ 5 điểm giám định — không có tổng hợp
+              lệ. Bấm nút bên dưới để mở khoá, đợi đủ điểm rồi khoá lại.
+            </div>
+          )}
+
+          {/* Khoá điểm — chặn giám định gửi/sửa thêm cho ĐÚNG lượt này,
+              bất kể họ gửi từ thiết bị nào (chặn ở backend, không phải
+              chỉ ẩn nút bên đây). Dùng khi BTK coi kết quả đã CHỐT, tránh
+              trường hợp 1 giám định lỡ tay bấm gửi lại sau khi đã công
+              bố, làm đổi kết quả đã thông báo.
+
+              LỖI THẬT đã gặp: trước đây nút này bấm được BẤT KỲ LÚC NÀO,
+              kể cả khi CHƯA đủ 5 điểm giám định — khoá vẫn "thành công"
+              (nút vẫn đổi tên), nhưng không có tổng điểm hợp lệ nào để
+              hiện (tinhDiemQuyenTongHop bắt buộc đúng 5 điểm mới tính),
+              nên BTK bấm khoá xong mà không thấy điểm đâu cả, tưởng lỗi
+              hiển thị — thật ra lỗi từ chỗ cho khoá quá sớm. Chặn LUÔN
+              từ gốc: chỉ CHO PHÉP khoá (không áp dụng lúc MỞ khoá) khi
+              đã có tongHop hợp lệ. */}
+          <button
+            className={
+              daKhoa ? styles.quyenUnlockBtn : styles.quyenLockBtn
+            }
+            disabled={!daKhoa && tongHop === null}
+            title={
+              !daKhoa && tongHop === null
+                ? "Cần đủ 5 giám định gửi điểm mới khoá được"
+                : undefined
+            }
+            onClick={daKhoa ? moKhoaDiem : khoaDiem}>
+            {daKhoa ? (
+              <>
+                <Lock size={15} /> Đã khoá điểm — bấm để mở lại
+              </>
+            ) : (
+              <>
+                <Unlock size={15} /> Khoá điểm
+              </>
+            )}
+          </button>
         </div>
 
-        <div className={styles.quyenMainCol}>
-          <div className={styles.quyenPerformer}>
-            <span className={styles.panelEyebrow}>Đang điều hành</span>
-            <AthleteAvatar
-              name={live.performerLabel}
-              photoUrl={live.photoUrl}
-              size={104}
-            />
-            <div className={styles.quyenPerformerName}>
-              {live.performerLabel}
-            </div>
-            <div className={styles.quyenPerformerSub}>{live.performerSub}</div>
-            {/* {live.thanhVien && live.thanhVien.length > 0 && (
-              <div className={styles.quyenThanhVien}>
-                {live.thanhVien.join(" · ")}
+        <div
+          className={`${styles.quyenMainCol} ${
+            laDongDoi ? styles.quyenMainColTeam : ""
+          }`}>
+          {!laDongDoi && (
+            <div className={styles.quyenPerformer}>
+              <span className={styles.panelEyebrow}>Đang điều hành</span>
+              <AthleteAvatar
+                name={live.performerLabel}
+                photoUrl={live.photoUrl}
+                size={104}
+              />
+              <div className={styles.quyenPerformerName}>
+                {live.performerLabel}
               </div>
-            )} */}
-          </div>
+              <div className={styles.quyenPerformerSub}>
+                {live.performerSub}
+              </div>
+            </div>
+          )}
+
+          {/* Giám định có thể gửi đủ điểm (và BTK khoá được) TRƯỚC KHI
+              BTK kịp bấm "Kết thúc lượt" — điều kiện gửi điểm chỉ cần
+              đủ 30 giây, không bắt buộc phải đã kết thúc. Lỗi thật đã
+              gặp: lúc đó khối hiện điểm (nằm trong nhánh daKetThuc bên
+              dưới) hoàn toàn không xuất hiện, dù đã khoá xong — BTK
+              không thấy điểm ở đâu cả trong cột chính. Thêm khối riêng
+              này, hiện NGAY KHI đã khoá, không phụ thuộc đã kết thúc
+              hay chưa — luôn thấy được điểm đã chốt ở đúng cột chính,
+              dù trận vẫn đang "sống" về mặt đồng hồ. */}
+          {daKhoa && tongHop !== null && !daKetThuc && (
+            <div className={`${styles.endedBox} ${styles.quyenEndedBox}`}>
+              <div className={styles.endedIcon}>
+                <Lock size={26} />
+              </div>
+              <span className={styles.endedLabel}>
+                Đã chốt điểm — chưa bấm "Kết thúc lượt"
+              </span>
+              <strong className={styles.endedScore}>
+                {tongHop.toFixed(2)}
+              </strong>
+            </div>
+          )}
 
           {daKetThuc ? (
             <div className={`${styles.endedBox} ${styles.quyenEndedBox}`}>
@@ -324,10 +538,16 @@ export default function DieuHanhQuyenTab({
                   ? "Đã hoàn thành lượt thi"
                   : `Đã kết thúc — ${LY_DO_KET_THUC_QUYEN_LABEL[live.lyDoKetThuc!]}`}
               </span>
-              {tongHop !== null && (
+              {tongHop !== null && daKhoa ? (
                 <strong className={styles.endedScore}>
                   {tongHop.toFixed(2)}
                 </strong>
+              ) : (
+                tongHop !== null && (
+                  <span className={styles.quyenWaitingLockNote}>
+                    Đã đủ điểm — bấm "Khoá điểm" bên trái để xem kết quả
+                  </span>
+                )
               )}
               <div
                 className={`${styles.controlBtns} ${styles.quyenEndActions}`}>
@@ -388,46 +608,37 @@ export default function DieuHanhQuyenTab({
                 )}
               </div>
 
-              {!showEndFlow ? (
+              {/* TRƯỚC ĐÂY 2 bước tách rời: bấm nút đỏ "Kết thúc lượt" chỉ
+                  MỞ form chọn lý do (chưa đổi trangThai gì cả) — rồi mới
+                  bấm tiếp "Xác nhận kết thúc" mới THẬT SỰ kết thúc. Khoảng
+                  hở giữa 2 lần bấm đó (lúc BTK đang chọn lý do) đồng hồ
+                  vẫn âm thầm chạy tiếp vì trangThai vẫn là "dang_thi" —
+                  đúng lỗi đã gặp: bấm "kết thúc" mà đồng hồ chưa dừng
+                  ngay. Giờ gộp lại đúng 1 bước: lý do LUÔN hiện sẵn, bấm
+                  "Kết thúc lượt" (đã đổi tên từ "Xác nhận kết thúc") là
+                  kết thúc NGAY LẬP TỨC — không còn khoảng hở nào giữa 2
+                  lần bấm nữa. */}
+              <div className={`${styles.settingsForm} ${styles.endFlowCard}`}>
+                <label className={styles.reasonRow}>
+                  <span>Lý do</span>
+                  <select
+                    value={lyDo}
+                    onChange={(e) =>
+                      setLyDo(e.target.value as LyDoKetThucQuyen)
+                    }>
+                    {LY_DO_KET_THUC_QUYEN_OPTIONS.map((o) => (
+                      <option key={o.value} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
                 <button
                   className={`${styles.btnDangerBig} ${styles.quyenFinishBtn}`}
-                  onClick={() => setShowEndFlow(true)}>
+                  onClick={() => ketThuc(lyDo)}>
                   <Flag size={18} /> Kết thúc lượt
                 </button>
-              ) : (
-                <div className={`${styles.settingsForm} ${styles.endFlowCard}`}>
-                  <div className={styles.endFlowTitle}>
-                    Xác nhận kết thúc lượt
-                  </div>
-                  <label className={styles.reasonRow}>
-                    <span>Lý do</span>
-                    <select
-                      value={lyDo}
-                      onChange={(e) =>
-                        setLyDo(e.target.value as LyDoKetThucQuyen)
-                      }>
-                      {LY_DO_KET_THUC_QUYEN_OPTIONS.map((o) => (
-                        <option key={o.value} value={o.value}>
-                          {o.label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <div className={styles.endFlowActions}>
-                    <button
-                      type="button"
-                      className={styles.editBtn}
-                      onClick={() => setShowEndFlow(false)}>
-                      Huỷ
-                    </button>
-                    <button
-                      className={styles.btnPrimary}
-                      onClick={() => ketThuc(lyDo)}>
-                      Xác nhận kết thúc
-                    </button>
-                  </div>
-                </div>
-              )}
+              </div>
             </div>
           )}
         </div>

@@ -43,9 +43,11 @@ export interface LiveMatchState {
 
   // Epoch ms — đặt LẠI (Date.now() mới) mỗi khi 1 hiệp THẬT SỰ kết thúc
   // do hết giờ (cả 3 nhánh trong effect "hết giờ" của
-  // DieuHanhDoiKhangTab.tsx đều set field này). Dùng làm tín hiệu RÕ
-  // RÀNG cho chuông báo hết hiệp (useMatchBell) — KHÔNG suy luận qua
-  // trangThai/thoiGianConLaiGiay nữa, vì 2 field đó nhận giá trị KHÁC
+  // DieuHanhDoiKhangTab.tsx đều set field này). TRƯỚC ĐÂY dùng làm tín
+  // hiệu cho hook useMatchBell (đã bỏ — chuông giờ gọi TRỰC TIẾP ngay
+  // tại đúng hành động, xem matchBell.ts) — giữ lại field này vì vẫn
+  // hữu ích để biết chính xác THỜI ĐIỂM 1 hiệp kết thúc, không suy luận
+  // qua trangThai/thoiGianConLaiGiay nữa, vì 2 field đó nhận giá trị KHÁC
   // NHAU tuỳ từng nhánh (VD hết hiệp thường thì thoiGianConLaiGiay
   // được đặt THÀNH thời gian nghỉ giữa hiệp, không phải 0 — kiểm tra
   // == 0 chỉ đúng cho đúng 1 trong 3 nhánh, bỏ sót các nhánh còn lại).

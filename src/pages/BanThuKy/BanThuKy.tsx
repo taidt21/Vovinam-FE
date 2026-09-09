@@ -749,9 +749,6 @@ export default function BanThuKy() {
         if (e.hinhThucThi === "doi") {
           return (squadOrderByEvent[e.id] ?? []).map(
             (s): Omit<QuyenItem, "so"> => {
-              const tenThanhVien = s.athleteIds.map(
-                (id) => athleteName(id) ?? "—",
-              );
               const thanhVien = s.athleteIds.map((id) => ({
                 hoTen: athleteName(id) ?? "—",
                 anhDaiDien: athletePhoto(id),
@@ -760,8 +757,14 @@ export default function BanThuKy() {
                 event: e,
                 athleteId: null,
                 teamId: s.teamId,
-                label: tenThanhVien.join(", "),
-                sub: "",
+                // Tên ĐỘI (VD "CLB Đô Lương A") — TRƯỚC ĐÂY nối tên các
+                // thành viên lại làm label ("Nguyễn Văn A, Trần Văn B"),
+                // vừa dài dòng vừa không có tên đội riêng biệt nào cả.
+                // Danh sách từng thành viên (thanhVien, có sẵn ảnh) mới
+                // là nơi hiện chi tiết từng người — xem
+                // DieuHanhQuyenTab.tsx/QuyenCongKhaiScreen.tsx.
+                label: s.ten,
+                sub: `${s.athleteIds.length} VĐV`,
                 isTeam: true,
                 thanhVien,
               };
@@ -1195,6 +1198,7 @@ export default function BanThuKy() {
           key={currentCourtId}
           courtId={currentCourtId}
           quyenJudgeScores={quyenJudgeScores}
+          quyenNumbered={quyenNumbered}
           trongTaiList={trongTaiList}
           onLuotXong={(marked) =>
             setQuyenLuotHoanThanh((prev) => [...prev, marked])

@@ -29,3 +29,23 @@
     line-height: 1.6;
     margin: 0 0 16px;
 }
+
+// Khối nhật ký tham khảo — giới hạn chiều cao vì có thể dài (trận đã
+// chạy được 1 lúc trước khi mất trạng thái), cuộn riêng bên trong thay
+// vì kéo dài cả trang.
+.recoveryLogRef {
+    margin-bottom: 16px;
+    padding: 12px;
+    border: 1px solid rgba($color-warning, 0.3);
+    border-radius: 10px;
+    background: $color-surface;
+    max-height: 280px;
+    overflow-y: auto;
+}
+
+.recoveryLogRefHint {
+    margin: 0 0 8px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #8a6416;
+}

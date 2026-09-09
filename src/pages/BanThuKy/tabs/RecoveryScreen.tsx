@@ -1,9 +1,12 @@
 /** @format */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Match } from "../../../types";
 import { publishMatchState } from "../../../lib/realtime/liveMatchStore";
 import { serverNow } from "../../../lib/realtime/serverClock";
+import { fetchMatchReview } from "../../../lib/api/matchesApi";
+import type { MatchLogEntry } from "../../../lib/realtime/pressLightClient";
+import MatchLogPanel from "../../../components/MatchLogPanel/MatchLogPanel";
 import {
   makeLiveState,
   DEFAULT_TONG_SO_HIEP,
@@ -23,6 +26,29 @@ export default function RecoveryScreen({
   athleteName: (id: string | null) => string | null;
   athleteTeam: (id: string | null) => string;
 }) {
+  // Nhật ký ĐÃ LƯU DB của đúng trận này (dữ liệu vẫn còn dù RAM đã mất
+  // sạch) — cho BTK ĐỌC LẠI diễn biến thật trước khi gõ tay các ô bên
+  // dưới, thay vì phải nhớ suông hoặc hỏi lại trọng tài mọi chi tiết.
+  // KHÔNG tự điền số vào form — nhật ký là câu chữ tự do (VD "Đỏ bấm
+  // +2"), tự phân tích lại thành đúng từng con số rủi ro suy luận sai
+  // còn nguy hiểm hơn để BTK tự đọc và tự gõ.
+  const [log, setLog] = useState<MatchLogEntry[]>([]);
+  const [dangTaiLog, setDangTaiLog] = useState(true);
+  useEffect(() => {
+    let huy = false;
+    fetchMatchReview(match.id)
+      .then((data) => {
+        if (!huy) setLog(data.log);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!huy) setDangTaiLog(false);
+      });
+    return () => {
+      huy = true;
+    };
+  }, [match.id]);
+
   const [hiep, setHiep] = useState(1);
   const [tongSoHiep, setTongSoHiep] = useState(DEFAULT_TONG_SO_HIEP);
   const [thoiGianHiepGiay, setThoiGianHiepGiay] = useState(
@@ -95,6 +121,21 @@ export default function RecoveryScreen({
         lại trọng tài nếu không chắc, không tự đoán. Các ô đã điền sẵn giá trị
         mặc định — CHỈ giữ nguyên nếu trận này đúng là chưa từng đổi cài đặt.
       </p>
+
+      {/* Nhật ký đã lưu DB của đúng trận này — đọc lại đây trước khi gõ
+          tay, không cần nhớ suông hay hỏi lại trọng tài nếu nhật ký đủ
+          rõ. Chỉ hiện khi có ít nhất 1 dòng — trận vừa mới bắt đầu, chưa
+          ai bấm gì thì không có gì để đọc lại, ẩn hẳn khối này đi. */}
+      {!dangTaiLog && log.length > 0 && (
+        <div className={styles.recoveryLogRef}>
+          <p className={styles.recoveryLogRefHint}>
+            Đọc lại diễn biến thật đã ghi nhận được (mới nhất ở trên) trước khi
+            điền các ô bên dưới:
+          </p>
+          <MatchLogPanel courtId={match.courtId ?? ""} staticLog={log} />
+        </div>
+      )}
+
       <div className={styles.settingsForm}>
         <label className={styles.field}>
           <span>Đang ở hiệp</span>

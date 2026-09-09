@@ -1,6 +1,5 @@
 /** @format */
 
-import { useEffect } from "react";
 // File thật đặt ở src/assets/ — PHẢI import kiểu này (không được ghi
 // thẳng đường dẫn dạng chuỗi "../../assets/...") vì đường dẫn CHUỖI chỉ
 // được trình duyệt hiểu là tương đối tính từ URL TRANG ĐANG MỞ (VD
@@ -10,7 +9,39 @@ import { useEffect } from "react";
 // đang mở ở đâu.
 import tiengChuongUrl from "../../assets/tieng_chuong_reo.mp3";
 
-function playBellSound() {
+// ============================================================
+// CHUÔNG BÁO HIỆU CHO VĐV — quy định nghiêm ngặt, KHÔNG tự thêm
+// ============================================================
+//
+// Chuông ảnh hưởng TRỰC TIẾP tới việc ra hiệu cho VĐV đang thi đấu, nên
+// CHỈ được gọi playBellSound() ở ĐÚNG 3 nơi sau, không thêm bất kỳ nơi
+// nào khác (mọi tình huống dừng/tạm dừng khác đều do trọng tài dùng
+// còi VẬT LÝ xử lý, không phải phần mềm):
+//   1. batDauHiep() trong DieuHanhDoiKhangTab.tsx — bắt đầu 1 hiệp đối
+//      kháng.
+//   2. ketThucHiep() (CHỈ nhánh hetGio thật, xem comment tại đó) +
+//      nhánh xử thắng trực tiếp khi hết giờ hiệp cuối, trong CÙNG file
+//      đó — hết thời gian 1 hiệp đối kháng.
+//   3. batDau() trong DieuHanhQuyenTab.tsx — bắt đầu 1 lượt thi diễn
+//      quyền.
+//
+// CỐ TÌNH gọi TRỰC TIẾP ngay tại đúng hành động (không dùng hook "theo
+// dõi trạng thái đổi rồi suy luận ra lúc nào cần reo") — LỖI THẬT đã
+// gặp nhiều lần với cách cũ: hook theo dõi state qua effect có thể
+// "bắt kịp" 1 lần đổi trạng thái đã xảy ra TỪ TRƯỚC (VD lúc component
+// gắn lại sau khi chuyển tab rồi quay lại, hoặc lúc mạng chập chờn rồi
+// tự nối lại nhận đúng CourtSnapshot của trạng thái đã có sẵn) — gây
+// chuông reo dù KHÔNG ai vừa thao tác gì, đúng hiện tượng "reo bừa
+// bãi, không rõ lý do". Gọi thẳng ngay trong đúng hành động thì CHỈ có
+// thể reo vì CHÍNH hành động đó — không suy luận gì thêm, không có kẽ
+// hở nào để hiểu nhầm.
+//
+// CỐ TÌNH KHÔNG gọi ở màn hình công khai (ManHinhCongKhai.tsx,
+// QuyenCongKhaiScreen.tsx) — theo xác nhận thực tế của người dùng hệ
+// thống, màn công khai và Bàn thư ký THƯỜNG LÀ CÙNG 1 THIẾT BỊ vật lý;
+// nếu cả 2 nơi cùng tự phát riêng sẽ chồng tiếng, cũng nghe như "reo
+// bừa bãi". Chuông chỉ phát từ ĐÚNG 1 nguồn duy nhất: Bàn thư ký.
+export function playBellSound() {
   if (typeof window === "undefined") return;
 
   const audio = new Audio(tiengChuongUrl);
@@ -94,102 +125,3 @@ function playBellSoundTongHop() {
     // bình thường).
   }
 }
-
-/**
- * Phát chuông đúng 1 lần mỗi khi trận CHUYỂN SANG "đang thi" DO BẮT ĐẦU
- * HIỆP MỚI (không phải do chỉ đơn thuần bấm "Tiếp tục" sau tạm dừng),
- * VÀ đúng 1 lần khi hết giờ hiệp — dùng chung cho cả 2 nơi (Bàn thư ký,
- * và màn hình công khai nhận đúng thay đổi đó qua realtime) nên chỉ
- * cần viết logic phát hiện đúng 1 chỗ.
- *
- * Phân biệt "bắt đầu hiệp thật" (batDauHiep()) với "chỉ tiếp tục sau
- * tạm dừng" (tiepTuc()) bằng hiepHienTai — CHỈ batDauHiep() mới tăng số
- * này lên, tiepTuc() giữ nguyên. LỖI THẬT đã gặp: bản trước chỉ kiểm
- * tra "có chuyển sang dang_thi không", không phân biệt được 2 trường
- * hợp trên — mỗi lần BTK bấm "Tiếp tục" (dù chỉ để tiếp tục sau tạm
- * dừng thường, hay sau khi y tế can thiệp xong) cũng bị hiểu nhầm
- * thành "bắt đầu hiệp", phát chuông sai không đúng lúc.
- *
- * Phát hiện "hết hiệp" bằng field hetHiepLuc (epoch ms) — field này
- * được ĐẶT LẠI (giá trị Date.now() MỚI, LUÔN LỚN HƠN giá trị cũ) Ở
- * ĐÚNG 1 CHỖ DUY NHẤT (effect "hết giờ" trong DieuHanhDoiKhangTab.tsx,
- * CẢ 3 nhánh của nó) mỗi khi 1 hiệp THẬT SỰ kết thúc do hết giờ. Kiểm
- * tra "TĂNG LÊN" (>) thay vì "khác đi" (!==) — cố tình phòng hờ: nếu
- * sau này có chỗ nào reset field này về 0 (VD gộp vào restartMatch()
- * cho "đủ bộ" các field khác), phép so sánh > vẫn đúng, không hiểu
- * nhầm việc RESET thành "vừa hết hiệp" (0 luôn nhỏ hơn giá trị cũ).
- *
- * TRƯỚC ĐÂY dùng thoiGianConLaiGiay <= 0 để suy luận — SAI, vì field đó
- * nhận giá trị KHÁC NHAU tuỳ từng nhánh kết thúc hiệp: hiệp cuối hoà thì
- * đúng là đặt về 0, nhưng hiệp thường (chuyển sang nghỉ giữa hiệp) lại
- * đặt THÀNH thời gian nghỉ giữa hiệp (1 số dương, VD 60s) — kiểm tra
- * <= 0 chỉ đúng cho đúng 1 trong 3 nhánh, bỏ sót các nhánh còn lại
- * (đây chính là lỗi khiến chuông không reo dù đã hết hiệp thật).
- *
- * CỐ TÌNH không phát ngay lúc trang vừa mở/tải xong dù trangThai lúc đó
- * đã là "dang_thi" — trường hợp đó là trận ĐANG DIỄN RA SẴN từ trước
- * (VD người dùng vừa F5 lại trang giữa hiệp), không phải vừa mới bắt
- * đầu, không nên phát chuông.
- *
- * TRƯỚC ĐÂY nhớ "trạng thái trước đó" bằng useRef bên trong hook — lỗi
- * thật đã gặp: useRef gắn liền vòng đời CHÍNH COMPONENT gọi hook này,
- * bị xoá sạch mỗi khi component đó unmount (VD Bàn thư ký bấm chuyển
- * qua tab khác rồi quay lại "Điều hành đối kháng" — tab đó unmount rồi
- * mount lại, useRef về lại giá trị ban đầu y hệt lúc F5 trang thật).
- * Trận đang "dang_thi" sẵn từ trước lúc quay lại tab bị hiểu NHẦM thành
- * "vừa mới bắt đầu", phát chuông sai dù không ai vừa bấm gì cả.
- *
- * Sửa bằng cách nhớ Ở NGOÀI vòng đời mọi component — theo TỪNG SÂN
- * riêng (Map cấp module, sống suốt phiên làm việc của cả app, không
- * unmount theo bất kỳ component nào) — dù tab có unmount/mount lại bao
- * nhiêu lần, Map này vẫn nhớ đúng "sân này đã từng ở trạng thái gì",
- * không còn hiểu nhầm quay-lại-tab thành vừa-bắt-đầu nữa.
- */
-interface TrangThaiDaGhiNhan {
-  trangThai: string;
-  hiepHienTai: number;
-  hetHiepLuc: number;
-}
-const trangThaiTruocDoTheoSan = new Map<string, TrangThaiDaGhiNhan>();
-
-export function useMatchBell(
-  courtId: string | undefined,
-  trangThai: string | undefined,
-  hiepHienTai: number | undefined,
-  hetHiepLuc: number | undefined,
-) {
-  useEffect(() => {
-    if (
-      !courtId ||
-      trangThai === undefined ||
-      hiepHienTai === undefined ||
-      hetHiepLuc === undefined
-    ) {
-      return;
-    }
-
-    const hienTai: TrangThaiDaGhiNhan = { trangThai, hiepHienTai, hetHiepLuc };
-    const truoc = trangThaiTruocDoTheoSan.get(courtId);
-    trangThaiTruocDoTheoSan.set(courtId, hienTai);
-
-    // Sân này CHƯA TỪNG được ghi nhận trạng thái nào (app vừa mở, hoặc
-    // đây là lần đầu tiên bất kỳ component nào theo dõi đúng sân này) —
-    // không đủ căn cứ để biết đây có phải "vừa mới chuyển sang/vừa hết
-    // giờ" hay không, nên bỏ qua, không phát chuông.
-    if (!truoc) return;
-
-    // Bắt đầu hiệp THẬT: chuyển sang "dang_thi" VÀ hiepHienTai tăng lên
-    // — chỉ đúng lúc bấm batDauHiep(), KHÔNG đúng lúc chỉ bấm tiepTuc()
-    // (tiếp tục sau tạm dừng thường, hoặc sau khi y tế can thiệp xong —
-    // cả 2 trường hợp đó đều KHÔNG đổi hiepHienTai).
-    if (trangThai === "dang_thi" && hiepHienTai > truoc.hiepHienTai) {
-      playBellSound();
-      return;
-    }
-
-    if (hetHiepLuc > truoc.hetHiepLuc) {
-      playBellSound(); // hết giờ hiệp
-    }
-  }, [courtId, trangThai, hiepHienTai, hetHiepLuc]);
-}
-

@@ -4,10 +4,18 @@ import { useEffect, useState } from "react";
 import type { LiveQuyenState } from "../../types/liveQuyen";
 import {
   fetchQuyenJudgeScores,
+  fetchQuyenScoreLocks,
   type QuyenJudgeScoreWire,
 } from "../../lib/api/quyenJudgeScoreApi";
 import { fetchTrongTai, type TrongTaiWire } from "../../lib/api/trongTaiApi";
+import { fetchEvents } from "../../lib/api/eventsApi";
+import {
+  fetchPerformanceOrders,
+  type PerformanceOrderWire,
+} from "../../lib/api/performanceOrderApi";
+import { compareNhomTuoi } from "../../lib/utils/nhomTuoi";
 import { tinhDiemQuyenTongHop } from "../../lib/domain/quyenScoring";
+import type { CompetitionEvent } from "../../types";
 import AthleteAvatar from "../../components/AthleteAvatar/AthleteAvatar";
 import styles from "./QuyenCongKhaiScreen.module.scss";
 
@@ -20,6 +28,15 @@ function responsiveQuyenAvatarSize(): number {
       Math.min(320, window.innerWidth * 0.145, window.innerHeight * 0.29),
     ),
   );
+}
+
+function responsiveTeamAvatarSize(memberCount: number): number {
+  const base = responsiveQuyenAvatarSize();
+
+  if (memberCount <= 3) return Math.round(base * 0.62);
+  if (memberCount <= 5) return Math.round(base * 0.56);
+  if (memberCount <= 10) return Math.round(base * 0.44);
+  return Math.round(base * 0.36);
 }
 
 // scores TRUYỀN VÀO đã đúng thứ tự vị trí giám định (index 0 = Giám
@@ -46,6 +63,53 @@ export default function QuyenScreen({
   header: React.ReactNode;
   live: LiveQuyenState;
 }) {
+  // Chuông giờ CHỈ phát ở Bàn thư ký (DieuHanhQuyenTab.tsx, gọi trực
+  // tiếp ngay lúc bấm "Bắt đầu"), KHÔNG còn phát ở đây — y hệt lý do
+  // đã bỏ ở ManHinhCongKhai.tsx (đối kháng): màn công khai và Bàn thư
+  // ký thường CÙNG 1 THIẾT BỊ vật lý, 2 nơi tự động phát riêng gây
+  // chồng tiếng, nghe như "reo bừa bãi".
+
+  // Số thứ tự TOÀN CỤC của lượt hiện tại — tái tạo ĐÚNG logic tính
+  // "quyenNumbered" bên BanThuKy.tsx (sắp theo nhóm tuổi, rồi theo thứ
+  // tự đăng ký trong từng nội dung, đánh số liên tục qua MỌI nội dung
+  // quyền) — không dùng chung được state đó vì màn này là 1 trang/thiết
+  // bị HOÀN TOÀN riêng biệt với BTK, nên tự tải lại đúng 2 nguồn dữ
+  // liệu cần thiết (events + performance-orders), tải 1 lần vì gần như
+  // không đổi giữa chừng 1 buổi thi.
+  const [events, setEvents] = useState<CompetitionEvent[]>([]);
+  const [orders, setOrders] = useState<PerformanceOrderWire[]>([]);
+  useEffect(() => {
+    fetchEvents()
+      .then(setEvents)
+      .catch(() => {});
+    fetchPerformanceOrders()
+      .then(setOrders)
+      .catch(() => {});
+  }, []);
+
+  const soThuTu = (() => {
+    const quyenEvents = events
+      .filter((e) => e.loai === "quyen")
+      .sort((a, b) => compareNhomTuoi(a.nhomTuoi, b.nhomTuoi));
+    let dem = 0;
+    for (const e of quyenEvents) {
+      const cuaNoiDungNay = orders
+        .filter((o) => o.eventId === e.id)
+        .sort((a, b) => a.thuTu - b.thuTu);
+      for (const o of cuaNoiDungNay) {
+        dem += 1;
+        if (
+          o.eventId === live.eventId &&
+          o.athleteId === live.athleteId &&
+          o.teamId === live.teamId
+        ) {
+          return dem;
+        }
+      }
+    }
+    return undefined;
+  })();
+
   const daTroi =
     live.trangThai === "dang_thi"
       ? live.thoiGianDaTroiGiay + (Date.now() - live.capNhatDongHoLuc) / 1000
@@ -123,6 +187,36 @@ export default function QuyenScreen({
     };
   }, [live.courtId]);
 
+  // Đã bị Bàn thư ký khoá chưa — TỔNG ĐIỂM và từng điểm giám định chỉ
+  // hiện công khai SAU KHI khoá, dù đã đủ 5 điểm từ trước đó rồi. Cho
+  // Bàn thư ký cơ hội soát lại (VD phát hiện 1 giám định gõ nhầm) trước
+  // khi công bố ra màn hình cho cả khán phòng thấy.
+  const [daKhoa, setDaKhoa] = useState(false);
+  useEffect(() => {
+    let huy = false;
+    const taiKhoa = () => {
+      fetchQuyenScoreLocks()
+        .then((all) => {
+          if (huy) return;
+          setDaKhoa(
+            all.some(
+              (l) =>
+                l.eventId === live.eventId &&
+                l.athleteId === live.athleteId &&
+                l.teamId === live.teamId,
+            ),
+          );
+        })
+        .catch(() => {});
+    };
+    taiKhoa();
+    const id = setInterval(taiKhoa, 3000);
+    return () => {
+      huy = true;
+      clearInterval(id);
+    };
+  }, [live.eventId, live.athleteId, live.teamId]);
+
   // 5 ô ĐÚNG vị trí 1-5 — null nếu vị trí đó chưa được gán giám định,
   // hoặc đã gán nhưng người đó chưa gửi điểm.
   const oDiem: (number | null)[] = Array.from({ length: 5 }, (_, i) => {
@@ -152,17 +246,65 @@ export default function QuyenScreen({
   return (
     <div className={`${styles.screen} ${styles.quyenScreen}`}>
       {header}
-      <div className={styles.quyenEvent}>{live.eventTen}</div>
+      <div className={styles.quyenEvent}>
+        {soThuTu && <span className={styles.quyenSoTag}>#{soThuTu}</span>}{" "}
+        {live.eventTen}
+      </div>
       <div className={styles.quyenPerformerBig}>
         <div
           className={`${styles.quyenIdentity} ${
             daKetThuc ? styles.quyenIdentityFinished : ""
           }`}>
-          <AthleteAvatar
-            name={live.performerLabel}
-            photoUrl={live.photoUrl}
-            size={responsiveQuyenAvatarSize()}
-          />
+          {live.thanhVien && live.thanhVien.length > 0 ? (
+            // Đồng đội: màn hình công khai chỉ cần nhận diện đội hình bằng
+            // avatar. Không hiện tên từng VĐV để 10-15 thành viên vẫn giữ
+            // được avatar đủ lớn, bố cục ổn định và không chiếm chỗ của
+            // trạng thái / tổng điểm. Tên vẫn truyền vào AthleteAvatar để
+            // tạo fallback chữ cái khi VĐV chưa có ảnh.
+            //
+            // Tách thanhVien ra biến cục bộ (const) NGAY TẠI ĐÂY — bắt
+            // buộc, vì TypeScript không giữ được việc "đã kiểm tra khác
+            // null" (live.thanhVien &&...) cho tới bên TRONG callback
+            // .map() bên dưới nếu cứ đọc thẳng qua live.thanhVien (giới
+            // hạn đã biết: hẹp kiểu qua đường dẫn thuộc tính object
+            // không xuyên qua được ranh giới 1 hàm khác, kể cả callback
+            // đồng bộ) — lỗi build thật đã gặp: "'live.thanhVien' is
+            // possibly 'null'" ngay tại dòng gọi responsiveTeamAvatarSize
+            // bên trong .map(). Biến const cục bộ thì KHÔNG bị giới hạn
+            // này, hẹp kiểu giữ nguyên xuyên suốt.
+            (() => {
+              const thanhVien = live.thanhVien;
+              return (
+                <div
+                  className={styles.quyenThanhVienRowBig}
+                  style={{
+                    gridTemplateColumns: `repeat(${Math.min(
+                      thanhVien.length,
+                      5,
+                    )}, max-content)`,
+                  }}>
+                  {thanhVien.map((tv, i) => (
+                    <div
+                      key={i}
+                      className={styles.quyenThanhVienItemBig}
+                      title={tv.hoTen}>
+                      <AthleteAvatar
+                        name={tv.hoTen}
+                        photoUrl={tv.anhDaiDien}
+                        size={responsiveTeamAvatarSize(thanhVien.length)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              );
+            })()
+          ) : (
+            <AthleteAvatar
+              name={live.performerLabel}
+              photoUrl={live.photoUrl}
+              size={responsiveQuyenAvatarSize()}
+            />
+          )}
 
           <div
             className={`${styles.quyenInfoBlock} ${
@@ -172,14 +314,14 @@ export default function QuyenScreen({
             <div className={styles.quyenUnit}>{live.performerSub}</div>
           </div>
 
-          {daKetThuc && diemTongHop !== null ? (
+          {daKetThuc && diemTongHop !== null && daKhoa ? (
             <div
               className={`${styles.quyenScore} ${styles.quyenScoreFinished}`}>
               {diemTongHop.toFixed(0)}
             </div>
           ) : (
             <>
-              {live.trangThai !== "cho_bat_dau" && (
+              {live.trangThai !== "cho_bat_dau" && !daKetThuc && (
                 <span className={styles.quyenClock}>{timeLabel}</span>
               )}
               {live.trangThai === "tam_dung" && (
@@ -189,6 +331,9 @@ export default function QuyenScreen({
                 <span className={styles.quyenStatus}>SẮP THI ĐẤU</span>
               )}
               {dangThi && <span className={styles.quyenLive}>TRỰC TIẾP</span>}
+              {daKetThuc && (
+                <span className={styles.quyenStatus}>ĐANG CHỜ KẾT QUẢ</span>
+              )}
             </>
           )}
         </div>
@@ -197,7 +342,12 @@ export default function QuyenScreen({
             có điểm nào. Luôn đúng 5 dòng, ĐÚNG VỊ TRÍ (xem oDiem ở
             trên) — dòng nào giám định đó chưa gửi (hoặc vị trí chưa
             được gán ai) thì hiện "-". Chỉ tô vàng/xám (kept/dropped)
-            khi đã ĐỦ 5 điểm để tính. */}
+            khi đã ĐỦ 5 điểm để tính.
+            
+            ĐÃ gửi nhưng CHƯA khoá — hiện dấu ✓ xác nhận đã chấm, KHÔNG
+            hiện số thật (khán giả cộng lại 5 số sẽ ra đúng tổng, khác
+            gì hiện thẳng tổng điểm — ẩn tổng mà vẫn hiện từng điểm thì
+            vô nghĩa). Số thật chỉ hiện SAU KHI khoá. */}
         <div className={styles.quyenResultCol}>
           <table className={styles.quyenBangGiamDinh}>
             <thead>
@@ -215,15 +365,17 @@ export default function QuyenScreen({
                 const rowClass =
                   diem === null
                     ? styles.judgeRowPending
-                    : duocTinh
-                      ? styles.judgeRowKept
-                      : styles.judgeRowDropped;
+                    : !daKhoa
+                      ? styles.judgeRowPending
+                      : duocTinh
+                        ? styles.judgeRowKept
+                        : styles.judgeRowDropped;
+                const noiDung =
+                  diem === null ? "—" : !daKhoa ? "✓" : diem.toFixed(0);
                 return (
                   <tr key={i} className={rowClass}>
                     <td className={styles.judgeIndexCell}>{i + 1}</td>
-                    <td className={styles.judgeScoreCell}>
-                      {diem !== null ? diem.toFixed(0) : "—"}
-                    </td>
+                    <td className={styles.judgeScoreCell}>{noiDung}</td>
                   </tr>
                 );
               })}

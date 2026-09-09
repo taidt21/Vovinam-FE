@@ -30,7 +30,7 @@ import { serverNow } from "../../../lib/realtime/serverClock";
 import { usePressedLights, toPositionedPresses } from "../../../lib/realtime/usePressedLights";
 import { fetchTrongTai } from "../../../lib/api/trongTaiApi";
 import { updateCourtSettings } from "../../../lib/api/courtSettingsApi";
-import { useMatchBell } from "../../../lib/audio/matchBell";
+import { playBellSound } from "../../../lib/audio/matchBell";
 import { ghiLogDieuChinhDiem, xoaLogDieuChinhDiem } from "../../../lib/realtime/pressLightClient";
 import Modal from "../../../components/Modal/Modal";
 import AthleteAvatar from "../../../components/AthleteAvatar/AthleteAvatar";
@@ -131,7 +131,6 @@ export default function DieuHanhDoiKhangTab({
     return () => clearTimeout(t);
   }, [live, courtId]);
   const remaining = live ? tinhThoiGianConLai(live) : 0;
-  useMatchBell(courtId, live?.trangThai, live?.hiepHienTai, live?.hetHiepLuc);
   // Lịch sử điều chỉnh tay của TỪNG BÊN riêng biệt — "Hoàn tác" bên nào
   // chỉ lùi lại đúng thao tác gần nhất của bên đó, không đụng bên kia dù
   // thao tác sau đó xen giữa 2 bên. Chỉ lưu lúc CÒN ĐANG XEM đúng trận
@@ -205,6 +204,7 @@ export default function DieuHanhDoiKhangTab({
       return;
     }
     const winner = cur.diemChinhThucDo > cur.diemChinhThucXanh ? "do" : "xanh";
+    playBellSound();
     patch({
       trangThai: "da_ket_thuc",
       nguoiThang: winner,
@@ -331,7 +331,8 @@ export default function DieuHanhDoiKhangTab({
     setLive(next);
   };
 
-  const batDauHiep = () =>
+  const batDauHiep = () => {
+    playBellSound();
     patch({
       trangThai: "dang_thi",
       hiepHienTai: live.hiepHienTai + 1,
@@ -347,11 +348,22 @@ export default function DieuHanhDoiKhangTab({
       soLanYTeHiepDo: 0,
       soLanYTeHiepXanh: 0,
     } as Partial<LiveMatchState>);
+  };
   const tamDung = () =>
     patch({ trangThai: "tam_dung", thoiGianConLaiGiay: remaining });
   const tiepTuc = () =>
     patch({ trangThai: "dang_thi", capNhatDongHoLuc: serverNow() });
   const ketThucHiep = () => {
+    // ketThucHiep() dùng CHUNG cho 2 trường hợp hoàn toàn khác nhau:
+    // (1) nút SkipForward (dòng ~866, chỉ hiện khi CHƯA hết giờ) — BTK
+    // CHỦ ĐỘNG kết thúc sớm (VD trọng tài thổi còi dừng vì lý do khác,
+    // không phải hết giờ) — KHÔNG được reo chuông ở đây, vì đây không
+    // phải "hết thời gian" thật.
+    // (2) hiệu ứng tự động + nút "Hết giờ" (dòng ~896, chỉ hiện khi ĐÃ
+    // hết giờ) — ĐÚNG trường hợp cần reo.
+    // Phân biệt bằng chính hetGio (đã tính sẵn trong component, đúng
+    // giá trị tại THỜI ĐIỂM gọi hàm này) — không cần thêm tham số.
+    if (hetGio) playBellSound();
     // Hoà đúng lúc hết giờ hiệp cuối, CHƯA từng vào hiệp phụ, và giải cho
     // phép -> xử như hiệp thường (qua nghỉ giữa hiệp) thay vì dừng hẳn,
     // để "Bắt đầu hiệp {n+1}" bên dưới tự nhiên trở thành hiệp phụ (đúng

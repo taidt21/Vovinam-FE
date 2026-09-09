@@ -416,7 +416,7 @@
 .matchMeta {
     font-size: 12px;
     color: $color-text-muted;
-    text-align: center;
+    text-align: left;
 }
 
 .performerCard {
@@ -429,15 +429,26 @@
     border-radius: 12px;
 }
 
+// Cột chữ bên phải avatar — TRƯỚC ĐÂY performerName/performerSub tự
+// text-align:center trong 1 cột rộng-theo-nội-dung, khiến 2 dòng ngắn
+// hơn dòng dài nhất bị "trôi" lệch tâm thay vì thẳng hàng gọn gàng với
+// nhau — nhìn không cân đối. Left-align nhất quán cả cột thì mọi dòng
+// thẳng hàng bên trái, đúng kiểu bố cục avatar+thông tin chuẩn.
+.performerInfo {
+    text-align: left;
+    min-width: 0;
+}
+
 .performerName {
     font-size: 20px;
     font-weight: 800;
-    text-align: center;
+    text-align: left;
 }
 
 .performerSub {
     font-size: 12px;
     color: $color-text-muted;
+    text-align: left;
 }
 
 .thanhVien {
@@ -520,6 +531,70 @@
         opacity: 0.35;
         cursor: not-allowed;
     }
+}
+
+// Trước đây hàng cuối bàn phím là [ô trống, 0, Xóa] — ô trống bên trái
+// tạo khoảng hở vô nghĩa, nhìn lệch hẳn so với 3 hàng số phía trên đều
+// đặn. Cho "0" chiếm 2 cột (thay ô trống) — vừa hết khoảng hở, vừa hợp
+// lý hơn vì "0" là số hay gõ nhất khi nhập điểm quyền (80, 90...).
+.keypadBtnZero {
+    grid-column: span 2;
+}
+
+// Thay hẳn khối "Điểm hiện tại" lúc đã bị khoá — không hiện số cũ nữa
+// (dễ hiểu lầm là còn sửa được), thay bằng thông báo rõ ràng lý do
+// không nhập được.
+.lockedNotice {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: $space-4;
+    background: rgba($color-warning, 0.08);
+    border: 2px solid rgba($color-warning, 0.28);
+    border-radius: 16px;
+    color: $color-warning;
+    text-align: center;
+
+    strong {
+        font-size: 16px;
+    }
+
+    span {
+        font-size: 12px;
+        color: $color-text-muted;
+    }
+}
+
+// Trung tính (không cảnh báo, khác hẳn tông vàng của .lockedNotice) —
+// đây chỉ là 1 khoảng chờ bình thường, không phải sự cố gì cả.
+.waitingNotice {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: $space-4;
+    background: $color-surface;
+    border: 2px solid $color-border;
+    border-radius: 16px;
+    color: $color-text;
+    text-align: center;
+
+    strong {
+        font-size: 16px;
+    }
+
+    span {
+        font-size: 12px;
+        color: $color-text-muted;
+    }
+}
+
+// Số VĐV/team của nội dung đang thi — dòng phụ nhỏ, mờ hơn hẳn tên nội
+// dung ngay phía trên để không cạnh tranh sự chú ý.
+.soLuongThamGia {
+    font-size: 11px;
+    color: $color-text-muted;
 }
 
 .keypadBtnXoa {

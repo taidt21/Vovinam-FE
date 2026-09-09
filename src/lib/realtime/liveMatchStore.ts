@@ -16,7 +16,23 @@ function ensureHandlersRegistered() {
   const conn = getConnection();
 
   conn.on('CourtSnapshot', (courtId: string, snapshot: { matchState: LiveMatchState | null }) => {
-    notify(courtId, snapshot.matchState ?? null);
+    // CourtSnapshot là phản hồi cho ĐÚNG 1 lần gọi JoinCourt cụ thể —
+    // KHÔNG phải tín hiệu "trạng thái vừa đổi". Nếu backend xử lý lần
+    // gọi đó chậm (VD lúc mới mount trang, hoặc backend vừa khởi động
+    // lại đang xử lý dồn), phản hồi có thể tới TRỄ hơn hẳn 1 cập nhật
+    // MỚI HƠN mà client đã tự nhận được entretemps (VD BTK vừa bấm
+    // "Khôi phục" ở RecoveryScreen) — áp thẳng snapshot cũ (null) lúc
+    // đó sẽ XOÁ MẤT trạng thái mới vừa thiết lập, y hệt bug đã gặp
+    // ("nháy 1 phát rồi treo lại ở màn Mất trạng thái").
+    //
+    // Muốn BÁO "trạng thái đã bị xoá thật" phải qua đúng sự kiện riêng
+    // MatchStateCleared (dưới), không phải qua CourtSnapshot — nên ở
+    // đây chỉ áp dụng snapshot null khi client CHƯA từng có gì (đang
+    // sẵn null), còn đã có sẵn 1 trạng thái sống thì bỏ qua bản null
+    // này, coi là phản hồi cũ tới trễ.
+    if (cache.get(courtId) == null || snapshot.matchState != null) {
+      notify(courtId, snapshot.matchState ?? null);
+    }
   });
   conn.on('MatchStateUpdated', (courtId: string, state: LiveMatchState) => {
     notify(courtId, state);
