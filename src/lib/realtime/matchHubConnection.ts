@@ -1,5 +1,6 @@
 import * as signalR from '@microsoft/signalr';
 import { calibrateServerClock } from './serverClock';
+import { getAdminToken } from '../api/adminAuth';
 
 let connection: signalR.HubConnection | null = null;
 let starting: Promise<signalR.HubConnection> | null = null;
@@ -8,14 +9,18 @@ const connectionStateListeners = new Set<(connected: boolean) => void>();
 let connectionHandlersRegistered = false;
 let calibrateIntervalStarted = false;
 let statusSyncIntervalStarted = false;
+let startedWithToken: string | null | undefined;
 
 function build(): signalR.HubConnection {
   const conn = new signalR.HubConnectionBuilder()
-    .withUrl('/hubs/match')
+    .withUrl('/hubs/match', {
+      accessTokenFactory: () => getAdminToken() ?? '',
+    })
     .withAutomaticReconnect([0, 500, 1000, 2000, 5000])
     .build();
 
   conn.onreconnected(() => {
+    startedWithToken = getAdminToken();
     rejoinAllCourts(conn);
     calibrateServerClock().catch(() => {});
   });
@@ -61,6 +66,12 @@ export async function ensureStarted(): Promise<signalR.HubConnection> {
   const conn = getConnection();
 
   if (conn.state === signalR.HubConnectionState.Connected) {
+    const currentToken = getAdminToken();
+    if (startedWithToken !== undefined && startedWithToken !== currentToken) {
+      await conn.stop();
+      startedWithToken = undefined;
+      return ensureStarted();
+    }
     startCalibrateInterval();
     return conn;
   }
@@ -78,6 +89,7 @@ export async function ensureStarted(): Promise<signalR.HubConnection> {
     starting = conn
       .start()
       .then(async () => {
+        startedWithToken = getAdminToken();
         rejoinAllCourts(conn);
         await calibrateServerClock();
         startCalibrateInterval();

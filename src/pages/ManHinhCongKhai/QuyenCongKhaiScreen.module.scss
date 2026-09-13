@@ -307,9 +307,12 @@ $white: #f7f7f7;
 
 .judgeRowKept .judgeScoreCell {
     position: relative;
-    color: #ffe100;
-    animation: keptScorePulse 1.15s ease-in-out infinite;
-    will-change: filter, text-shadow, transform;
+    color: #ffd500;
+    // Giữ 3 điểm được tính nổi bật nhưng không nhấp nháy để màn công khai ổn định, dễ nhìn.
+    filter: brightness(1.12);
+    text-shadow:
+        0 0 10px rgba(255, 225, 0, 0.42),
+        0 0 24px rgba(255, 213, 0, 0.34);
 }
 
 .judgeRowKept .judgeIndexCell {

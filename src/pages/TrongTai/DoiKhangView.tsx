@@ -89,7 +89,7 @@ export default function DoiKhangView({
       <div className={styles.doiKhangInner}>
         <div className={styles.doiKhangInfoStrip}>
           <span className={styles.doiKhangInfoNames}>
-            {live ? `${live.tenXanh} vs ${live.tenDo}` : "Chờ Bàn thư ký"}
+            {live ? `${live.tenDo} vs ${live.tenXanh}` : "Chờ Bàn thư ký"}
             {live && ` — Hiệp ${live.hiepHienTai}/${live.tongSoHiep}`}
           </span>
           {trangThaiNgan && (
@@ -103,20 +103,6 @@ export default function DoiKhangView({
         <div className={styles.doiKhangMainArea}>
           <div className={styles.doiKhangSideCol}>
             <button
-              className={`${styles.doiKhangBtnXanh} ${styles.doiKhangBtn1} ${pressingKey === "xanh1" ? styles.pressing : ""}`}
-              disabled={!coTheBamDen}
-              onClick={() => handlePress("xanh", 1)}>
-              XANH +1
-            </button>
-            <button
-              className={`${styles.doiKhangBtnXanh} ${styles.doiKhangBtn2} ${pressingKey === "xanh2" ? styles.pressing : ""}`}
-              disabled={!coTheBamDen}
-              onClick={() => handlePress("xanh", 2)}>
-              XANH +2
-            </button>
-          </div>
-          <div className={styles.doiKhangSideCol}>
-            <button
               className={`${styles.doiKhangBtnDo} ${styles.doiKhangBtn1} ${pressingKey === "do1" ? styles.pressing : ""}`}
               disabled={!coTheBamDen}
               onClick={() => handlePress("do", 1)}>
@@ -127,6 +113,20 @@ export default function DoiKhangView({
               disabled={!coTheBamDen}
               onClick={() => handlePress("do", 2)}>
               ĐỎ +2
+            </button>
+          </div>
+          <div className={styles.doiKhangSideCol}>
+            <button
+              className={`${styles.doiKhangBtnXanh} ${styles.doiKhangBtn1} ${pressingKey === "xanh1" ? styles.pressing : ""}`}
+              disabled={!coTheBamDen}
+              onClick={() => handlePress("xanh", 1)}>
+              XANH +1
+            </button>
+            <button
+              className={`${styles.doiKhangBtnXanh} ${styles.doiKhangBtn2} ${pressingKey === "xanh2" ? styles.pressing : ""}`}
+              disabled={!coTheBamDen}
+              onClick={() => handlePress("xanh", 2)}>
+              XANH +2
             </button>
           </div>
         </div>

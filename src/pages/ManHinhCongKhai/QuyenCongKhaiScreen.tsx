@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { LiveQuyenState } from "../../types/liveQuyen";
+import { tinhThoiGianDaTroi } from "../../lib/realtime/liveQuyenStore";
 import {
   fetchQuyenJudgeScores,
   fetchQuyenScoreLocks,
@@ -125,10 +126,7 @@ export default function QuyenScreen({
     return undefined;
   })();
 
-  const daTroi =
-    live.trangThai === "dang_thi"
-      ? live.thoiGianDaTroiGiay + (Date.now() - live.capNhatDongHoLuc) / 1000
-      : live.thoiGianDaTroiGiay;
+  const daTroi = tinhThoiGianDaTroi(live);
   const hienThi = live.coGioiHan
     ? Math.max(0, (live.thoiGianGioiHanGiay ?? 0) - daTroi)
     : daTroi;
