@@ -83,6 +83,40 @@ $white: #f7f7f7;
     gap: 1.1vh;
 }
 
+.quyenTeamPublicIdentity {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2.4vh;
+}
+
+.quyenTeamLogoPlaceholder {
+    width: min(18vw, 30vh);
+    aspect-ratio: 1;
+    display: grid;
+    place-items: center;
+    border: 3px solid rgba(255, 255, 255, 0.72);
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.34);
+    color: rgba(255, 255, 255, 0.82);
+    font-size: min(3vw, 5.4vh);
+    font-weight: 950;
+    letter-spacing: 0.12em;
+}
+
+.quyenTeamUnitName {
+    max-width: 38vw;
+    color: #fff;
+    font-size: min(4.8vw, 8.5vh);
+    font-weight: 950;
+    line-height: 1.05;
+    text-align: center;
+    text-wrap: balance;
+}
+
 .quyenIdentityFinished {
     justify-content: flex-start;
     padding-top: 1.5vh;
@@ -307,7 +341,7 @@ $white: #f7f7f7;
 
 .judgeRowKept .judgeScoreCell {
     position: relative;
-    color: #ffd500;
+    color: #ffe100;
     // Giữ 3 điểm được tính nổi bật nhưng không nhấp nháy để màn công khai ổn định, dễ nhìn.
     filter: brightness(1.12);
     text-shadow:

@@ -31,30 +31,6 @@ function responsiveQuyenAvatarSize(): number {
   );
 }
 
-function responsiveTeamAvatarSize(
-  memberCount: number,
-  compactResult = false,
-): number {
-  const base = responsiveQuyenAvatarSize();
-
-  let ratio: number;
-  if (memberCount <= 3) ratio = 0.62;
-  else if (memberCount <= 5) ratio = 0.56;
-  else if (memberCount <= 10) ratio = 0.44;
-  else ratio = 0.36;
-
-  // Khi đã công bố kết quả, roster đồng đội thu gọn để nhường chiều cao
-  // cho tổng điểm. Đội càng đông thì mức thu càng mạnh.
-  if (compactResult) {
-    if (memberCount <= 3) ratio *= 0.9;
-    else if (memberCount <= 5) ratio *= 0.85;
-    else if (memberCount <= 10) ratio *= 0.8;
-    else ratio *= 0.72;
-  }
-
-  return Math.round(base * ratio);
-}
-
 // scores TRUYỀN VÀO đã đúng thứ tự vị trí giám định (index 0 = Giám
 // định 1...) — xem comment ở nơi gọi hàm này, không tự sắp xếp gì
 // thêm ở đây, chỉ xác định trong số điểm ĐÃ ĐÚNG VỊ TRÍ đó, đâu là 3
@@ -253,7 +229,7 @@ export default function QuyenScreen({
       .map((o) => o.slotIndex),
   );
 
-  const dangHienKetQua = daKetThuc && diemTongHop !== null && daKhoa;
+  // const dangHienKetQua = daKetThuc && diemTongHop !== null && daKhoa;
 
   return (
     <div
@@ -274,54 +250,17 @@ export default function QuyenScreen({
             daKetThuc ? styles.quyenIdentityFinished : ""
           }`}>
           {laDongDoi ? (
-            (() => {
-              const thanhVien = live.thanhVien!;
-              return (
-                <>
-                  {/* Đồng đội: tên đội đặt trên roster để người xem nhận diện
-                      theo đúng thứ tự thị giác: đội nào -> đội hình -> kết quả. */}
-                  <div
-                    className={`${styles.quyenInfoBlock} ${styles.quyenInfoBlockTeam} ${
-                      daKetThuc ? styles.quyenInfoBlockFinished : ""
-                    }`}>
-                    <div className={styles.quyenName}>
-                      {live.performerLabel}
-                    </div>
-                    <div className={styles.quyenUnit}>{live.performerSub}</div>
-                    <div className={styles.quyenTeamCount}>
-                      {thanhVien.length} VĐV
-                    </div>
-                  </div>
-
-                  <div
-                    className={`${styles.quyenThanhVienRowBig} ${
-                      dangHienKetQua ? styles.quyenThanhVienRowResult : ""
-                    }`}
-                    style={{
-                      gridTemplateColumns: `repeat(${Math.min(
-                        thanhVien.length,
-                        5,
-                      )}, max-content)`,
-                    }}>
-                    {thanhVien.map((tv, i) => (
-                      <div
-                        key={i}
-                        className={styles.quyenThanhVienItemBig}
-                        title={tv.hoTen}>
-                        <AthleteAvatar
-                          name={tv.hoTen}
-                          photoUrl={tv.anhDaiDien}
-                          size={responsiveTeamAvatarSize(
-                            thanhVien.length,
-                            dangHienKetQua,
-                          )}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </>
-              );
-            })()
+            <div className={styles.quyenTeamPublicIdentity}>
+              <div
+                className={styles.quyenTeamLogoPlaceholder}
+                aria-label="Logo đơn vị tạm thời">
+                LOGO
+              </div>
+              <div className={styles.quyenTeamUnitName}>
+                {live.performerLabel.replace(/^Đội\s+/i, "").trim() ||
+                  live.performerLabel}
+              </div>
+            </div>
           ) : (
             <>
               <AthleteAvatar
