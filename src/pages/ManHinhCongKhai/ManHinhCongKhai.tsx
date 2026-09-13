@@ -392,11 +392,9 @@ function CourtScreen({
 
   const timerTitle = daKetThuc
     ? "KẾT THÚC"
-    : dangYTe
-      ? "Y TẾ CAN THIỆP"
-      : dangNghi
-        ? `Nghỉ hiệp ${live.hiepHienTai}`
-        : `Hiệp ${live.hiepHienTai}`;
+    : dangNghi
+      ? `Nghỉ hiệp ${live.hiepHienTai}`
+      : `Hiệp ${live.hiepHienTai}`;
 
   const statusLabel = choBatDau
     ? "SẮP THI ĐẤU"
@@ -408,6 +406,13 @@ function CourtScreen({
           ? "NGHỈ GIỮA HIỆP"
           : null;
 
+  const yTeBenLabel =
+    live.dangGoiYTe === "do"
+      ? "ĐỎ"
+      : live.dangGoiYTe === "xanh"
+        ? "XANH"
+        : "VĐV";
+
   return (
     <div className={styles.combatScreen}>
       <PublicTopHeader
@@ -418,9 +423,7 @@ function CourtScreen({
         timeLabel={
           daKetThuc
             ? "--:--"
-            : dangYTe
-              ? formatMmSs(yTeConLaiGiay)
-              : formatMmSs(remaining)
+            : formatMmSs(remaining)
         }
         statusLabel={statusLabel}
       />
@@ -433,7 +436,7 @@ function CourtScreen({
 
       <main className={styles.fightStage}>
         <section
-          className={`${styles.fighterSide} ${styles.redSide} ${sideClass("do")}`}>
+          className={`${styles.fighterSide} ${styles.redSide} ${sideClass("do")} ${dangYTe ? styles.fighterSideMedicalDim : ""}`}>
           {(live.nhacNhoDo > 0 || live.soCanhCaoDo > 0) && (
             <div className={styles.canhBaoOverlay}>
               {live.nhacNhoDo > 0 && (
@@ -467,7 +470,7 @@ function CourtScreen({
         </section>
 
         <section
-          className={`${styles.fighterSide} ${styles.blueSide} ${sideClass("xanh")}`}>
+          className={`${styles.fighterSide} ${styles.blueSide} ${sideClass("xanh")} ${dangYTe ? styles.fighterSideMedicalDim : ""}`}>
           {(live.nhacNhoXanh > 0 || live.soCanhCaoXanh > 0) && (
             <div className={styles.canhBaoOverlay}>
               {live.nhacNhoXanh > 0 && (
@@ -499,6 +502,14 @@ function CourtScreen({
             photoUrl={live.anhXanh}
           />
         </section>
+
+        {dangYTe && (
+          <div className={styles.medicalOverlay}>
+            <div className={styles.medicalOverlayTitle}>Y TẾ CAN THIỆP</div>
+            <div className={`${styles.medicalOverlaySide} ${live.dangGoiYTe === "do" ? styles.medicalOverlaySideRed : styles.medicalOverlaySideBlue}`}>{yTeBenLabel}</div>
+            <div className={styles.medicalOverlayTimer}>{formatMmSs(yTeConLaiGiay)}</div>
+          </div>
+        )}
       </main>
 
       <JudgePanel

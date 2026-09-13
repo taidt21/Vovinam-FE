@@ -1,6 +1,6 @@
 /** @format */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type {
   Athlete,
   AthleteRecord,
@@ -20,7 +20,11 @@ import { compareNhomTuoi } from "../../lib/utils/nhomTuoi";
 import { serverNow } from "../../lib/realtime/serverClock";
 import { apiGet } from "../../lib/api/api";
 import { fetchEvents } from "../../lib/api/eventsApi";
-import { fetchMatches, updateMatch, fetchMatchReview } from "../../lib/api/matchesApi";
+import {
+  fetchMatches,
+  updateMatch,
+  fetchMatchReview,
+} from "../../lib/api/matchesApi";
 import { fetchCourtSettings } from "../../lib/api/courtSettingsApi";
 import {
   fetchQuyenJudgeScores,
@@ -96,6 +100,12 @@ export default function BanThuKy() {
   const [bracketsByEvent, setBracketsByEvent] = useState<
     Record<string, Match[]>
   >({});
+  const [lastFinishedMatchNumber, setLastFinishedMatchNumber] = useState<
+    number | null
+  >(null);
+  const matchesRefreshEpochRef = useRef(0);
+  const boTranPendingRef = useRef(false);
+  const [dangBoTranDoiKhang, setDangBoTranDoiKhang] = useState(false);
   const [orderByEvent, setOrderByEvent] = useState<Record<string, Athlete[]>>(
     {},
   );
@@ -298,9 +308,13 @@ export default function BanThuKy() {
       )
       .finally(() => setLoading(false));
   }, []);
-  const refreshMatches = () =>
-    fetchMatches()
+  const refreshMatches = () => {
+    const epochAtStart = matchesRefreshEpochRef.current;
+    return fetchMatches()
       .then((matchesData) => {
+        // Một mutation có thể hoàn tất trong lúc request này còn đang bay.
+        // Không cho response cũ ghi đè state mới vừa được xác nhận từ DB.
+        if (epochAtStart !== matchesRefreshEpochRef.current) return;
         const byEventMatches: Record<string, Match[]> = {};
         for (const m of matchesData) {
           if (!byEventMatches[m.eventId]) byEventMatches[m.eventId] = [];
@@ -309,6 +323,7 @@ export default function BanThuKy() {
         setBracketsByEvent(byEventMatches);
       })
       .catch(() => {});
+  };
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -441,6 +456,9 @@ export default function BanThuKy() {
     lyDo: LyDoKetThuc,
     thangSide: "do" | "xanh",
   ) => {
+    setLastFinishedMatchNumber(
+      numbered.find((x) => x.match.id === match.id)?.so ?? null,
+    );
     const winnerId =
       thangSide === "do" ? match.athleteRedId : match.athleteBlueId;
     const updatedMatch: Match = {
@@ -842,14 +860,21 @@ export default function BanThuKy() {
       .filter((x) => dungPhanCuaSan(x.so) && x.match.trangThai !== "cho_thi")
       .reduce((max, x) => Math.max(max, x.so), 0);
 
-    const next = numbered.find(
-      ({ match, so }) =>
-        match.trangThai === "cho_thi" &&
-        match.athleteRedId &&
-        match.athleteBlueId &&
-        so > soCaoNhatDaThi &&
-        dungPhanCuaSan(so),
-    );
+    const next = numbered.find(({ match, so }) => {
+      if (
+        match.trangThai !== "cho_thi" ||
+        !match.athleteRedId ||
+        !match.athleteBlueId
+      ) {
+        return false;
+      }
+
+      if (lastFinishedMatchNumber != null) {
+        return so > lastFinishedMatchNumber;
+      }
+
+      return so > soCaoNhatDaThi && dungPhanCuaSan(so);
+    });
     if (next) openIntoCourt(next.event.id, next.match.id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
@@ -859,6 +884,7 @@ export default function BanThuKy() {
     numbered,
     courts,
     currentCourtId,
+    lastFinishedMatchNumber,
   ]);
 
   // "Đã xong" giờ theo đúng dữ liệu lưu thật (quyenLuotHoanThanh) — không
@@ -894,7 +920,9 @@ export default function BanThuKy() {
   // lại "cho_thi" trong DB (không thì DB vẫn nghĩ sân này đang giữ 1
   // trận, còn UI thì trống, lệch nhau), xoá state sống, rồi báo tạm
   // ngưng tự nhận trận kế tiếp cho ĐÚNG bên đối kháng.
-  const boTranChoBatDauDoiKhang = () => {
+  const boTranChoBatDauDoiKhang = async () => {
+    if (boTranPendingRef.current) return;
+
     const current = activeOfCourt(currentCourtId);
     if (!current) return;
     const eventId = Object.keys(bracketsByEvent).find((eid) =>
@@ -906,15 +934,36 @@ export default function BanThuKy() {
     if (!match || !eventId) return;
 
     const updated: Match = { ...match, trangThai: "cho_thi", courtId: null };
-    setBracketsByEvent((prev) => ({
-      ...prev,
-      [eventId]: (prev[eventId] ?? []).map((m) =>
-        m.id === updated.id ? updated : m,
-      ),
-    }));
-    clearMatchState(currentCourtId);
-    publishCourtResting(currentCourtId, "doi_khang", true);
-    updateMatch(updated.id, updated).catch(() => {});
+    boTranPendingRef.current = true;
+    setDangBoTranDoiKhang(true);
+
+    // Vô hiệu các refresh đã bắt đầu trước mutation này. Nếu polling/
+    // MatchesChanged chạy trong lúc đang lưu, epoch sẽ tăng lần nữa sau
+    // khi DB xác nhận để response cũ không đưa trận trở lại UI.
+    matchesRefreshEpochRef.current += 1;
+
+    try {
+      await updateMatch(updated.id, updated);
+      matchesRefreshEpochRef.current += 1;
+
+      setBracketsByEvent((prev) => ({
+        ...prev,
+        [eventId]: (prev[eventId] ?? []).map((m) =>
+          m.id === updated.id ? updated : m,
+        ),
+      }));
+      clearMatchState(currentCourtId);
+      publishCourtResting(currentCourtId, "doi_khang", true);
+    } catch {
+      matchesRefreshEpochRef.current += 1;
+      window.alert(
+        "Không thể bỏ trận khỏi sân — kiểm tra kết nối/backend rồi thử lại.",
+      );
+      refreshMatches();
+    } finally {
+      boTranPendingRef.current = false;
+      setDangBoTranDoiKhang(false);
+    }
   };
 
   useEffect(() => {
@@ -1079,7 +1128,9 @@ export default function BanThuKy() {
                 className={styles.publicScreenLink}
                 onClick={openPublicScreenExtended}
                 disabled={dangMoManHinh}>
-                {dangMoManHinh ? "Đang mở..." : "Mở màn hình công khai (máy chủ)"}{" "}
+                {dangMoManHinh
+                  ? "Đang mở..."
+                  : "Mở màn hình công khai (máy chủ)"}{" "}
                 <span aria-hidden="true">↗</span>
               </button>
               {manHinhCKDangChay && (
@@ -1189,6 +1240,7 @@ export default function BanThuKy() {
               finishMatch(activeOnMyCourt, activeEvent.id, lyDo, thang)
             }
             onGoTranChoBatDau={boTranChoBatDauDoiKhang}
+            dangGoTranChoBatDau={dangBoTranDoiKhang}
             choPhepHiepPhu={tournament?.choPhepHiepPhu ?? false}
           />
         ))}

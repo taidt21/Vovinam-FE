@@ -56,6 +56,7 @@ export default function DieuHanhDoiKhangTab({
   athleteTeam,
   onEndMatch,
   onGoTranChoBatDau,
+  dangGoTranChoBatDau,
   choPhepHiepPhu,
 }: {
   match: Match;
@@ -64,7 +65,8 @@ export default function DieuHanhDoiKhangTab({
   athleteName: (id: string | null) => string | null;
   athleteTeam: (id: string | null) => string;
   onEndMatch: (lyDo: LyDoKetThuc, thang: "do" | "xanh") => void;
-  onGoTranChoBatDau: () => void;
+  onGoTranChoBatDau: () => void | Promise<void>;
+  dangGoTranChoBatDau: boolean;
   choPhepHiepPhu: boolean;
 }) {
   const courtId = match.courtId!;
@@ -863,8 +865,9 @@ export default function DieuHanhDoiKhangTab({
                   <button
                     className={styles.dropMatchBtn}
                     onClick={onGoTranChoBatDau}
+                    disabled={dangGoTranChoBatDau}
                     title="Gỡ trận này khỏi sân, cho sân nghỉ">
-                    <X size={15} /> Bỏ, cho sân nghỉ
+                    <X size={15} /> {dangGoTranChoBatDau ? "Đang bỏ..." : "Bỏ, cho sân nghỉ"}
                   </button>
                 </div>
               )}

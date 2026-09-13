@@ -277,6 +277,7 @@ $blue-dark: #073e96;
 }
 
 .fightStage {
+    position: relative;
     grid-column: 2;
     grid-row: 2;
     min-width: 0;
@@ -295,6 +296,63 @@ $blue-dark: #073e96;
     display: grid;
     grid-template-rows: minmax(0, 1fr) clamp(126px, 15.5vh, 172px);
     transition: opacity 180ms ease, filter 180ms ease;
+}
+
+.fighterSideMedicalDim {
+    opacity: 0.34;
+    filter: saturate(0.55) blur(1.6px);
+}
+
+.medicalOverlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 4;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(8px, 1vh, 14px);
+    min-width: clamp(260px, 26vw, 420px);
+    padding: clamp(18px, 2vh, 30px) clamp(22px, 2vw, 34px);
+    border: 2px solid rgba(255, 255, 255, 0.88);
+    border-radius: clamp(12px, 0.8vw, 18px);
+    background: linear-gradient(180deg, rgba(10, 12, 15, 0.96), rgba(6, 7, 9, 0.98));
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.42);
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.medicalOverlayTitle {
+    color: #ff6a6f;
+    font-size: clamp(28px, 2.35vw, 44px);
+    font-weight: 900;
+    line-height: 1.05;
+    letter-spacing: 0.04em;
+}
+
+.medicalOverlaySide {
+    font-size: clamp(22px, 1.8vw, 34px);
+    font-weight: 900;
+    line-height: 1.1;
+}
+
+.medicalOverlaySideRed {
+    color: $red;
+}
+
+.medicalOverlaySideBlue {
+    color: $blue;
+}
+
+.medicalOverlayTimer {
+    color: $yellow;
+    font-size: clamp(82px, 7.2vw, 140px);
+    font-weight: 900;
+    line-height: 0.92;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 18px rgba(255, 213, 0, 0.22);
 }
 
 .redSide {

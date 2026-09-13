@@ -123,12 +123,15 @@ export default function DieuHanhQuyenTab({
   }
 
   // Gỡ lượt "cho_bat_dau" (đã đưa vào sân, chưa bấm bắt đầu) khỏi sân —
-  // quyền không có bản ghi DB nào cần trả lại (khác đối kháng), nên chỉ
-  // cần xoá state sống rồi báo tạm ngưng tự nhận lượt kế tiếp cho ĐÚNG
-  // bên quyền.
+  // quyền không có bản ghi DB nào cần trả lại (khác đối kháng). Phải bật
+  // cờ nghỉ TRƯỚC khi xoá state sống: xoá trước sẽ kích hoạt effect tự
+  // nhận lượt kế tiếp trong BanThuKy khi dangNghiQuyen vẫn còn false,
+  // khiến lượt mới vừa được đưa vào sân ngay và người dùng tưởng nút phải
+  // bấm lần hai. publishCourtResting cập nhật cache local đồng bộ trước
+  // khi gửi SignalR, nên effect sẽ thấy sân đang nghỉ ngay khi state bị xoá.
   const boLuotChoBatDau = () => {
-    clearQuyenState(courtId);
     publishCourtResting(courtId, "quyen", true);
+    clearQuyenState(courtId);
   };
 
   const patch = (p: Partial<LiveQuyenState>) => {
