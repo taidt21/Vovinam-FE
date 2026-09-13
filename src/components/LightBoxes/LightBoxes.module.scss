@@ -1,3 +1,31 @@
+.lightBoxesWrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.lightLegend {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    column-gap: var(--lb-gap-inner, 12px);
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    text-align: center;
+}
+
+.lightLegendCell {
+    min-width: 0;
+    padding: 2px 0;
+}
+
+.lightLegendSpacer {
+    display: none;
+}
+
 .lightBoxesRow {
     --lb-w: 85px;
     --lb-h: 35px;

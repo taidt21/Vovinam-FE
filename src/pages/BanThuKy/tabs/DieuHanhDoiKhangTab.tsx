@@ -666,10 +666,7 @@ export default function DieuHanhDoiKhangTab({
             .filter(Boolean)
             .join(" ")}>
           {!daKetThuc && (
-            <LightBoxes
-              side="do"
-              presses={toPositionedPresses(pressed.do, judgePositions)}
-            />
+            <LightBoxes side="do" presses={toPositionedPresses(pressed.do, judgePositions)} />
           )}
           <div className={styles.cornerMain}>
             <span className={styles.cornerLabelDo}>ĐỎ</span>
@@ -1053,10 +1050,7 @@ export default function DieuHanhDoiKhangTab({
             )}
           </div>
           {!daKetThuc && (
-            <LightBoxes
-              side="xanh"
-              presses={toPositionedPresses(pressed.xanh, judgePositions)}
-            />
+            <LightBoxes side="xanh" presses={toPositionedPresses(pressed.xanh, judgePositions)} />
           )}
         </div>
       </div>
