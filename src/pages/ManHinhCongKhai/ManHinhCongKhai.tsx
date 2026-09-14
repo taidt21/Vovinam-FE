@@ -605,9 +605,12 @@ function JudgePanel({
       </div>
       <div className={styles.judgeGrid}>
         {fiveJudges.map((score, index) => {
-          // +1: sáng ô 1. +2: sáng CẢ ô 1 và ô 2.
-          const firstLightOn = typeof score === "number" && score >= 1;
-          const secondLightOn = typeof score === "number" && score >= 2;
+          // Mỗi lần bấm chỉ sáng đúng MỘT cột:
+          // +1 = cột phía trong; +2 = cột phía ngoài.
+          // Đỏ nằm bên trái nên ngoài=trái; Xanh nằm bên phải nên ngoài=phải.
+          const leftIsOuter = isRed;
+          const firstLightOn = score === (leftIsOuter ? 2 : 1);
+          const secondLightOn = score === (leftIsOuter ? 1 : 2);
 
           return (
             <div className={styles.judgeRow} key={index}>
