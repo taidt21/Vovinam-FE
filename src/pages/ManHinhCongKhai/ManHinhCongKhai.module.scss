@@ -685,3 +685,13 @@ $blue-dark: #073e96;
         min-height: 22px;
     }
 }
+.eventSummaryPublicShell {
+    width: 100%;
+    height: calc(100vh - 64px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(20px, 3vw, 48px);
+    box-sizing: border-box;
+    overflow: auto;
+}

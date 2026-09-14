@@ -33,7 +33,13 @@ import { fetchEvents } from "../../lib/api/eventsApi";
 import { fetchMatches } from "../../lib/api/matchesApi";
 import { numberDoiKhangMatches } from "../../lib/domain/bracket";
 import { fetchTrongTai } from "../../lib/api/trongTaiApi";
+import {
+  getEventSummarySnapshot,
+  subscribeEventSummary,
+} from "../../lib/realtime/eventSummaryStore";
+import type { EventSummaryState } from "../../types/eventSummary";
 import AthleteAvatar from "../../components/AthleteAvatar/AthleteAvatar";
+import EventSummaryView from "../../components/EventSummary/EventSummaryView";
 import QuyenScreen from "./QuyenCongKhaiScreen";
 import styles from "./ManHinhCongKhai.module.scss";
 
@@ -171,6 +177,9 @@ function CourtScreen({
   const [liveQuyen, setLiveQuyen] = useState<LiveQuyenState | null>(() =>
     getQuyenSnapshot(court.id),
   );
+  const [eventSummary, setEventSummary] = useState<EventSummaryState | null>(
+    () => getEventSummarySnapshot(court.id),
+  );
   const [, setTick] = useState(0);
   const [tournamentName, setTournamentName] = useState(DEFAULT_TOURNAMENT_NAME);
   const [matchNumber, setMatchNumber] = useState<number | null>(() => {
@@ -209,6 +218,11 @@ function CourtScreen({
       unsub();
       unsubConn();
     };
+  }, [court.id]);
+
+  useEffect(() => {
+    setEventSummary(getEventSummarySnapshot(court.id));
+    return subscribeEventSummary(court.id, setEventSummary);
   }, [court.id]);
 
   useEffect(() => {
@@ -353,6 +367,17 @@ function CourtScreen({
       <span className={styles.compactCourt}>{court.ten}</span>
     </header>
   );
+
+  if (eventSummary) {
+    return (
+      <div className={styles.screen}>
+        {compactHeader}
+        <div className={styles.eventSummaryPublicShell}>
+          <EventSummaryView summary={eventSummary} publicMode />
+        </div>
+      </div>
+    );
+  }
 
   if (!live && liveQuyen) {
     return <QuyenScreen header={compactHeader} live={liveQuyen} />;

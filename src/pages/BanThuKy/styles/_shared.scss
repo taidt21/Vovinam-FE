@@ -617,3 +617,29 @@
         width: 100%;
     }
 }
+
+// Chỉ dùng cho nút/tổ hợp thao tác của tính năng tổng kết nội dung.
+.summaryControlBtns {
+    flex-direction: column;
+    width: 100%;
+}
+
+.btnSummary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    width: 100%;
+    padding: $space-3 $space-5;
+    border: 1px solid #b7791f;
+    border-radius: 8px;
+    background: #fff8e1;
+    color: #7a4b00;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+
+    &:hover {
+        background: #fff2bf;
+    }
+}

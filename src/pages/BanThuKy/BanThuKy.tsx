@@ -17,6 +17,10 @@ import { getGanSan } from "../../lib/api/adminAuth";
 import { numberDoiKhangMatches } from "../../lib/domain/bracket";
 import type { NumberedMatch } from "../../lib/domain/bracket";
 import { compareNhomTuoi } from "../../lib/utils/nhomTuoi";
+import {
+  computeDoiKhangMedals,
+  computeQuyenRanking,
+} from "../../lib/domain/medals";
 import { serverNow } from "../../lib/realtime/serverClock";
 import { apiGet } from "../../lib/api/api";
 import { fetchEvents } from "../../lib/api/eventsApi";
@@ -57,6 +61,7 @@ import {
 import {
   getCourtResting,
   publishCourtResting,
+  setCourtRestingConfirmed,
   subscribeCourtResting,
 } from "../../lib/realtime/courtRestingStore";
 import {
@@ -64,6 +69,13 @@ import {
   subscribeConnectionState,
   ensureJoinedCourt,
 } from "../../lib/realtime/matchHubConnection";
+import {
+  clearEventSummary,
+  getEventSummarySnapshot,
+  publishEventSummary,
+  subscribeEventSummary,
+} from "../../lib/realtime/eventSummaryStore";
+import type { EventSummaryState } from "../../types/eventSummary";
 
 import {
   TABS,
@@ -78,6 +90,7 @@ import DieuHanhDoiKhangTab from "./tabs/DieuHanhDoiKhangTab";
 import XemLaiDoiKhangTab from "./tabs/XemLaiDoiKhangTab";
 import DieuHanhQuyenTab from "./tabs/DieuHanhQuyenTab";
 import TrongTaiTab from "./tabs/TrongTaiTab";
+import EventSummaryView from "../../components/EventSummary/EventSummaryView";
 
 import styles from "./BanThuKy.module.scss";
 import FullscreenButton from "../../components/FullscreenButton/FullscreenButton";
@@ -152,6 +165,9 @@ export default function BanThuKy() {
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [dangNghiDoiKhang, setDangNghiDoiKhang] = useState(false);
   const [dangNghiQuyen, setDangNghiQuyen] = useState(false);
+  const [eventSummary, setEventSummary] = useState<EventSummaryState | null>(
+    () => (currentCourtId ? getEventSummarySnapshot(currentCourtId) : null),
+  );
 
   useEffect(() => {
     if (!currentCourtId) return;
@@ -167,6 +183,15 @@ export default function BanThuKy() {
     if (!currentCourtId) return;
     setDangNghiQuyen(getCourtResting(currentCourtId, "quyen"));
     return subscribeCourtResting(currentCourtId, "quyen", setDangNghiQuyen);
+  }, [currentCourtId]);
+
+  useEffect(() => {
+    if (!currentCourtId) {
+      setEventSummary(null);
+      return;
+    }
+    setEventSummary(getEventSummarySnapshot(currentCourtId));
+    return subscribeEventSummary(currentCourtId, setEventSummary);
   }, [currentCourtId]);
 
   // Y hệt lỗi vừa sửa ở màn hình công khai/trọng tài: các state sống
@@ -491,10 +516,12 @@ export default function BanThuKy() {
     try {
       await updateMatch(updatedMatch.id, updatedMatch);
       if (updatedNext) await updateMatch(updatedNext.id, updatedNext);
+      return updatedMatch;
     } catch {
       window.alert(
         "Lưu kết quả thất bại — kiểm tra backend đã chạy chưa. Thử tải lại trang.",
       );
+      return null;
     }
   };
 
@@ -838,7 +865,13 @@ export default function BanThuKy() {
   };
 
   useEffect(() => {
-    if (tab !== "dieu_hanh_dk" || activeOnMyCourt || dangNghiDoiKhang) return;
+    if (
+      tab !== "dieu_hanh_dk" ||
+      activeOnMyCourt ||
+      dangNghiDoiKhang ||
+      dangBoTranDoiKhang
+    )
+      return;
     // Trước đây tìm trận "cho_thi" kế tiếp trong TOÀN BỘ danh sách trận,
     // không phân biệt sân — nên nếu sân này xong trận trước, mà trận kế
     // tiếp trong danh sách lại đang định dành cho sân KHÁC (chưa kịp bắt
@@ -881,6 +914,7 @@ export default function BanThuKy() {
     tab,
     activeOnMyCourt,
     dangNghiDoiKhang,
+    dangBoTranDoiKhang,
     numbered,
     courts,
     currentCourtId,
@@ -946,14 +980,14 @@ export default function BanThuKy() {
       await updateMatch(updated.id, updated);
       matchesRefreshEpochRef.current += 1;
 
+      await setCourtRestingConfirmed(currentCourtId, "doi_khang", true);
+
       setBracketsByEvent((prev) => ({
         ...prev,
         [eventId]: (prev[eventId] ?? []).map((m) =>
           m.id === updated.id ? updated : m,
         ),
       }));
-      clearMatchState(currentCourtId);
-      publishCourtResting(currentCourtId, "doi_khang", true);
     } catch {
       matchesRefreshEpochRef.current += 1;
       window.alert(
@@ -1004,6 +1038,134 @@ export default function BanThuKy() {
     courts,
   ]);
 
+  const publishDoiKhangSummary = async (
+    match: Match,
+    eventId: string,
+    lyDo: LyDoKetThuc,
+    thang: "do" | "xanh",
+  ) => {
+    const finished = await finishMatch(match, eventId, lyDo, thang);
+    if (!finished) return;
+
+    const event = eventOf(eventId);
+    const matches = (bracketsByEvent[eventId] ?? []).map((m) =>
+      m.id === finished.id ? finished : m,
+    );
+    const medals = computeDoiKhangMedals(matches);
+    if (!event || !medals) {
+      window.alert("Chưa đủ dữ liệu để tổng kết nội dung đối kháng này.");
+      return;
+    }
+
+    try {
+      await publishEventSummary({
+        courtId: currentCourtId,
+        eventId,
+        eventTen: event.ten,
+        loai: "doi_khang",
+        items: [
+          {
+            hang: 1,
+            label: athleteName(medals.vang) ?? "—",
+            sub: athleteTeam(medals.vang),
+          },
+          {
+            hang: 2,
+            label: athleteName(medals.bac) ?? "—",
+            sub: athleteTeam(medals.bac),
+          },
+          ...medals.dong.map((id) => ({
+            hang: 3 as const,
+            label: athleteName(id) ?? "—",
+            sub: athleteTeam(id),
+          })),
+        ],
+        capNhatLuc: Date.now(),
+      });
+    } catch {
+      window.alert(
+        "Đã lưu kết quả nhưng không thể hiển thị tổng kết — kiểm tra kết nối realtime.",
+      );
+    }
+  };
+
+  const publishQuyenSummary = async (marked: {
+    eventId: string;
+    athleteId: string | null;
+    teamId: string | null;
+    lyDo: string;
+  }) => {
+    const event = eventOf(marked.eventId);
+    if (!event) throw new Error("Không tìm thấy nội dung Quyền.");
+
+    const eventItems = quyenNumbered.filter(
+      (item) => item.event.id === marked.eventId,
+    );
+    const completionRecords = quyenLuotHoanThanh
+      .filter((x) => x.eventId === marked.eventId)
+      .map((x) => ({ athleteId: x.athleteId, teamId: x.teamId }));
+
+    if (
+      !completionRecords.some(
+        (x) => x.athleteId === marked.athleteId && x.teamId === marked.teamId,
+      )
+    ) {
+      completionRecords.push({
+        athleteId: marked.athleteId,
+        teamId: marked.teamId,
+      });
+    }
+
+    const { hoanThanh, ranking } = computeQuyenRanking(
+      eventItems.map((item) => ({
+        athleteId: item.athleteId,
+        teamId: item.teamId,
+      })),
+      quyenJudgeScores.filter((score) => score.eventId === marked.eventId),
+      completionRecords,
+      tournament?.choPhepDongHangBaQuyen ?? true,
+    );
+
+    if (!hoanThanh) {
+      throw new Error("Nội dung Quyền chưa đủ dữ liệu để tổng kết.");
+    }
+
+    await publishEventSummary({
+      courtId: currentCourtId,
+      eventId: marked.eventId,
+      eventTen: event.ten,
+      loai: "quyen",
+      items: ranking
+        .filter((r) => r.huyChuong !== null)
+        .map((r) => {
+          const item = eventItems.find(
+            (x) => x.athleteId === r.athleteId && x.teamId === r.teamId,
+          );
+          return {
+            hang: r.huyChuong as 1 | 2 | 3,
+            label: r.athleteId ? (athleteName(r.athleteId) ?? "—") : undefined,
+            members: r.teamId
+              ? (item?.thanhVien ?? []).map((x) => x.hoTen)
+              : undefined,
+            sub: r.athleteId
+              ? athleteTeam(r.athleteId)
+              : (teams.find((t) => t.id === r.teamId)?.ten ?? "—"),
+            diem: r.diem,
+          };
+        }),
+      capNhatLuc: Date.now(),
+    });
+  };
+
+  const closeEventSummary = async () => {
+    if (!currentCourtId) return;
+    try {
+      await clearEventSummary(currentCourtId);
+    } catch {
+      window.alert("Không thể đóng tổng kết trên màn hình công khai.");
+    }
+  };
+
   // Việc "tìm màn hình mở rộng + mở trình duyệt kiosk" giờ để backend lo
   // hết (xem ManHinhCongKhaiLauncher.cs) — ở đây chỉ gọi API rồi hiện
   // đúng kết quả. Lý do đổi: Window Management API (getScreenDetails)
@@ -1044,6 +1206,19 @@ export default function BanThuKy() {
 
   const courtName = courts.find((c) => c.id === currentCourtId)?.ten ?? "";
   const currentTabLabel = TABS.find((item) => item.id === tab)?.label ?? "";
+  const currentQuyenLive = currentCourtId
+    ? getQuyenSnapshot(currentCourtId)
+    : null;
+  const isLastQuyenOfEvent = currentQuyenLive
+    ? quyenNumbered
+        .filter((item) => item.event.id === currentQuyenLive.eventId)
+        .every(
+          (item) =>
+            (item.athleteId === currentQuyenLive.athleteId &&
+              item.teamId === currentQuyenLive.teamId) ||
+            daHoanThanhQuyen(item),
+        )
+    : false;
 
   const openPublicScreenExtended = async () => {
     if (!currentCourtId || dangMoManHinh) return;
@@ -1201,7 +1376,12 @@ export default function BanThuKy() {
       )}
 
       {tab === "dieu_hanh_dk" &&
-        (reviewMatch ? (
+        (eventSummary?.loai === "doi_khang" ? (
+          <EventSummaryView
+            summary={eventSummary}
+            onClose={closeEventSummary}
+          />
+        ) : reviewMatch ? (
           <XemLaiDoiKhangTab
             key={reviewMatch.match.id}
             match={reviewMatch.match}
@@ -1236,8 +1416,17 @@ export default function BanThuKy() {
             so={numbered.find((x) => x.match.id === activeOnMyCourt.id)?.so}
             athleteName={athleteName}
             athleteTeam={athleteTeam}
-            onEndMatch={(lyDo, thang) =>
-              finishMatch(activeOnMyCourt, activeEvent.id, lyDo, thang)
+            onEndMatch={async (lyDo, thang) => {
+              await finishMatch(activeOnMyCourt, activeEvent.id, lyDo, thang);
+            }}
+            isLastMatchOfEvent={!activeOnMyCourt.nextMatchId}
+            onEndMatchAndShowSummary={(lyDo, thang) =>
+              publishDoiKhangSummary(
+                activeOnMyCourt,
+                activeEvent.id,
+                lyDo,
+                thang,
+              )
             }
             onGoTranChoBatDau={boTranChoBatDauDoiKhang}
             dangGoTranChoBatDau={dangBoTranDoiKhang}
@@ -1245,18 +1434,26 @@ export default function BanThuKy() {
           />
         ))}
 
-      {tab === "dieu_hanh_quyen" && (
-        <DieuHanhQuyenTab
-          key={currentCourtId}
-          courtId={currentCourtId}
-          quyenJudgeScores={quyenJudgeScores}
-          quyenNumbered={quyenNumbered}
-          trongTaiList={trongTaiList}
-          onLuotXong={(marked) =>
-            setQuyenLuotHoanThanh((prev) => [...prev, marked])
-          }
-        />
-      )}
+      {tab === "dieu_hanh_quyen" &&
+        (eventSummary?.loai === "quyen" ? (
+          <EventSummaryView
+            summary={eventSummary}
+            onClose={closeEventSummary}
+          />
+        ) : (
+          <DieuHanhQuyenTab
+            key={currentCourtId}
+            courtId={currentCourtId}
+            quyenJudgeScores={quyenJudgeScores}
+            quyenNumbered={quyenNumbered}
+            trongTaiList={trongTaiList}
+            onLuotXong={(marked) =>
+              setQuyenLuotHoanThanh((prev) => [...prev, marked])
+            }
+            isLastOfEvent={isLastQuyenOfEvent}
+            onXemTongKet={publishQuyenSummary}
+          />
+        ))}
 
       {tab === "trong_tai" && (
         <TrongTaiTab

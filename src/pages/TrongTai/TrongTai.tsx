@@ -395,7 +395,7 @@ function MainScreen({
           <p>{courtName} chưa có gì đang diễn ra.</p>
           <button
             className={styles.retryBtn}
-            onClick={() => ensureJoinedCourt(courtId).catch(() => {})}>
+            onClick={() => ensureJoinedCourt(courtId, true).catch(() => {})}>
             Thử tải lại
           </button>
         </div>

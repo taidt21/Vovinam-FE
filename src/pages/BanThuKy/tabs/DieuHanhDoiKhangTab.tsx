@@ -16,6 +16,7 @@ import {
   X,
   Siren,
   AlertTriangle,
+  Trophy,
 } from "lucide-react";
 import type { LiveMatchState, LyDoKetThuc, Match } from "../../../types";
 import {
@@ -55,6 +56,8 @@ export default function DieuHanhDoiKhangTab({
   athleteName,
   athleteTeam,
   onEndMatch,
+  isLastMatchOfEvent,
+  onEndMatchAndShowSummary,
   onGoTranChoBatDau,
   dangGoTranChoBatDau,
   choPhepHiepPhu,
@@ -64,7 +67,12 @@ export default function DieuHanhDoiKhangTab({
   so: number | undefined;
   athleteName: (id: string | null) => string | null;
   athleteTeam: (id: string | null) => string;
-  onEndMatch: (lyDo: LyDoKetThuc, thang: "do" | "xanh") => void;
+  onEndMatch: (lyDo: LyDoKetThuc, thang: "do" | "xanh") => void | Promise<void>;
+  isLastMatchOfEvent: boolean;
+  onEndMatchAndShowSummary: (
+    lyDo: LyDoKetThuc,
+    thang: "do" | "xanh",
+  ) => void | Promise<void>;
   onGoTranChoBatDau: () => void | Promise<void>;
   dangGoTranChoBatDau: boolean;
   choPhepHiepPhu: boolean;
@@ -644,6 +652,13 @@ export default function DieuHanhDoiKhangTab({
   const confirmFinish = () => {
     if (live.nguoiThang) onEndMatch(live.lyDoKetThuc ?? lyDo, live.nguoiThang);
   };
+  const confirmFinishAndShowSummary = () => {
+    if (live.nguoiThang)
+      onEndMatchAndShowSummary(
+        live.lyDoKetThuc ?? lyDo,
+        live.nguoiThang,
+      );
+  };
   const huyKetThuc = () =>
     patch({ trangThai: "tam_dung", nguoiThang: null, lyDoKetThuc: undefined });
 
@@ -823,10 +838,20 @@ export default function DieuHanhDoiKhangTab({
             <div className={styles.endedBox}>
               <Award size={28} />
               <span className={styles.endedLabel}>Đã có người thắng</span>
-              <div className={styles.controlBtns}>
+              <div
+                className={`${styles.controlBtns} ${
+                  isLastMatchOfEvent ? styles.summaryControlBtns : ""
+                }`}>
                 <button className={styles.btnPrimary} onClick={confirmFinish}>
                   <Check size={16} /> Xác nhận, qua trận tiếp theo
                 </button>
+                {isLastMatchOfEvent && (
+                  <button
+                    className={styles.btnSummary}
+                    onClick={confirmFinishAndShowSummary}>
+                    <Trophy size={16} /> Xác nhận, xem tổng kết nội dung
+                  </button>
+                )}
                 <button className={styles.linkBtn} onClick={huyKetThuc}>
                   Bấm nhầm, chọn lại
                 </button>

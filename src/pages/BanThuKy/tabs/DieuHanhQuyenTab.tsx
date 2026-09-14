@@ -1,7 +1,7 @@
 /** @format */
 
 import { useEffect, useState } from "react";
-import { Play, Pause, Flag, Award, Check, X, Lock, Unlock } from "lucide-react";
+import { Play, Pause, Flag, Award, Check, X, Lock, Unlock, Trophy } from "lucide-react";
 import type {
   LiveQuyenState,
   LyDoKetThucQuyen,
@@ -15,7 +15,7 @@ import {
 } from "../../../lib/realtime/liveQuyenStore";
 import {
   getCourtResting,
-  publishCourtResting,
+  setCourtRestingConfirmed,
   subscribeCourtResting,
 } from "../../../lib/realtime/courtRestingStore";
 import { serverNow } from "../../../lib/realtime/serverClock";
@@ -48,6 +48,8 @@ export default function DieuHanhQuyenTab({
   quyenNumbered,
   trongTaiList,
   onLuotXong,
+  isLastOfEvent,
+  onXemTongKet,
 }: {
   courtId: string;
   quyenJudgeScores: QuyenJudgeScoreWire[];
@@ -59,10 +61,18 @@ export default function DieuHanhQuyenTab({
     teamId: string | null;
     lyDo: string;
   }) => void;
+  isLastOfEvent: boolean;
+  onXemTongKet: (marked: {
+    eventId: string;
+    athleteId: string | null;
+    teamId: string | null;
+    lyDo: string;
+  }) => void | Promise<void>;
 }) {
   const [live, setLive] = useState<LiveQuyenState | null>(() =>
     getQuyenSnapshot(courtId),
   );
+  const [dangBoLuotChoBatDau, setDangBoLuotChoBatDau] = useState(false);
   const [, setTick] = useState(0);
   const [lyDo, setLyDo] = useState<LyDoKetThucQuyen>("hoan_thanh");
   const [dangNghi, setDangNghiState] = useState(() =>
@@ -129,9 +139,18 @@ export default function DieuHanhQuyenTab({
   // khiến lượt mới vừa được đưa vào sân ngay và người dùng tưởng nút phải
   // bấm lần hai. publishCourtResting cập nhật cache local đồng bộ trước
   // khi gửi SignalR, nên effect sẽ thấy sân đang nghỉ ngay khi state bị xoá.
-  const boLuotChoBatDau = () => {
-    publishCourtResting(courtId, "quyen", true);
-    clearQuyenState(courtId);
+  const boLuotChoBatDau = async () => {
+    if (dangBoLuotChoBatDau) return;
+    setDangBoLuotChoBatDau(true);
+    try {
+      await setCourtRestingConfirmed(courtId, "quyen", true);
+    } catch {
+      window.alert(
+        "Không thể cho sân nghỉ — kiểm tra kết nối/backend rồi thử lại.",
+      );
+    } finally {
+      setDangBoLuotChoBatDau(false);
+    }
   };
 
   const patch = (p: Partial<LiveQuyenState>) => {
@@ -197,6 +216,28 @@ export default function DieuHanhQuyenTab({
     onLuotXong(marked);
     markQuyenLuotHoanThanh(marked).catch(() => {});
     clearQuyenState(courtId);
+  };
+
+  // Nhánh tổng kết giữ nguyên nhánh "Xong" cũ ở trên; chỉ với nút mới
+  // thì chờ DB xác nhận lượt cuối trước, publish summary rồi mới clear
+  // state sống. Không dùng CourtResting và không chặn auto-next.
+  const xongHanVaXemTongKet = async () => {
+    const marked = {
+      eventId: live.eventId,
+      athleteId: live.athleteId,
+      teamId: live.teamId,
+      lyDo: live.lyDoKetThuc ?? "hoan_thanh",
+    };
+    try {
+      await markQuyenLuotHoanThanh(marked);
+      onLuotXong(marked);
+      await onXemTongKet(marked);
+      clearQuyenState(courtId);
+    } catch {
+      window.alert(
+        "Không thể lưu/hiển thị tổng kết nội dung — kiểm tra kết nối rồi thử lại.",
+      );
+    }
   };
 
   const choThiLai = async () => {
@@ -557,6 +598,13 @@ export default function DieuHanhQuyenTab({
                 <button className={styles.btnPrimary} onClick={xongHan}>
                   <Check size={16} /> Xong, qua lượt tiếp theo
                 </button>
+                {isLastOfEvent && (
+                  <button
+                    className={styles.btnSummary}
+                    onClick={xongHanVaXemTongKet}>
+                    <Trophy size={16} /> Xác nhận, xem tổng kết nội dung
+                  </button>
+                )}
                 <button className={styles.linkBtn} onClick={choThiLai}>
                   Cho thi lại từ đầu
                 </button>
@@ -592,8 +640,9 @@ export default function DieuHanhQuyenTab({
                     <button
                       className={styles.dropMatchBtn}
                       onClick={boLuotChoBatDau}
+                      disabled={dangBoLuotChoBatDau}
                       title="Gỡ lượt này khỏi sân, cho sân nghỉ">
-                      <X size={15} /> Bỏ, cho sân nghỉ
+                      <X size={15} /> {dangBoLuotChoBatDau ? "Đang bỏ..." : "Bỏ, cho sân nghỉ"}
                     </button>
                   </>
                 )}

@@ -5,6 +5,8 @@ import { getAdminToken } from '../api/adminAuth';
 let connection: signalR.HubConnection | null = null;
 let starting: Promise<signalR.HubConnection> | null = null;
 const joinedCourts = new Set<string>();
+const joinedCourtsOnConnection = new Set<string>();
+const joiningCourts = new Map<string, Promise<void>>();
 const connectionStateListeners = new Set<(connected: boolean) => void>();
 let connectionHandlersRegistered = false;
 let calibrateIntervalStarted = false;
@@ -33,8 +35,40 @@ export function getConnection(): signalR.HubConnection {
   return connection;
 }
 
+async function joinCourt(
+  conn: signalR.HubConnection,
+  courtId: string,
+  force = false,
+): Promise<void> {
+  if (!force && joinedCourtsOnConnection.has(courtId)) return;
+
+  const pending = joiningCourts.get(courtId);
+  if (pending) {
+    await pending;
+    if (!force) return;
+  }
+
+  const joinPromise = conn
+    .invoke('JoinCourt', courtId)
+    .then(() => {
+      joinedCourtsOnConnection.add(courtId);
+    })
+    .finally(() => {
+      if (joiningCourts.get(courtId) === joinPromise) {
+        joiningCourts.delete(courtId);
+      }
+    });
+
+  joiningCourts.set(courtId, joinPromise);
+  await joinPromise;
+}
+
 function rejoinAllCourts(conn: signalR.HubConnection) {
-  joinedCourts.forEach((id) => conn.invoke('JoinCourt', id).catch(() => {}));
+  joinedCourtsOnConnection.clear();
+  joiningCourts.clear();
+  joinedCourts.forEach((id) => {
+    joinCourt(conn, id).catch(() => {});
+  });
 }
 
 function startCalibrateInterval() {
@@ -68,6 +102,8 @@ export async function ensureStarted(): Promise<signalR.HubConnection> {
   if (conn.state === signalR.HubConnectionState.Connected) {
     const currentToken = getAdminToken();
     if (startedWithToken !== undefined && startedWithToken !== currentToken) {
+      joinedCourtsOnConnection.clear();
+      joiningCourts.clear();
       await conn.stop();
       startedWithToken = undefined;
       return ensureStarted();
@@ -86,6 +122,8 @@ export async function ensureStarted(): Promise<signalR.HubConnection> {
   }
 
   if (!starting) {
+    joinedCourtsOnConnection.clear();
+    joiningCourts.clear();
     starting = conn
       .start()
       .then(async () => {
@@ -105,12 +143,12 @@ export async function ensureStarted(): Promise<signalR.HubConnection> {
   return starting;
 }
 
-export async function ensureJoinedCourt(courtId: string): Promise<void> {
+export async function ensureJoinedCourt(courtId: string, force = false): Promise<void> {
   const conn = await ensureStarted();
   joinedCourts.add(courtId);
-  if (conn.state === signalR.HubConnectionState.Connected) {
-    await conn.invoke('JoinCourt', courtId).catch(() => {});
-  }
+
+  if (conn.state !== signalR.HubConnectionState.Connected) return;
+  await joinCourt(conn, courtId, force);
 }
 
 function ensureConnectionHandlersRegistered(conn: signalR.HubConnection) {
