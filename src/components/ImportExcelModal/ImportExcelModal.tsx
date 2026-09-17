@@ -15,20 +15,24 @@ interface ImportExcelModalProps {
   existingTeamNames: string[];
   events: CompetitionEvent[];
   existingAthletes: { hoTen: string; namSinh: number }[];
+  importing?: boolean;
   onClose: () => void;
-  onConfirm: (validRows: ImportRow[]) => void;
+  onConfirm: (file: File) => void;
 }
 
 export default function ImportExcelModal({
   existingTeamNames,
   events,
   existingAthletes,
+  importing = false,
   onClose,
   onConfirm,
 }: ImportExcelModalProps) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [rows, setRows] = useState<ImportRow[] | null>(null);
   const [unknownColumns, setUnknownColumns] = useState<string[]>([]);
+  const [fileError, setFileError] = useState<string | null>(null);
 
   const normalizedExisting = new Set(
     existingTeamNames.map((t) => t.trim().toLowerCase()),
@@ -37,14 +41,22 @@ export default function ImportExcelModal({
   const onFileInputChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setSelectedFile(file);
     const buffer = await file.arrayBuffer();
-    const { rows: parsed, unknownColumns: unknown } = parseWorkbook(
-      buffer,
-      events,
-      existingAthletes,
-    );
-    setRows(parsed);
-    setUnknownColumns(unknown);
+    try {
+      const result = parseWorkbook(buffer, events, existingAthletes);
+      setRows(result.rows);
+      setUnknownColumns(result.unknownColumns);
+      setFileError(result.fileError);
+    } catch (error) {
+      setRows([]);
+      setUnknownColumns([]);
+      setFileError(
+        error instanceof Error
+          ? `Không đọc được file Excel: ${error.message}`
+          : 'Không đọc được file Excel.',
+      );
+    }
   };
 
   const downloadTemplate = () => {
@@ -68,7 +80,7 @@ export default function ImportExcelModal({
   );
 
   return (
-    <Modal title="Import danh sách VĐV từ Excel" onClose={onClose} size="lg">
+    <Modal title="Import toàn bộ danh sách từ Excel" onClose={onClose} size="lg">
       {!rows ? (
         <div className={styles.uploadArea}>
           <button
@@ -85,6 +97,11 @@ export default function ImportExcelModal({
             hidden
             onChange={onFileInputChange}
           />
+          {fileError && (
+            <p className={styles.warnNote}>
+              <AlertTriangle size={14} /> {fileError}
+            </p>
+          )}
           <button
             type="button"
             className={styles.templateLink}
@@ -94,6 +111,11 @@ export default function ImportExcelModal({
         </div>
       ) : (
         <div className={styles.reviewArea}>
+          {fileError && (
+            <p className={styles.warnNote}>
+              <AlertTriangle size={14} /> {fileError}
+            </p>
+          )}
           <div className={styles.summaryRow}>
             <div className={styles.summaryItem}>
               <span className={styles.summaryNum}>{rows.length}</span>
@@ -128,6 +150,12 @@ export default function ImportExcelModal({
               {newTeamNames.join(", ")}
             </p>
           )}
+
+          <p className={styles.infoNote}>
+            Bảng dưới đây kiểm tra từng dòng trong sheet VĐV. Khi xác nhận,
+            hệ thống sẽ import toàn bộ workbook gồm Đơn vị, logo, VĐV, cán bộ
+            đoàn và các ảnh.
+          </p>
 
           <div className={styles.tableWrap}>
             <table className={styles.table}>
@@ -192,15 +220,23 @@ export default function ImportExcelModal({
             <button
               type="button"
               className={styles.btnGhost}
-              onClick={() => setRows(null)}>
+              onClick={() => {
+                setRows(null);
+                setSelectedFile(null);
+                setFileError(null);
+                setUnknownColumns([]);
+                if (fileRef.current) fileRef.current.value = '';
+              }}>
               Chọn file khác
             </button>
             <button
               type="button"
               className={styles.btnPrimary}
-              disabled={validRows.length === 0}
-              onClick={() => onConfirm(validRows)}>
-              Ghi nhận import {validRows.length} VĐV
+              disabled={!selectedFile || Boolean(fileError) || importing}
+              onClick={() => selectedFile && onConfirm(selectedFile)}>
+              {importing
+                ? "Đang import..."
+                : `Xác nhận import toàn bộ file (${validRows.length} VĐV hợp lệ)`}
             </button>
           </div>
         </div>

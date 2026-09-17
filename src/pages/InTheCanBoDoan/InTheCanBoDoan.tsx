@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Download, Plus, Search, Trash2, Upload, FileSpreadsheet } from "lucide-react";
-import * as XLSX from "xlsx";
 import { apiGet, apiPost } from "../../lib/api/api";
 import { normalizeVi } from "../../lib/utils/text";
+import { parseStaffWorkbook } from "../../lib/excel/staffExcelImport";
 import type { Team } from "../../types/tournament";
 import {
   fetchCanBoDoan,
@@ -38,17 +38,6 @@ const VAI_TRO_OPTIONS: { value: string; label: string }[] = [
   { value: "truong_doan", label: "Trưởng đoàn" },
   { value: "huan_luyen_vien", label: "Huấn luyện viên" },
 ];
-
-// Đọc nhãn tiếng Việt trong cột "Vai trò" của file Excel (xuất từ
-// WordPress, xem vs_staff_role_label() bên theme) rồi map ngược lại
-// đúng giá trị nội bộ — so sánh không dấu/không phân biệt hoa thường
-// cho chắc ăn dù file gõ hoa/thường lẫn lộn.
-function docVaiTro(text: string): string | null {
-  const n = normalizeVi(text);
-  if (n.includes("truong doan")) return "truong_doan";
-  if (n.includes("huan luyen")) return "huan_luyen_vien";
-  return null;
-}
 
 function nhanVaiTro(vaiTro: string): string {
   return VAI_TRO_OPTIONS.find((o) => o.value === vaiTro)?.label ?? vaiTro;
@@ -248,24 +237,16 @@ export default function InTheCanBoDoan() {
     }
   };
 
-  // Import Excel — đúng format WordPress xuất ra: Họ tên | Vai trò |
-  // Đơn vị | Link ảnh. Đơn vị chưa có trong hệ thống thì tự tạo mới
-  // (giống hệt cách VĐV đang import ở trang này), Link ảnh có sẵn thì
-  // đặt thẳng bằng URL, không tải về rồi upload lại cho mất công.
+  // Hỗ trợ cả file cán bộ riêng và workbook 3 sheet do WordPress xuất.
+  // Đọc theo tên cột thay vì vị trí để hai định dạng dùng chung importer.
   const nhapExcel = async (file: File) => {
     setDangImport(true);
     setImportLoi(null);
     try {
       const buffer = await file.arrayBuffer();
-      const wb = XLSX.read(buffer, { type: "array" });
-      const sheet = wb.Sheets[wb.SheetNames[0]];
-      const raw: string[][] = XLSX.utils.sheet_to_json(sheet, {
-        header: 1,
-        blankrows: false,
-        defval: "",
-      });
-      if (raw.length < 2) {
-        setImportLoi("File không có dòng dữ liệu nào.");
+      const parsed = parseStaffWorkbook(buffer);
+      if (parsed.fileError) {
+        setImportLoi(parsed.fileError);
         return;
       }
 
@@ -275,18 +256,13 @@ export default function InTheCanBoDoan() {
       let listMoi = [...list];
       let soLoi = 0;
 
-      for (const row of raw.slice(1)) {
-        const hoTen = String(row[0] ?? "").trim();
-        const vaiTroText = String(row[1] ?? "").trim();
-        const donVi = String(row[2] ?? "").trim();
-        const anhUrl = String(row[3] ?? "").trim();
-        if (!hoTen || !donVi) continue;
-
-        const vaiTro = docVaiTro(vaiTroText);
-        if (!vaiTro) {
+      for (const row of parsed.rows) {
+        if (row.errors.length > 0 || !row.vaiTro) {
           soLoi++;
           continue;
         }
+
+        const { hoTen, vaiTro, donVi } = row;
 
         let teamId = idByTeamName.get(normalizeVi(donVi));
         if (!teamId) {
@@ -303,7 +279,7 @@ export default function InTheCanBoDoan() {
           hoTen,
           vaiTro,
           teamId,
-          anhDaiDien: anhUrl || null,
+          anhDaiDien: row.anhDaiDien || null,
         });
         listMoi = [...listMoi, { ...created, teamTen: donVi }];
       }
@@ -311,7 +287,7 @@ export default function InTheCanBoDoan() {
       setList(listMoi);
       if (soLoi > 0) {
         setImportLoi(
-          `Đã import xong, nhưng ${soLoi} dòng có cột "Vai trò" không đọc được (phải ghi đúng "Trưởng đoàn" hoặc "Huấn luyện viên") — bị bỏ qua.`,
+          `Đã import xong, nhưng ${soLoi} dòng thiếu dữ liệu hoặc có vai trò không hợp lệ — bị bỏ qua.`,
         );
       }
     } catch (err) {

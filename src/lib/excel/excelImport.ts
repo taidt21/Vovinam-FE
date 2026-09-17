@@ -9,11 +9,27 @@ const HEADER_ALIASES: Record<string, string[]> = {
   hoTen: ['ho ten', 'ten', 'ho va ten'],
   namSinh: ['nam sinh'],
   gioiTinh: ['gioi tinh'],
-  nhomTuoi: ['nhom tuoi'],
-  donVi: ['don vi', 'doan'],
+  nhomTuoi: ['ma nhom tuoi', 'nhom tuoi'],
+  donVi: ['ten don vi', 'don vi', 'doan', 'ma don vi'],
   noiDung: ['noi dung'],
   anhDaiDien: ['link anh', 'anh', 'anh dai dien', 'url anh', 'photo url', 'image url'],
 };
+
+function normalizeSheetName(value: string): string {
+  return normalize(value).replace(/[^a-z0-9]/g, '');
+}
+
+function findAthleteSheetName(wb: XLSX.WorkBook): string | null {
+  const matched = wb.SheetNames.find((name) => {
+    const normalized = normalizeSheetName(name);
+    return normalized === 'vdv'
+      || normalized === 'vdvdangky'
+      || normalized === 'vandongvien';
+  });
+
+  if (matched) return matched;
+  return wb.SheetNames.length === 1 ? wb.SheetNames[0] : null;
+}
 
 export interface ImportRow {
   rowNumber: number;
@@ -36,25 +52,66 @@ export function parseWorkbook(
   buffer: ArrayBuffer,
   events: CompetitionEvent[],
   existingAthletes: { hoTen: string; namSinh: number }[],
-): { rows: ImportRow[]; unknownColumns: string[] } {
+): { rows: ImportRow[]; unknownColumns: string[]; fileError: string | null } {
   const wb = XLSX.read(buffer, { type: 'array' });
-  const sheet = wb.Sheets[wb.SheetNames[0]];
+  const sheetName = findAthleteSheetName(wb);
+  if (!sheetName) {
+    return {
+      rows: [],
+      unknownColumns: [],
+      fileError: 'Không tìm thấy sheet "VĐV" trong file Excel.',
+    };
+  }
+
+  const sheet = wb.Sheets[sheetName];
   const raw: string[][] = XLSX.utils.sheet_to_json(sheet, { header: 1, blankrows: false, defval: '' });
 
-  if (raw.length === 0) return { rows: [], unknownColumns: [] };
+  if (raw.length === 0) {
+    return { rows: [], unknownColumns: [], fileError: `Sheet "${sheetName}" đang trống.` };
+  }
 
   const headerRow = raw[0].map((h) => String(h));
+  const normalizedHeaders = headerRow.map(normalize);
   const colIndex: Partial<Record<keyof typeof HEADER_ALIASES, number>> = {};
-  const unknownColumns: string[] = [];
+  const fields = Object.keys(HEADER_ALIASES) as (keyof typeof HEADER_ALIASES)[];
 
-  headerRow.forEach((h, i) => {
-    const n = normalize(h);
-    const field = (Object.keys(HEADER_ALIASES) as (keyof typeof HEADER_ALIASES)[]).find((key) =>
-      HEADER_ALIASES[key].some((alias) => normalize(alias) === n)
-    );
-    if (field) colIndex[field] = i;
-    else if (h.trim()) unknownColumns.push(h);
-  });
+  for (const field of fields) {
+    for (const alias of HEADER_ALIASES[field]) {
+      const index = normalizedHeaders.indexOf(normalize(alias));
+      if (index >= 0) {
+        colIndex[field] = index;
+        break;
+      }
+    }
+  }
+
+  const knownHeaders = new Set(fields.flatMap((field) => HEADER_ALIASES[field].map(normalize)));
+  const unknownColumns = headerRow.filter(
+    (header, index) => header.trim() && !knownHeaders.has(normalizedHeaders[index]),
+  );
+
+  const requiredFields: (keyof typeof HEADER_ALIASES)[] = [
+    'hoTen',
+    'namSinh',
+    'gioiTinh',
+    'nhomTuoi',
+    'donVi',
+  ];
+  const missingFields = requiredFields.filter((field) => colIndex[field] === undefined);
+  if (missingFields.length > 0) {
+    const labels: Record<string, string> = {
+      hoTen: 'Họ tên',
+      namSinh: 'Năm sinh',
+      gioiTinh: 'Giới tính',
+      nhomTuoi: 'Nhóm tuổi',
+      donVi: 'Đơn vị',
+    };
+    return {
+      rows: [],
+      unknownColumns,
+      fileError: `Sheet "${sheetName}" thiếu cột bắt buộc: ${missingFields.map((field) => labels[field]).join(', ')}.`,
+    };
+  }
 
   const get = (row: string[], field: keyof typeof HEADER_ALIASES) => {
     const idx = colIndex[field];
@@ -115,7 +172,11 @@ export function parseWorkbook(
     const anhDaiDien = get(row, 'anhDaiDien');
 
     const noiDungRaw = get(row, 'noiDung');
-    const noiDungParts = noiDungRaw ? noiDungRaw.split(/[,;]/).map((s) => s.trim()).filter(Boolean) : [];
+    // WordPress ngăn cách nhiều nội dung bằng dấu chấm phẩy. Không tách
+    // theo dấu phẩy vì tên một nội dung hợp lệ có thể chứa dấu phẩy.
+    const noiDungParts = noiDungRaw
+      ? noiDungRaw.split(/[;\r\n]+/).map((s) => s.trim()).filter(Boolean)
+      : [];
     const eventIds: string[] = [];
     for (const part of noiDungParts) {
       const candidates = events.filter((ev) => normalize(ev.ten) === normalize(part));
@@ -148,7 +209,7 @@ export function parseWorkbook(
     };
   });
 
-  return { rows, unknownColumns };
+  return { rows, unknownColumns, fileError: null };
 }
 
 export function buildTemplateFile(): Blob {

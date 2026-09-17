@@ -19,9 +19,10 @@ import { laAdmin } from "../../lib/api/adminAuth";
 import { NHOM_TUOI_OPTIONS } from "../../lib/utils/nhomTuoi";
 import Modal from "../../components/Modal/Modal";
 import ImportExcelModal from "../../components/ImportExcelModal/ImportExcelModal";
+
 import AthleteAvatar from "../../components/AthleteAvatar/AthleteAvatar";
-import type { ImportRow } from "../../lib/excel/excelImport";
 import { fetchEvents } from "../../lib/api/eventsApi";
+import { importRegistrationExcel } from "../../lib/api/registrationImportApi";
 import { formatEventNhomTuoi } from "../../lib/utils/nhomTuoi";
 import styles from "./DoanVaVDV.module.scss";
 
@@ -32,6 +33,7 @@ interface Team {
   id: string;
   ten: string;
   soVdv: number;
+  logoUrl?: string | null;
 }
 
 interface Athlete {
@@ -263,50 +265,37 @@ export default function DoanVaVDV() {
     }
   };
 
-  // Excel: đoàn nào chưa tồn tại phải TẠO TRƯỚC để có id thật từ server,
-  // rồi mới tạo VĐV tham chiếu đúng id đó — khác hẳn bản cũ (tự sinh
-  // crypto.randomUUID() tại chỗ, không cần chờ ai cả).
-  const handleImportConfirm = async (validRows: ImportRow[]) => {
+  // Gửi nguyên workbook 3 sheet lên backend. Backend xử lý trong một lần:
+  // Đơn vị + logo, VĐV + ảnh + nội dung và Cán bộ đoàn + ảnh.
+  const handleImportConfirm = async (file: File) => {
     setImporting(true);
     try {
-      const idByTeamName = new Map(
-        teams.map((t) => [t.ten.trim().toLowerCase(), t.id]),
-      );
-
-      const newTeamNames = Array.from(
-        new Set(
-          validRows
-            .map((r) => r.donVi.trim())
-            .filter((name) => name && !idByTeamName.has(name.toLowerCase())),
-        ),
-      );
-      for (const name of newTeamNames) {
-        const created = await apiPost<Team>("/dashboard/teams", { ten: name });
-        idByTeamName.set(name.toLowerCase(), created.id);
-      }
-
-      for (const r of validRows) {
-        const teamId = idByTeamName.get(r.donVi.trim().toLowerCase());
-        if (!teamId) continue;
-        await apiPost("/dashboard/athletes", {
-          hoTen: r.hoTen,
-          namSinh: r.namSinh,
-          gioiTinh: r.gioiTinh,
-          nhomTuoi:
-            parseInt(r.nhomTuoi.replace(/[^0-9]/g, ""), 10) ||
-            NHOM_TUOI_OPTIONS[0],
-          teamId,
-          eventIds: r.eventIds,
-          anhDaiDien: r.anhDaiDien || null,
-        });
-      }
-
+      const result = await importRegistrationExcel(file);
       await reloadTeamsAndAthletes();
       setShowImportModal(false);
-    } catch (err) {
+
+      const warningPreview = result.canhBao.slice(0, 10);
+      const warningText = warningPreview.length
+        ? `\n\nCảnh báo:\n- ${warningPreview.join("\n- ")}${
+            result.canhBao.length > warningPreview.length
+              ? `\n... và ${result.canhBao.length - warningPreview.length} cảnh báo khác.`
+              : ""
+          }`
+        : "";
+
       window.alert(
-        err instanceof Error
-          ? `Import gặp lỗi giữa chừng: ${err.message} — 1 số dòng có thể đã được tạo, kiểm tra lại danh sách trước khi import lại.`
+        `Import hoàn tất:\n` +
+          `- Đơn vị: ${result.donVi} (${result.donViMoi} mới), logo: ${result.logoDonVi}\n` +
+          `- VĐV: ${result.vdv}, ảnh VĐV: ${result.anhVdv}\n` +
+          `- Cán bộ đoàn: ${result.canBo}, ảnh cán bộ: ${result.anhCanBo}\n` +
+          `- Đăng ký nội dung: ${result.dangKyNoiDung}\n` +
+          `- Bỏ qua: ${result.boQua}` +
+          warningText,
+      );
+    } catch (error) {
+      window.alert(
+        error instanceof Error
+          ? `Import thất bại: ${error.message}`
           : "Import thất bại",
       );
     } finally {
@@ -359,15 +348,20 @@ export default function DoanVaVDV() {
           </button>
           <button
             className={styles.btnGhost}
-            onClick={() => window.open("/dashboard/in-the-can-bo-doan", "_blank")}>
+            onClick={() =>
+              window.open("/dashboard/in-the-can-bo-doan", "_blank")
+            }>
             <FileDown size={17} /> In thẻ Trưởng đoàn/HLV
           </button>
           {coQuyenSua && (
             <>
               <button
+                type="button"
                 className={styles.btnGhost}
+                disabled={importing}
                 onClick={() => setShowImportModal(true)}>
-                <FileSpreadsheet size={17} /> Import Excel
+                <FileSpreadsheet size={17} />
+                {importing ? "Đang import..." : "Import Excel"}
               </button>
               <button className={styles.btnPrimary} onClick={openAddAthlete}>
                 <Plus size={17} /> Thêm VĐV
@@ -447,7 +441,11 @@ export default function DoanVaVDV() {
                 onClick={() => toggleTeamFilter(t.id)}
                 title="Bấm để lọc VĐV theo đoàn này">
                 <span className={styles.teamInitial} aria-hidden="true">
-                  {t.ten.trim().charAt(0).toUpperCase()}
+                  {t.logoUrl ? (
+                    <img className={styles.teamLogo} src={t.logoUrl} alt="" />
+                  ) : (
+                    t.ten.trim().charAt(0).toUpperCase()
+                  )}
                 </span>
                 <span className={styles.teamChipText}>
                   <span className={styles.teamChipName}>{t.ten}</span>
@@ -834,13 +832,15 @@ export default function DoanVaVDV() {
 
       {showImportModal && (
         <ImportExcelModal
-          existingTeamNames={teams.map((t) => t.ten)}
+          existingTeamNames={teams.map((team) => team.ten)}
           events={events}
           existingAthletes={athletes}
-          onClose={() => setShowImportModal(false)}
+          importing={importing}
+          onClose={() => !importing && setShowImportModal(false)}
           onConfirm={handleImportConfirm}
         />
       )}
+
       {importing && (
         <div className={styles.importingOverlay}>
           Đang import, vui lòng đợi...

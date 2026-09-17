@@ -10,6 +10,7 @@ import {
 } from "../../lib/api/quyenJudgeScoreApi";
 import { fetchTrongTai, type TrongTaiWire } from "../../lib/api/trongTaiApi";
 import { fetchEvents } from "../../lib/api/eventsApi";
+import { apiGet } from "../../lib/api/api";
 import {
   fetchPerformanceOrders,
   type PerformanceOrderWire,
@@ -19,6 +20,12 @@ import { tinhDiemQuyenTongHop } from "../../lib/domain/quyenScoring";
 import type { CompetitionEvent } from "../../types";
 import AthleteAvatar from "../../components/AthleteAvatar/AthleteAvatar";
 import styles from "./QuyenCongKhaiScreen.module.scss";
+
+interface PublicTeam {
+  id: string;
+  ten: string;
+  logoUrl: string | null;
+}
 
 function responsiveQuyenAvatarSize(): number {
   if (typeof window === "undefined") return 230;
@@ -70,12 +77,16 @@ export default function QuyenScreen({
   // không đổi giữa chừng 1 buổi thi.
   const [events, setEvents] = useState<CompetitionEvent[]>([]);
   const [orders, setOrders] = useState<PerformanceOrderWire[]>([]);
+  const [teams, setTeams] = useState<PublicTeam[]>([]);
   useEffect(() => {
     fetchEvents()
       .then(setEvents)
       .catch(() => {});
     fetchPerformanceOrders()
       .then(setOrders)
+      .catch(() => {});
+    apiGet<PublicTeam[]>("/dashboard/teams")
+      .then(setTeams)
       .catch(() => {});
   }, []);
 
@@ -112,6 +123,14 @@ export default function QuyenScreen({
   const daKetThuc = live.trangThai === "da_ket_thuc";
   const dangThi = live.trangThai === "dang_thi";
   const laDongDoi = Boolean(live.thanhVien && live.thanhVien.length > 0);
+  const currentTeam = live.teamId
+    ? teams.find((team) => team.id === live.teamId)
+    : undefined;
+  const teamDisplayName =
+    currentTeam?.ten ||
+    live.performerLabel.replace(/^Đội\s+/i, "").trim() ||
+    live.performerLabel;
+  const teamInitial = teamDisplayName.trim().charAt(0).toUpperCase() || "Đ";
 
   const [scores, setScores] = useState<QuyenJudgeScoreWire[]>([]);
 
@@ -253,12 +272,23 @@ export default function QuyenScreen({
             <div className={styles.quyenTeamPublicIdentity}>
               <div
                 className={styles.quyenTeamLogoPlaceholder}
-                aria-label="Logo đơn vị tạm thời">
-                LOGO
+                aria-label={`Logo đơn vị ${teamDisplayName}`}>
+                <span className={styles.quyenTeamLogoFallback}>
+                  {teamInitial}
+                </span>
+                {currentTeam?.logoUrl && (
+                  <img
+                    className={styles.quyenTeamLogo}
+                    src={currentTeam.logoUrl}
+                    alt={`Logo ${teamDisplayName}`}
+                    onError={(event) => {
+                      event.currentTarget.hidden = true;
+                    }}
+                  />
+                )}
               </div>
               <div className={styles.quyenTeamUnitName}>
-                {live.performerLabel.replace(/^Đội\s+/i, "").trim() ||
-                  live.performerLabel}
+                {teamDisplayName}
               </div>
             </div>
           ) : (
