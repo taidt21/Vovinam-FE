@@ -693,6 +693,7 @@ export default function DieuHanhDoiKhangTab({
               name={athleteName(match.athleteRedId) ?? "—"}
               photoUrl={live.anhDo}
               size={72}
+              shape="id-card"
             />
             <div className={styles.athNameBig}>
               {athleteName(match.athleteRedId)}
@@ -961,6 +962,7 @@ export default function DieuHanhDoiKhangTab({
               name={athleteName(match.athleteBlueId) ?? "—"}
               photoUrl={live.anhXanh}
               size={72}
+              shape="id-card"
             />
             <div className={styles.athNameBig}>
               {athleteName(match.athleteBlueId)}

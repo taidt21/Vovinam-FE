@@ -652,6 +652,7 @@ function AthleteBar({
         name={name}
         photoUrl={photoUrl}
         size={responsiveAthleteAvatarSize()}
+        shape="id-card"
       />
     </div>
   );

@@ -16,10 +16,12 @@ export default function AthleteAvatar({
   name,
   photoUrl,
   size = 64,
+  shape = "circle",
 }: {
   name: string;
   photoUrl?: string | null;
   size?: number;
+  shape?: "circle" | "id-card";
 }) {
   const [loadFailed, setLoadFailed] = useState(false);
 
@@ -29,14 +31,18 @@ export default function AthleteAvatar({
     setLoadFailed(false);
   }, [photoUrl]);
 
-  const style = { width: size, height: size };
+  // Với ảnh thẻ, `size` là chiều cao để không làm tăng chiều cao của các
+  // khu vực đang hiển thị avatar. Tỷ lệ 3:4 khớp vùng ảnh trên thẻ VĐV.
+  const width = shape === "id-card" ? Math.round((size * 3) / 4) : size;
+  const style = { width, height: size };
+  const shapeClass = shape === "id-card" ? styles.idCard : "";
 
   if (photoUrl && !loadFailed) {
     return (
       <img
         src={photoUrl}
         alt={name}
-        className={styles.avatar}
+        className={`${styles.avatar} ${shapeClass}`}
         style={style}
         onError={() => setLoadFailed(true)}
       />
@@ -45,8 +51,8 @@ export default function AthleteAvatar({
 
   return (
     <div
-      className={styles.avatarFallback}
-      style={{ ...style, fontSize: Math.round(size * 0.38) }}
+      className={`${styles.avatarFallback} ${shapeClass}`}
+      style={{ ...style, fontSize: Math.round(width * 0.38) }}
       aria-label={name}
       role="img">
       {initialsOf(name)}
