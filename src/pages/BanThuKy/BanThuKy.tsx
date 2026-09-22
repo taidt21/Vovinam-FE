@@ -1431,6 +1431,7 @@ export default function BanThuKy() {
             onGoTranChoBatDau={boTranChoBatDauDoiKhang}
             dangGoTranChoBatDau={dangBoTranDoiKhang}
             choPhepHiepPhu={tournament?.choPhepHiepPhu ?? false}
+            cuaSoDongThuanGiay={tournament?.cuaSoDongThuanGiay ?? 1.5}
           />
         ))}
 

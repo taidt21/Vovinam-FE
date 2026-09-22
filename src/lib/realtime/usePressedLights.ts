@@ -30,18 +30,35 @@ export function toPositionedPresses(
   return result;
 }
 
-// Theo dõi các lần bấm đèn còn hiệu lực (chưa hết 1.5s, hoặc đã bị xoá vì
-// vừa có đồng thuận) tại 1 sân — dùng chung cho Màn hình công khai lẫn
-// Bàn thư ký, để cả 2 nơi luôn thấy y hệt nhau lúc trọng tài đang bấm.
-export function usePressedLights(courtId: string): PressedLights {
+export function lightDisplayDurationMs(seconds: number): number {
+  const safeSeconds = Number.isFinite(seconds)
+    ? Math.min(5, Math.max(0.5, seconds))
+    : 1.5;
+  return safeSeconds * 1000;
+}
+
+// Theo dõi các lần bấm đèn còn hiệu lực theo đúng cửa sổ đồng thuận đã
+// cấu hình cho giải — dùng chung cho Màn hình công khai lẫn Bàn thư ký,
+// để cả 2 nơi luôn thấy y hệt nhau lúc trọng tài đang bấm.
+export function usePressedLights(
+  courtId: string,
+  displayDurationSeconds: number,
+): PressedLights {
   const [pressed, setPressed] = useState<PressedLights>({ do: [], xanh: [] });
   const timersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(
     new Map(),
   );
+  const displayDurationMsRef = useRef(
+    lightDisplayDurationMs(displayDurationSeconds),
+  );
+  displayDurationMsRef.current = lightDisplayDurationMs(displayDurationSeconds);
 
   useEffect(() => {
     const unsubPress = subscribeLightPressed(courtId, (e) => {
-      const oldTimer = timersRef.current.get(e.giamDinhId);
+      // Đỏ và Xanh là hai tín hiệu độc lập: cùng một giám định có thể
+      // bấm hai bên liên tiếp cho hai đòn khác nhau.
+      const timerKey = `${e.giamDinhId}:${e.mau}`;
+      const oldTimer = timersRef.current.get(timerKey);
       if (oldTimer) clearTimeout(oldTimer);
 
       setPressed((prev) => ({
@@ -54,12 +71,12 @@ export function usePressedLights(courtId: string): PressedLights {
 
       const t = setTimeout(() => {
         setPressed((prev) => ({
-          do: prev.do.filter((p) => p.id !== e.giamDinhId),
-          xanh: prev.xanh.filter((p) => p.id !== e.giamDinhId),
+          ...prev,
+          [e.mau]: prev[e.mau].filter((p) => p.id !== e.giamDinhId),
         }));
-        timersRef.current.delete(e.giamDinhId);
-      }, 1500);
-      timersRef.current.set(e.giamDinhId, t);
+        timersRef.current.delete(timerKey);
+      }, displayDurationMsRef.current);
+      timersRef.current.set(timerKey, t);
     });
 
     // TRƯỚC ĐÂY: nghe thêm sự kiện ConsensusScored (đủ 3/5 người đồng
@@ -69,7 +86,7 @@ export function usePressedLights(courtId: string): PressedLights {
     // là bắn ConsensusScored NGAY, xoá mất cả 3 đèn vừa sáng — người thứ
     // 4, 5 bấm sau đó vài mili-giây mới kịp sáng lên, nên chỉ còn thấy
     // tối đa 2 đèn dù cả 5 người đều đã bấm. Bỏ hẳn việc tự xoá theo sự
-    // kiện này — để MỖI đèn tự tắt theo đúng hẹn giờ 1.5s CỦA RIÊNG NÓ
+    // kiện này — để MỖI đèn tự tắt theo đúng thời gian cấu hình CỦA RIÊNG NÓ
     // (y hệt trường hợp không đạt đồng thuận), không bị xoá sớm chỉ vì
     // đã đủ số đồng thuận ở lượt đó.
     return () => {

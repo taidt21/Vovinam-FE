@@ -1,7 +1,8 @@
 /** @format */
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { subscribeLightPressed } from "../../lib/realtime/pressLightClient";
+import { lightDisplayDurationMs } from "../../lib/realtime/usePressedLights";
 import styles from "./LiveLightsPanel.module.scss";
 
 interface ActivePress {
@@ -10,35 +11,46 @@ interface ActivePress {
   diem: number;
 }
 
-export default function LiveLightsPanel({ courtId }: { courtId: string }) {
+export default function LiveLightsPanel({
+  courtId,
+  displayDurationSeconds,
+}: {
+  courtId: string;
+  displayDurationSeconds: number;
+}) {
   const [active, setActive] = useState<Record<string, ActivePress>>({});
+  const displayDurationMsRef = useRef(
+    lightDisplayDurationMs(displayDurationSeconds),
+  );
+  displayDurationMsRef.current = lightDisplayDurationMs(displayDurationSeconds);
 
   useEffect(() => {
     const timers = new Map<string, ReturnType<typeof setTimeout>>();
 
     const unsubPress = subscribeLightPressed(courtId, (e) => {
+      const pressKey = `${e.giamDinhId}:${e.mau}`;
       setActive((prev) => ({
         ...prev,
-        [e.giamDinhId]: {
+        [pressKey]: {
           tenTrongTai: e.tenTrongTai,
           mau: e.mau,
           diem: e.diem,
         },
       }));
-      const existing = timers.get(e.giamDinhId);
+      const existing = timers.get(pressKey);
       if (existing) clearTimeout(existing);
-      // Mỗi lần bấm mới của ĐÚNG người đó làm mới lại 2 giây — bấm liên
+      // Mỗi lần bấm mới của ĐÚNG người đó làm mới lại thời gian cấu hình — bấm liên
       // tục thì đèn giữ sáng liên tục, không nhấp nháy tắt-bật vô nghĩa.
       timers.set(
-        e.giamDinhId,
+        pressKey,
         setTimeout(() => {
           setActive((prev) => {
             const next = { ...prev };
-            delete next[e.giamDinhId];
+            delete next[pressKey];
             return next;
           });
-          timers.delete(e.giamDinhId);
-        }, 2000),
+          timers.delete(pressKey);
+        }, displayDurationMsRef.current),
       );
     });
 
@@ -47,7 +59,7 @@ export default function LiveLightsPanel({ courtId }: { courtId: string }) {
     // thời thì backend xử lý tuần tự, người thứ 3 vừa đủ ngưỡng là xoá
     // mất cả 3 badge vừa hiện, người thứ 4-5 bấm sau vài mili-giây mới
     // kịp hiện, nên chỉ còn thấy tối đa 2 người dù cả 5 đều đã bấm. Bỏ
-    // hẳn — để MỖI badge tự tắt theo đúng hẹn giờ 2s của riêng nó.
+    // hẳn — để MỖI badge tự tắt theo đúng thời gian cấu hình của riêng nó.
     return () => {
       unsubPress();
       timers.forEach((t) => clearTimeout(t));

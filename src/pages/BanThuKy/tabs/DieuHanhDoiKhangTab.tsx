@@ -61,6 +61,7 @@ export default function DieuHanhDoiKhangTab({
   onGoTranChoBatDau,
   dangGoTranChoBatDau,
   choPhepHiepPhu,
+  cuaSoDongThuanGiay,
 }: {
   match: Match;
   eventTen: string;
@@ -76,12 +77,13 @@ export default function DieuHanhDoiKhangTab({
   onGoTranChoBatDau: () => void | Promise<void>;
   dangGoTranChoBatDau: boolean;
   choPhepHiepPhu: boolean;
+  cuaSoDongThuanGiay: number;
 }) {
   const courtId = match.courtId!;
   const [live, setLive] = useState<LiveMatchState | null>(() =>
     getMatchSnapshot(courtId),
   );
-  const pressed = usePressedLights(courtId);
+  const pressed = usePressedLights(courtId, cuaSoDongThuanGiay);
 
   // id -> thuTuGiamDinh (1-5) — xem đúng comment ở toPositionedPresses
   // (usePressedLights.ts): việc bấm đèn chỉ gửi kèm giamDinhId, số thứ
@@ -1083,7 +1085,10 @@ export default function DieuHanhDoiKhangTab({
         </div>
       </div>
 
-      <LiveLightsPanel courtId={courtId} />
+      <LiveLightsPanel
+        courtId={courtId}
+        displayDurationSeconds={cuaSoDongThuanGiay}
+      />
 
       {!daKetThuc && (
         <div className={styles.controls}>

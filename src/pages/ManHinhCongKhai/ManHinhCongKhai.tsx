@@ -182,6 +182,7 @@ function CourtScreen({
   );
   const [, setTick] = useState(0);
   const [tournamentName, setTournamentName] = useState(DEFAULT_TOURNAMENT_NAME);
+  const [cuaSoDongThuanGiay, setCuaSoDongThuanGiay] = useState(1.5);
   const [matchNumber, setMatchNumber] = useState<number | null>(() => {
     if (!matchNumberFallback) return null;
     const n = Number(matchNumberFallback);
@@ -245,6 +246,7 @@ function CourtScreen({
         if (tournament.ten?.trim()) {
           setTournamentName(tournament.ten.trim().toLocaleUpperCase("vi"));
         }
+        setCuaSoDongThuanGiay(tournament.cuaSoDongThuanGiay ?? 1.5);
 
         const byEvent: Record<string, Match[]> = {};
         for (const match of matches) {
@@ -352,7 +354,7 @@ function CourtScreen({
     return () => document.removeEventListener("dblclick", toggleFullscreen);
   }, [autoFullscreen]);
 
-  const pressed = usePressedLights(court.id);
+  const pressed = usePressedLights(court.id, cuaSoDongThuanGiay);
   // Chuông giờ CHỈ phát ở Bàn thư ký (DieuHanhDoiKhangTab.tsx, gọi trực
   // tiếp ngay tại đúng hành động — bắt đầu hiệp/hết giờ), KHÔNG còn phát
   // ở đây nữa — màn công khai và Bàn thư ký thường CÙNG 1 THIẾT BỊ vật
